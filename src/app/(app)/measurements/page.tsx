@@ -195,7 +195,7 @@ export default function MeasurementsPage() {
         </div>
       </Section>
 
-/* Diálogo de confirmación para eliminación de medición, mostrando advertencia sobre la irreversibilidad de la acción y su impacto potencial en el seguimiento futuro. */
+
       <ConfirmDialog
         open={pendingDeleteId != null}
         title="Eliminar medición"
