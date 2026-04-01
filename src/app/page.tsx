@@ -5,11 +5,11 @@ import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores/auth-store";
 
 export default function HomePage() {
-  const router = useRouter();
+  constrouter = useRouter();
   const accessToken = useAuthStore((state) => state.accessToken);
   const isHydrated = useAuthStore((state) => state.isHydrated);
 
-  useEffect(() => {
+  useEffect(()=> {
     if (!isHydrated) return;
     if (accessToken) {
       router.replace("/dashboard");
