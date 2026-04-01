@@ -25,7 +25,7 @@ export default function ProfilePage() {
       if (mountedRef && !mountedRef.current) return;
       setProfile(data);
     } catch (err) {
-      const message = err instanceof Error ? err.message : "No se pudo cargar el perfil.";
+      const message = err instanceof Error ? err.message : "No fue posible cargar el perfil";
       if (mountedRef && !mountedRef.current) return;
       setError(message);
     }
