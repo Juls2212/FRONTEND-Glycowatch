@@ -3,6 +3,7 @@ import { FeedbackBanner } from "@/components/ui/feedback-banner";
 import { SkeletonBlock } from "@/components/ui/skeleton-block";
 import { AlertItem } from "@/features/alerts/types";
 
+// Componente para mostrar la lista de alertas
 type Props = {
   alerts: AlertItem[];
   isLoading: boolean;
