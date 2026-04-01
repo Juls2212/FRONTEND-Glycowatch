@@ -11,7 +11,7 @@ import { HttpError } from "@/types/api";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { FeedbackBanner } from "@/components/ui/feedback-banner";
 
-const PAGE_SIZE = 00;
+const PAGE_SIZE = 10;
 
 export default function MeasurementsPage() {
   const [latestMeasurement, setLatestMeasurement] = useState<LatestMeasurement | null>(null);
@@ -45,6 +45,7 @@ export default function MeasurementsPage() {
     }
   };
 
+
   useEffect(() => {
     let mounted = true;
 
@@ -54,11 +55,13 @@ export default function MeasurementsPage() {
       if (mounted) setIsLoading(false);
     }
 
+
     void initialize();
     return () => {
       mounted = false;
     };
   }, []);
+
 
   const onApplyFilters = async () => {
     setSuccess(null);
@@ -72,6 +75,7 @@ export default function MeasurementsPage() {
     setIsLoading(false);
   };
 
+
   const onClearFilters = async () => {
     setSuccess(null);
     setDraftFrom("");
@@ -82,6 +86,7 @@ export default function MeasurementsPage() {
     await loadData(0, clean);
     setIsLoading(false);
   };
+
 
   const onPageChange = async (targetPage: number) => {
     if (targetPage < 0 || targetPage >= totalPages || targetPage === currentPage) return;
@@ -190,10 +195,11 @@ export default function MeasurementsPage() {
         </div>
       </Section>
 
+// se advierte sobre la acción irreversible.
       <ConfirmDialog
         open={pendingDeleteId != null}
         title="Eliminar medición"
-        description="Esta acción no se puede deshacer. ¿Deseas continuar?"
+        description="Esta acción no se puede deshacer. ¿Deseas continuar? (Actualmente, la eliminación no está disponible en el servidor, pero el diálogo se muestra para futuras implementaciones)"
         confirmLabel="Sí, eliminar"
         cancelLabel="Cancelar"
         isProcessing={deletingId != null}
@@ -202,5 +208,5 @@ export default function MeasurementsPage() {
       />
     </div>
   );
-}
+} 
 
