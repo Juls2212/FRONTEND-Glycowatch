@@ -29,7 +29,7 @@ function formatAlertType(type: AlertItem["type"]): string {
 function resolveSeverityClass(type: AlertItem["type"]): string {
   return type === "HIGH_GLUCOSE" ? "high" : "low";
 }
-
+// Construye una descripción del mensaje basada en el tipo de alerta
 function buildDescription(alert: AlertItem): string {
   if (alert.type === "HIGH_GLUCOSE") {
     return "Se detectó una lectura por encima del umbral configurado.";
