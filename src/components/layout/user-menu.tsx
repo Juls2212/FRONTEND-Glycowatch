@@ -4,11 +4,14 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores/auth-store";
 
+// Componente de menú de usuario con opciones para administrar el perfil y cerrar sesión
 export function UserMenu() {
   const router = useRouter();
   const logout = useAuthStore((state) => state.logout);
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement | null>(null);
+
+  // Cerrar el menú al hacer clic fuera de él
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
