@@ -1,5 +1,6 @@
 "use client";
 
+// This page is for user profile management, allowing users to view and update their personal information and health parameters.
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Section } from "@/components/ui/section";
