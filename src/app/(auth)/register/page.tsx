@@ -70,7 +70,6 @@ export default function RegisterPage() {
           </button>
         </form>
 
-
         <p className="auth-switch">
           ¿Ya tienes cuenta?{" "}
           <Link href="/login" className="auth-link">
