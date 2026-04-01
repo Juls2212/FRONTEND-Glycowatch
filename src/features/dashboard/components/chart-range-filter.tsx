@@ -5,6 +5,7 @@ type Props = {
   onChange: (range: ChartRange) => void;
 };
 
+// Opciones de rango de tiempo para el filtro
 const RANGE_OPTIONS: Array<{ value: ChartRange; label: string }> = [
   { value: "DAY", label: "Este día" },
   { value: "WEEK", label: "Última semana" },
