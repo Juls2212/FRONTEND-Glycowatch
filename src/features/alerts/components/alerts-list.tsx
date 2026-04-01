@@ -21,6 +21,7 @@ type AlertGroup = {
   items: AlertItem[];
 };
 
+// Funciones auxiliares para formatear el tipo de alerta, resolver la clase de severidad y construir la descripción del mensaje
 function formatAlertType(type: AlertItem["type"]): string {
   return type === "HIGH_GLUCOSE" ? "Glucosa alta" : "Glucosa baja";
 }
