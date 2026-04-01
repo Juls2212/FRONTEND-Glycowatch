@@ -6,7 +6,7 @@ import { ChartPoint } from "@/features/dashboard/types";
 type Props = {
   data: ChartPoint[];
 };
-
+// Formateadores de fecha ya adaptados a la localización "es-CO"
 const axisDateFormatter = new Intl.DateTimeFormat("es-CO", {
   day: "2-digit",
   month: "2-digit",
@@ -24,14 +24,17 @@ const tooltipDateFormatter = new Intl.DateTimeFormat("es-CO", {
   second: "2-digit"
 });
 
+
 function formatAxisLabel(value: string): string {
   return axisDateFormatter.format(new Date(value));
 }
+
 
 function formatTooltipLabel(value: string): string {
   return tooltipDateFormatter.format(new Date(value));
 }
 
+// Componente de gráfico de glucosa utilizando Recharts
 export function GlucoseChart({ data }: Props) {
   return (
     <div className="chart-wrap">
