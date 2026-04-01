@@ -1,4 +1,4 @@
-"use client";
+"use client"; // This page is rendered on the client side because it manages authentication state and form interactions.
 
 import { useEffect } from "react";
 import Link from "next/link";
@@ -11,6 +11,8 @@ function resolvePostLoginPath(): string {
   return onboardingStorage.isProfilePending() ? "/profile" : "/dashboard";
 }
 
+
+// The LoginPage component renders a login form and manages the authentication flow.
 export default function LoginPage() {
   const router = useRouter();
   const login = useAuthStore((state) => state.login);
