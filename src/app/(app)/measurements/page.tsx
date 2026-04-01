@@ -11,7 +11,7 @@ import { HttpError } from "@/types/api";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { FeedbackBanner } from "@/components/ui/feedback-banner";
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 00;
 
 export default function MeasurementsPage() {
   const [latestMeasurement, setLatestMeasurement] = useState<LatestMeasurement | null>(null);
