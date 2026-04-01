@@ -80,7 +80,7 @@ export default function ProfilePage() {
           isSubmitting={isSubmitting}
           error={null}
           success={null}
-          onSubmi={onSubmit}
+          onSubmit={onSubmit}
         />
       </Section>
     </div>
