@@ -9,7 +9,7 @@ function toNumeric(value: unknown): number {
     const parsed = Number(value);
     return Number.isFinite(parsed) ? parsed : 0;
   }
-  return ;
+  return 0;
 }
 
 function normalizeDashboardMetrics(raw: unknown): DashboardMetrics {
