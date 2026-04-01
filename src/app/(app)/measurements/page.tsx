@@ -195,11 +195,11 @@ export default function MeasurementsPage() {
         </div>
       </Section>
 
-// se advierte sobre la acción irreversible.
+/* Diálogo de confirmación para eliminación de medición, mostrando advertencia sobre la irreversibilidad de la acción y su impacto potencial en el seguimiento futuro. */
       <ConfirmDialog
         open={pendingDeleteId != null}
         title="Eliminar medición"
-        description="Esta acción no se puede deshacer. ¿Deseas continuar? (Actualmente, la eliminación no está disponible en el servidor, pero el diálogo se muestra para futuras implementaciones)"
+        description="Esta acción no se puede deshacer. ¿Deseas continuar? Asegúrate de que esta medición no sea necesaria para tu seguimiento o análisis futuro."
         confirmLabel="Sí, eliminar"
         cancelLabel="Cancelar"
         isProcessing={deletingId != null}
