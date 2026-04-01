@@ -42,8 +42,8 @@ function toFormState(profile: ProfileData): FormState {
     hypoglycemiaThreshold: String(profile.hypoglycemiaThreshold ?? ""),
     hyperglycemiaThreshold: String(profile.hyperglycemiaThreshold ?? ""),
     timezone: profile.timezone ?? "",
-    weightKg: profile.weightKg == null ? "" : String(profile.weightKg),
-    heightCm: profile.heightCm == null ? "" : String(profile.heightCm)
+    weightKg: profile.weightKg == null ? ".." : String(profile.weightKg),
+    heightCm: profile.heightCm == null ? ".." : String(profile.heightCm)
   };
 }
 
@@ -53,6 +53,8 @@ function parseOptionalNumber(value: string): number | null {
   return Number.isNaN(numeric) ? Number.NaN : numeric;
 }
 
+
+// Formulario para editar el perfil del usuario, con validación básica y manejo de estados de carga y error.
 export function ProfileForm({ profile, isLoading, isSubmitting, error, success, onSubmit }: Props) {
   const [form, setForm] = useState<FormState>(INITIAL_STATE);
   const [validationError, setValidationError] = useState<string | null>(null);
@@ -68,6 +70,7 @@ export function ProfileForm({ profile, isLoading, isSubmitting, error, success, 
     }
   }, [profile]);
 
+  // Validación de campos antes de enviar el formulario.
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setValidationError(null);
