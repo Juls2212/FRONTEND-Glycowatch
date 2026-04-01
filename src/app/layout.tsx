@@ -5,7 +5,7 @@ import { AppBootstrap } from "@/components/auth/app-bootstrap";
 
 export const metadata: Metadata = {
   title: " GlycoWatch Dashboard ",
-  description: ""
+  description: "Frontend panel for GlycoWatch application",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
