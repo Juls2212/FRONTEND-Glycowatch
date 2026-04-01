@@ -79,4 +79,4 @@ export default function RegisterPage() {
       </div>
     </div>
   );
-} // Note: This page is intentionally kept simple and does not auto-login the user after registration. Instead, it prompts them to log in to complete their profile setup.
+}
