@@ -4,6 +4,9 @@ import { SkeletonBlock } from "@/components/ui/skeleton-block";
 import { AlertItem } from "@/features/alerts/types";
 
 // Componente para mostrar la lista de alertas
+// Se agrupan por tipo (alta o baja) y se muestra un mensaje descriptivo para cada una
+// También se incluye un botón para marcar cada alerta como leída, que se deshabilita mientras se actualiza su estado
+
 type Props = {
   alerts: AlertItem[];
   isLoading: boolean;
