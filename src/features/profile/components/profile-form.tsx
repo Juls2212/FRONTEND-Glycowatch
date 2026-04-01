@@ -42,8 +42,8 @@ function toFormState(profile: ProfileData): FormState {
     hypoglycemiaThreshold: String(profile.hypoglycemiaThreshold ?? ""),
     hyperglycemiaThreshold: String(profile.hyperglycemiaThreshold ?? ""),
     timezone: profile.timezone ?? "",
-    weightKg: profile.weightKg == null ? ".." : String(profile.weightKg),
-    heightCm: profile.heightCm == null ? ".." : String(profile.heightCm)
+    weightKg: profile.weightKg == null ? "" : String(profile.weightKg),
+    heightCm: profile.heightCm == null ? "" : String(profile.heightCm)
   };
 }
 
