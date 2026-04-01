@@ -24,9 +24,5 @@ export class HttpError extends Error {
     this.status = status;
     this.code = code;
   }
-
-  static fromApiError(apiError: ApiError): HttpError {
-    return new HttpError(apiError.message, 500, apiError.error);
-  }
 }
 
