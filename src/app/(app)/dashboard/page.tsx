@@ -6,7 +6,7 @@ import {
   fetchAlerts,
   fetchChartData,
   fetchDashboardMetrics,
-  fetchRiskAnalysis,
+  fetchRiskAnalysis
 } from "@/features/dashboard/api";
 import { AlertItem, ChartPoint, DashboardMetrics, RiskAnalysis } from "@/features/dashboard/types";
 import { Card } from "@/components/ui/card";
