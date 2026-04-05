@@ -2,14 +2,20 @@
   --radius-sm: 10px;
   --radius-md: 12px;
   --radius-lg: 16px;
+  --radius-xl: 20px;
   --shadow-soft: 0 10px 26px rgba(0, 0, 0, 0.18);
   --shadow-strong: 0 18px 40px rgba(0, 0, 0, 0.3);
+  --shadow-card-hover: 0 18px 36px rgba(0, 0, 0, 0.24);
+  --shadow-floating: 0 20px 48px rgba(0, 0, 0, 0.28);
+  --transition-fast: 0.18s ease;
+  --transition-base: 0.24s ease;
   --surface-app: #0b0d12;
   --surface-app-rgb: 11, 13, 18;
   --surface-app-secondary: #12161d;
   --surface-sidebar: #10141b;
   --surface-sidebar-secondary: #0d1117;
   --surface-panel: #151a22;
+  --surface-panel-rgb: 21, 26, 34;
   --surface-panel-strong: #1a2029;
   --surface-input: #121821;
   --surface-overlay: rgba(10, 13, 18, 0.56);
@@ -55,12 +61,15 @@
 :root[data-color-mode="light"] {
   --shadow-soft: 0 12px 28px rgba(24, 38, 56, 0.08);
   --shadow-strong: 0 18px 40px rgba(24, 38, 56, 0.13);
+  --shadow-card-hover: 0 18px 34px rgba(24, 38, 56, 0.12);
+  --shadow-floating: 0 22px 46px rgba(24, 38, 56, 0.14);
   --surface-app: #f4f6f8;
   --surface-app-rgb: 244, 246, 248;
   --surface-app-secondary: #eceff3;
   --surface-sidebar: #f8f9fb;
   --surface-sidebar-secondary: #eff2f6;
   --surface-panel: #ffffff;
+  --surface-panel-rgb: 255, 255, 255;
   --surface-panel-strong: #f8fafc;
   --surface-input: #ffffff;
   --surface-overlay: rgba(250, 251, 252, 0.82);
@@ -152,6 +161,9 @@ body {
   color: var(--text-primary);
   font-family: "Segoe UI", "Inter", sans-serif;
   min-height: 100%;
+  transition:
+    background var(--transition-base),
+    color var(--transition-base);
 }
 
 a {
@@ -216,9 +228,14 @@ a {
   align-items: center;
   gap: 12px;
   padding: 10px 12px;
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   color: var(--text-secondary);
-  transition: background 0.22s ease, color 0.22s ease, transform 0.22s ease;
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast),
+    transform var(--transition-fast),
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
 }
 
 .nav-link::before {
@@ -236,12 +253,13 @@ a {
 .nav-link:hover {
   background: var(--surface-highlight);
   color: var(--text-primary);
+  box-shadow: inset 0 0 0 1px rgba(var(--accent-rgb), 0.08);
   transform: translateX(2px);
 }
 
 .nav-link:focus-visible {
-  outline: 1px solid var(--focus-ring);
-  outline-offset: 1px;
+  outline: none;
+  box-shadow: 0 0 0 3px var(--focus-ring);
 }
 
 .nav-link.active {
@@ -319,7 +337,13 @@ a {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s ease;
+  box-shadow: 0 1px 0 rgba(var(--surface-app-rgb), 0.08);
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    transform var(--transition-fast),
+    color var(--transition-fast);
 }
 
 .icon-button.active {
@@ -330,12 +354,13 @@ a {
 
 .icon-button:hover {
   border-color: var(--accent-outline-strong);
-  box-shadow: 0 0 0 4px rgba(var(--accent-rgb), 0.14);
+  box-shadow: 0 10px 24px rgba(var(--surface-app-rgb), 0.14), 0 0 0 4px rgba(var(--accent-rgb), 0.12);
+  transform: translateY(-1px);
 }
 
 .icon-button:focus-visible {
-  outline: 1px solid var(--focus-ring);
-  outline-offset: 1px;
+  outline: none;
+  box-shadow: 0 0 0 3px var(--focus-ring);
 }
 
 .icon-svg {
@@ -348,13 +373,13 @@ a {
   width: min(320px, calc(100vw - 32px));
   background: linear-gradient(180deg, var(--surface-panel) 0%, var(--surface-panel-strong) 100%);
   border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-soft);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-floating);
   padding: 14px;
   display: grid;
   gap: 14px;
   z-index: 25;
-  animation: dropdown-in 0.16s ease-out;
+  animation: dropdown-in var(--transition-fast);
 }
 
 .appearance-backdrop {
@@ -380,14 +405,14 @@ a {
   width: min(380px, calc(100vw - 32px));
   background: linear-gradient(180deg, var(--surface-panel) 0%, var(--surface-panel-strong) 100%);
   border: 1px solid var(--border-subtle);
-  border-radius: 18px;
-  box-shadow: var(--shadow-soft);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-floating);
   padding: 14px;
   display: grid;
   gap: 14px;
   z-index: 28;
   backdrop-filter: blur(18px);
-  animation: dropdown-in 0.16s ease-out;
+  animation: dropdown-in var(--transition-fast);
 }
 
 .notification-header {
@@ -435,6 +460,17 @@ a {
   border-radius: 16px;
   background: var(--surface-muted);
   border: 1px solid var(--border-subtle);
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    transform var(--transition-fast),
+    box-shadow var(--transition-fast);
+}
+
+.notification-item:hover {
+  background: color-mix(in srgb, var(--surface-highlight) 55%, var(--surface-muted));
+  border-color: rgba(var(--accent-rgb), 0.18);
+  transform: translateY(-1px);
 }
 
 .notification-item-main {
@@ -530,16 +566,21 @@ a {
   border: 1px solid var(--border-subtle);
   background: var(--surface-input);
   color: var(--text-primary);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   padding: 10px 12px;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.18s ease;
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    transform var(--transition-fast),
+    box-shadow var(--transition-fast);
 }
 
 .appearance-option:hover {
   border-color: var(--accent-outline-strong);
+  box-shadow: inset 0 0 0 1px rgba(var(--accent-rgb), 0.08);
 }
 
 .appearance-option.active {
@@ -557,18 +598,23 @@ a {
   border: 1px solid var(--border-subtle);
   background: var(--surface-input);
   color: var(--text-primary);
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   min-height: 42px;
   padding: 10px 12px;
   display: inline-flex;
   align-items: center;
   gap: 10px;
   cursor: pointer;
-  transition: all 0.18s ease;
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    transform var(--transition-fast),
+    box-shadow var(--transition-fast);
 }
 
 .accent-swatch:hover {
   border-color: var(--accent-outline-strong);
+  box-shadow: inset 0 0 0 1px rgba(var(--accent-rgb), 0.08);
 }
 
 .accent-swatch.active {
@@ -615,12 +661,18 @@ a {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s ease;
+  box-shadow: 0 1px 0 rgba(var(--surface-app-rgb), 0.08);
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    transform var(--transition-fast);
 }
 
 .avatar-button:hover {
   border-color: var(--accent-outline-strong);
-  box-shadow: 0 0 0 4px rgba(var(--accent-rgb), 0.15);
+  box-shadow: 0 10px 24px rgba(var(--surface-app-rgb), 0.14), 0 0 0 4px rgba(var(--accent-rgb), 0.12);
+  transform: translateY(-1px);
 }
 
 .avatar-placeholder {
@@ -636,13 +688,13 @@ a {
   min-width: 190px;
   background: linear-gradient(180deg, var(--surface-panel) 0%, var(--surface-panel-strong) 100%);
   border: 1px solid var(--border-subtle);
-  border-radius: 12px;
-  box-shadow: var(--shadow-soft);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-floating);
   padding: 8px;
   display: flex;
   flex-direction: column;
   gap: 6px;
-  animation: dropdown-in 0.16s ease-out;
+  animation: dropdown-in var(--transition-fast);
   z-index: 20;
 }
 
@@ -651,15 +703,20 @@ a {
   border: 1px solid transparent;
   background: transparent;
   color: var(--text-primary);
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   padding: 8px 10px;
   cursor: pointer;
-  transition: all 0.18s ease;
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast),
+    transform var(--transition-fast);
 }
 
 .user-dropdown-item:hover {
   background: var(--surface-highlight);
   border-color: var(--accent-outline);
+  transform: translateX(1px);
 }
 
 .user-dropdown-item.danger {
@@ -735,7 +792,7 @@ a {
 .section {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 15px;
 }
 
 .section-header {
@@ -770,9 +827,20 @@ a {
 .card {
   background: linear-gradient(165deg, var(--surface-panel) 0%, var(--surface-panel-strong) 100%);
   border: 1px solid var(--border-subtle);
-  border-radius: 16px;
+  border-radius: var(--radius-xl);
   padding: 16px;
   box-shadow: var(--shadow-soft);
+  transition:
+    border-color var(--transition-base),
+    box-shadow var(--transition-base),
+    transform var(--transition-base),
+    background var(--transition-base);
+}
+
+.card:hover {
+  border-color: color-mix(in srgb, var(--border-subtle) 65%, rgba(var(--accent-rgb), 0.24));
+  box-shadow: var(--shadow-card-hover);
+  transform: translateY(-2px);
 }
 
 .feedback-banner {
@@ -903,9 +971,9 @@ a {
 .chart-tooltip {
   min-width: 220px;
   border: 1px solid transparent;
-  border-radius: 16px;
+  border-radius: var(--radius-lg);
   padding: 12px 14px;
-  box-shadow: 0 18px 34px rgba(8, 12, 18, 0.28);
+  box-shadow: var(--shadow-floating);
   backdrop-filter: blur(18px);
 }
 
@@ -1681,7 +1749,9 @@ a {
     linear-gradient(180deg, rgba(var(--accent-rgb), 0.06) 0%, transparent 18%),
     linear-gradient(180deg, var(--surface-app-secondary) 0%, var(--surface-app) 100%);
   grid-template-columns: 272px minmax(0, 1fr);
-  transition: grid-template-columns 0.24s ease;
+  transition:
+    grid-template-columns var(--transition-base),
+    background var(--transition-base);
 }
 
 .app-shell.sidebar-collapsed {
@@ -1691,7 +1761,7 @@ a {
 .sidebar {
   padding: 22px 16px 18px;
   gap: 18px;
-  transition: padding 0.24s ease, gap 0.24s ease;
+  transition: padding var(--transition-base), gap var(--transition-base);
 }
 
 .sidebar.collapsed {
@@ -1702,10 +1772,14 @@ a {
 .sidebar-footer-card {
   border: 1px solid var(--border-subtle);
   background: linear-gradient(180deg, rgba(var(--surface-app-rgb), 0.08) 0%, transparent 100%), var(--surface-panel);
-  border-radius: 18px;
+  border-radius: var(--radius-xl);
   padding: 16px;
   box-shadow: var(--shadow-soft);
   backdrop-filter: blur(12px);
+  transition:
+    border-color var(--transition-base),
+    box-shadow var(--transition-base),
+    background var(--transition-base);
 }
 
 .sidebar-panel {
@@ -1778,12 +1852,16 @@ a {
   border: 1px solid var(--border-subtle);
   background: var(--surface-input);
   color: var(--text-primary);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    transform var(--transition-fast);
 }
 
 .sidebar-toggle-button {
@@ -1796,6 +1874,8 @@ a {
 .topbar-sidebar-toggle:hover {
   border-color: var(--accent-outline-strong);
   background: var(--surface-highlight);
+  box-shadow: 0 10px 24px rgba(var(--surface-app-rgb), 0.12);
+  transform: translateY(-1px);
 }
 
 .sidebar-toggle-chevron {
@@ -1822,18 +1902,23 @@ a {
 
 .app-main {
   padding: 26px 30px 32px;
+  transition: padding var(--transition-base);
 }
 
 .topbar {
   margin-bottom: 26px;
   padding: 16px 18px;
   border: 1px solid var(--border-subtle);
-  border-radius: 20px;
+  border-radius: var(--radius-xl);
   background:
     linear-gradient(180deg, rgba(var(--accent-rgb), 0.07) 0%, transparent 100%),
     linear-gradient(180deg, var(--surface-panel) 0%, var(--surface-panel-strong) 100%);
   box-shadow: var(--shadow-soft);
   backdrop-filter: blur(12px);
+  transition:
+    border-color var(--transition-base),
+    box-shadow var(--transition-base),
+    background var(--transition-base);
 }
 
 .topbar-main {
@@ -1986,6 +2071,10 @@ a {
   color: var(--text-primary);
   padding: 7px 11px;
   font-size: 12px;
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast);
 }
 
 .metric-chip {
@@ -2121,6 +2210,11 @@ a {
   justify-content: center;
   border: 1px solid transparent;
   flex: 0 0 auto;
+  transition:
+    transform var(--transition-fast),
+    box-shadow var(--transition-fast),
+    background var(--transition-fast),
+    border-color var(--transition-fast);
 }
 
 .metric-icon-badge .icon-svg {
@@ -2170,6 +2264,10 @@ a {
   padding: 6px 10px;
   font-size: 12px;
   white-space: nowrap;
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast);
 }
 
 .metric-value-unit {
@@ -2226,10 +2324,19 @@ a {
 }
 
 .risk-stat {
-  border-radius: 14px;
+  border-radius: var(--radius-lg);
   padding: 14px;
   border: 1px solid rgba(var(--accent-rgb), 0.12);
   background: var(--surface-muted);
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.risk-stat:hover {
+  background: color-mix(in srgb, var(--surface-highlight) 40%, var(--surface-muted));
+  border-color: rgba(var(--accent-rgb), 0.2);
 }
 
 .risk-message {
@@ -2257,10 +2364,14 @@ a {
 }
 
 .dashboard-alerts-summary-item {
-  border-radius: 14px;
+  border-radius: var(--radius-lg);
   border: 1px solid rgba(var(--accent-rgb), 0.12);
   background: var(--surface-muted);
   padding: 14px;
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    transform var(--transition-fast);
 }
 
 .dashboard-alerts-summary-item .metric-value {
@@ -2276,10 +2387,20 @@ a {
 }
 
 .dashboard-alerts-item {
-  border-radius: 14px;
+  border-radius: var(--radius-lg);
   border: 1px solid rgba(var(--border-rgb), 0.8);
   background: var(--surface-muted);
   padding: 12px 14px;
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.dashboard-alerts-item:hover,
+.dashboard-alerts-summary-item:hover {
+  background: color-mix(in srgb, var(--surface-highlight) 48%, var(--surface-muted));
+  transform: translateY(-1px);
 }
 
 .dashboard-alerts-item-main {
@@ -2324,9 +2445,6 @@ a {
 .ghost-button:hover,
 .primary-button:hover,
 .range-pill:hover,
-.nav-link:hover,
-.icon-button:hover,
-.avatar-button:hover,
 .appearance-option:hover,
 .accent-swatch:hover {
   transform: translateY(-1px);
@@ -2356,6 +2474,64 @@ a {
 .appearance-dropdown,
 .user-dropdown {
   backdrop-filter: blur(18px);
+}
+
+.primary-button,
+.ghost-button,
+.range-pill,
+.notification-link,
+.notification-action,
+.mobile-nav-link,
+.dashboard-alert-close,
+.field input,
+.field select,
+.field textarea {
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast),
+    color var(--transition-fast),
+    box-shadow var(--transition-fast),
+    transform var(--transition-fast);
+}
+
+.primary-button,
+.ghost-button,
+.range-pill,
+.notification-action {
+  border-radius: var(--radius-md);
+}
+
+.primary-button:hover,
+.ghost-button:hover,
+.range-pill:hover,
+.notification-action:hover {
+  box-shadow: 0 10px 20px rgba(var(--surface-app-rgb), 0.12);
+}
+
+.primary-button:focus-visible,
+.ghost-button:focus-visible,
+.range-pill:focus-visible,
+.notification-action:focus-visible,
+.notification-link:focus-visible,
+.sidebar-toggle-button:focus-visible,
+.topbar-sidebar-toggle:focus-visible,
+.appearance-option:focus-visible,
+.accent-swatch:focus-visible,
+.avatar-button:focus-visible,
+.dashboard-alert-close:focus-visible,
+.field input:focus-visible,
+.field select:focus-visible,
+.field textarea:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--focus-ring);
+}
+
+.notification-link {
+  transition: color var(--transition-fast), opacity var(--transition-fast);
+}
+
+.notification-link:hover {
+  opacity: 0.88;
 }
 
 @media (max-width: 900px) {
