@@ -1,6 +1,4 @@
 "use client";
-
-import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import {
   createManualMeasurement,
@@ -31,14 +29,6 @@ function formatMetric(value: number): string {
 
 function formatWholeMetric(value: number): string {
   return value.toLocaleString("es-CO", { maximumFractionDigits: 0 });
-}
-
-function formatAlertType(type: AlertItem["type"]): string {
-  return type === "HIGH_GLUCOSE" ? "Glucosa alta" : "Glucosa baja";
-}
-
-function resolveAlertTone(type: AlertItem["type"]): "danger" | "info" {
-  return type === "HIGH_GLUCOSE" ? "danger" : "info";
 }
 
 type BannerData = {
@@ -268,14 +258,6 @@ export default function DashboardPage() {
     if (!metrics) return "--";
     return `${formatMetric(metrics.minGlucose)} - ${formatMetric(metrics.maxGlucose)} mg/dL`;
   }, [metrics]);
-  const recentAlerts = useMemo(
-    () =>
-      [...alerts]
-        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-        .slice(0, 3),
-    [alerts]
-  );
-
   useEffect(() => {
     if (!bannerData) {
       setDismissedBannerKey(null);
@@ -503,97 +485,48 @@ export default function DashboardPage() {
           </Card>
         </Section>
 
-        <div className="dashboard-secondary-stack">
-          <Section title="Registro manual" subtitle="Entrada rapida para anadir una medicion sin salir del panel">
-            <Card className="manual-entry-card">
-              <form className="manual-form" onSubmit={onManualSubmit}>
-                <label className="field">
-                  <span>Valor de glucosa (mg/dL)</span>
-                  <input
-                    type="number"
-                    step="0.1"
-                    min="1"
-                    value={glucoseValueInput}
-                    onChange={(event) => setGlucoseValueInput(event.target.value)}
-                    placeholder="Ej. 112.5"
-                  />
-                </label>
+        <Section title="Registro manual" subtitle="Entrada rapida para anadir una medicion sin salir del panel">
+          <Card className="manual-entry-card">
+            <form className="manual-form" onSubmit={onManualSubmit}>
+              <label className="field">
+                <span>Valor de glucosa (mg/dL)</span>
+                <input
+                  type="number"
+                  step="0.1"
+                  min="1"
+                  value={glucoseValueInput}
+                  onChange={(event) => setGlucoseValueInput(event.target.value)}
+                  placeholder="Ej. 112.5"
+                />
+              </label>
 
-                <label className="field">
-                  <span>Fecha y hora de medicion</span>
-                  <input
-                    type="datetime-local"
-                    max={new Date().toISOString().slice(0, 16)}
-                    value={measuredAtInput}
-                    onChange={(event) => setMeasuredAtInput(event.target.value)}
-                  />
-                </label>
+              <label className="field">
+                <span>Fecha y hora de medicion</span>
+                <input
+                  type="datetime-local"
+                  max={new Date().toISOString().slice(0, 16)}
+                  value={measuredAtInput}
+                  onChange={(event) => setMeasuredAtInput(event.target.value)}
+                />
+              </label>
 
-                <label className="field">
-                  <span>Unidad</span>
-                  <input type="text" value="mg/dL" disabled />
-                </label>
+              <label className="field">
+                <span>Unidad</span>
+                <input type="text" value="mg/dL" disabled />
+              </label>
 
-                {formError ? <p className="error-text">{formError}</p> : null}
-                {formSuccess ? <p className="success-text">{formSuccess}</p> : null}
+              {formError ? <p className="error-text">{formError}</p> : null}
+              {formSuccess ? <p className="success-text">{formSuccess}</p> : null}
 
-                <div className="manual-actions">
-                  <p className="manual-helper-text">El registro se agrega al historial y actualiza el panel al guardarse.</p>
-                  <button type="submit" className="primary-button" disabled={isSubmitting}>
-                    {isSubmitting ? "Guardando..." : "Guardar medicion"}
-                  </button>
-                </div>
-              </form>
-            </Card>
-          </Section>
-
-          <Section
-            title="Actividad de alertas"
-            subtitle="Resumen breve para mantener contexto sin competir con el analisis principal"
-            action={
-              <Link href="/alerts" className="notification-link">
-                Ver todas
-              </Link>
-            }
-          >
-            <Card className="alerts-card dashboard-alerts-compact">
-              <div className="dashboard-alerts-summary">
-                <div className="dashboard-alerts-summary-item">
-                  <p className="metric-label">Nuevas</p>
-                  <p className="metric-value">{formatWholeMetric(unreadAlertsCount)}</p>
-                </div>
-                <div className="dashboard-alerts-summary-item">
-                  <p className="metric-label">Totales</p>
-                  <p className="metric-value">{formatWholeMetric(metrics?.alertsCount ?? 0)}</p>
-                </div>
+              <div className="manual-actions">
+                <p className="manual-helper-text">El registro se agrega al historial y actualiza el panel al guardarse.</p>
+                <button type="submit" className="primary-button" disabled={isSubmitting}>
+                  {isSubmitting ? "Guardando..." : "Guardar medicion"}
+                </button>
               </div>
-
-              {recentAlerts.length > 0 ? (
-                <ul className="dashboard-alerts-list">
-                  {recentAlerts.map((alert) => (
-                    <li key={alert.id} className="dashboard-alerts-item">
-                      <div className="dashboard-alerts-item-main">
-                        <span className={`notification-dot ${resolveAlertTone(alert.type)}`} aria-hidden="true" />
-                        <div className="notification-copy">
-                          <div className="notification-meta">
-                            <p className="notification-item-title">{formatAlertType(alert.type)}</p>
-                            <span className={`alert-badge ${alert.isRead ? "read" : "unread"}`}>
-                              {alert.isRead ? "Leida" : "Nueva"}
-                            </span>
-                          </div>
-                          <p className="notification-item-message">{alert.message}</p>
-                          <p className="soft-text">{new Date(alert.createdAt).toLocaleString("es-CO")}</p>
-                        </div>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="soft-text">No hay alertas recientes.</p>
-              )}
-            </Card>
-          </Section>
-        </div>
+            </form>
+          </Card>
+        </Section>
       </div>
     </div>
   );

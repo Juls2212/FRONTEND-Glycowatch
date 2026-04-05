@@ -2367,12 +2367,7 @@ a {
 }
 
 .dashboard-secondary-grid-visual {
-  grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.9fr);
-}
-
-.dashboard-secondary-stack {
-  display: grid;
-  gap: 18px;
+  grid-template-columns: minmax(0, 1.42fr) minmax(320px, 0.78fr);
 }
 
 .visualization-shell {
