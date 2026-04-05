@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Section } from "@/components/ui/section";
-import { GlucoseChart } from "@/components/charts/glucose-chart";
+import { GlucoseVisualization } from "@/components/charts/glucose-visualization";
 import { fetchChartData, fetchDashboardMetrics, fetchRiskAnalysis } from "@/features/dashboard/api";
 import { ChartPoint, DashboardMetrics, RiskAnalysis } from "@/features/dashboard/types";
 import { ChartRangeFilter } from "@/features/dashboard/components/chart-range-filter";
@@ -178,7 +178,7 @@ export default function AnalyticsPage() {
         <Card>
           {isLoading ? <p className="soft-text">Cargando análisis...</p> : null}
           {error ? <p className="error-text">{error}</p> : null}
-          {!isLoading && !error && filteredChartData.length > 0 ? <GlucoseChart data={filteredChartData} /> : null}
+          {!isLoading && !error && filteredChartData.length > 0 ? <GlucoseVisualization data={filteredChartData} /> : null}
           {!isLoading && !error && filteredChartData.length === 0 ? (
             <p className="soft-text">No hay datos en el rango seleccionado.</p>
           ) : null}
@@ -234,4 +234,3 @@ export default function AnalyticsPage() {
     </div>
   );
 }
-
