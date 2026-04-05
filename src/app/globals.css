@@ -38,6 +38,12 @@
   --accent-ghost-strong: rgba(var(--accent-rgb), 0.18);
   --accent-outline: rgba(var(--accent-rgb), 0.26);
   --accent-outline-strong: rgba(var(--accent-rgb), 0.42);
+  --gradient-app-primary: rgba(var(--accent-rgb), 0.16);
+  --gradient-app-secondary: rgba(28, 122, 138, 0.12);
+  --gradient-header-primary: rgba(var(--accent-rgb), 0.1);
+  --gradient-header-secondary: rgba(28, 122, 138, 0.08);
+  --gradient-highlight-primary: rgba(var(--accent-rgb), 0.12);
+  --gradient-highlight-secondary: rgba(28, 122, 138, 0.08);
   --success: #43c27c;
   --success-rgb: 67, 194, 124;
   --warning: #f1b24c;
@@ -89,6 +95,12 @@
   --accent-ghost-strong: rgba(var(--accent-rgb), 0.14);
   --accent-outline: rgba(var(--accent-rgb), 0.22);
   --accent-outline-strong: rgba(var(--accent-rgb), 0.34);
+  --gradient-app-primary: rgba(var(--accent-rgb), 0.08);
+  --gradient-app-secondary: rgba(28, 122, 138, 0.05);
+  --gradient-header-primary: rgba(var(--accent-rgb), 0.07);
+  --gradient-header-secondary: rgba(28, 122, 138, 0.04);
+  --gradient-highlight-primary: rgba(var(--accent-rgb), 0.08);
+  --gradient-highlight-secondary: rgba(28, 122, 138, 0.04);
   --focus-ring: rgba(var(--accent-rgb), 0.32);
   --chart-line-start: var(--accent);
   --chart-line-end: var(--accent-strong);
@@ -106,6 +118,9 @@
   --accent-rgb: 77, 163, 255;
   --accent-strong: #2f7fd6;
   --accent-soft: #1f4c7c;
+  --gradient-app-secondary: rgba(36, 182, 208, 0.11);
+  --gradient-header-secondary: rgba(36, 182, 208, 0.08);
+  --gradient-highlight-secondary: rgba(36, 182, 208, 0.07);
 }
 
 :root[data-accent-theme="red"] {
@@ -113,6 +128,9 @@
   --accent-rgb: 225, 123, 141;
   --accent-strong: #be5f72;
   --accent-soft: #6f3240;
+  --gradient-app-secondary: rgba(101, 45, 66, 0.14);
+  --gradient-header-secondary: rgba(101, 45, 66, 0.1);
+  --gradient-highlight-secondary: rgba(101, 45, 66, 0.08);
 }
 
 :root[data-accent-theme="green"] {
@@ -120,6 +138,9 @@
   --accent-rgb: 68, 201, 138;
   --accent-strong: #2fa66f;
   --accent-soft: #1f5a3d;
+  --gradient-app-secondary: rgba(22, 105, 108, 0.12);
+  --gradient-header-secondary: rgba(22, 105, 108, 0.08);
+  --gradient-highlight-secondary: rgba(22, 105, 108, 0.07);
 }
 
 :root[data-accent-theme="cyan"] {
@@ -127,6 +148,9 @@
   --accent-rgb: 52, 198, 211;
   --accent-strong: #219aa5;
   --accent-soft: #19535a;
+  --gradient-app-secondary: rgba(37, 95, 146, 0.11);
+  --gradient-header-secondary: rgba(37, 95, 146, 0.08);
+  --gradient-highlight-secondary: rgba(37, 95, 146, 0.07);
 }
 
 :root[data-accent-theme="amber"] {
@@ -134,6 +158,9 @@
   --accent-rgb: 242, 173, 75;
   --accent-strong: #cd8b2a;
   --accent-soft: #69471a;
+  --gradient-app-secondary: rgba(92, 69, 24, 0.12);
+  --gradient-header-secondary: rgba(92, 69, 24, 0.08);
+  --gradient-highlight-secondary: rgba(92, 69, 24, 0.07);
 }
 
 html[data-color-mode="dark"] {
@@ -154,7 +181,12 @@ body {
   padding: 0;
   background: radial-gradient(
       1200px 700px at 15% -10%,
-      rgba(var(--accent-rgb), 0.18) 0%,
+      var(--gradient-app-primary) 0%,
+      rgba(var(--surface-app-rgb), 0) 45%
+    ),
+    radial-gradient(
+      900px 560px at 88% 8%,
+      var(--gradient-app-secondary) 0%,
       rgba(var(--surface-app-rgb), 0) 45%
     ),
     linear-gradient(180deg, var(--surface-app-secondary) 0%, var(--surface-app) 100%);
@@ -1746,7 +1778,8 @@ a {
 
 .app-shell {
   background:
-    linear-gradient(180deg, rgba(var(--accent-rgb), 0.06) 0%, transparent 18%),
+    radial-gradient(960px 420px at 72% -4%, var(--gradient-app-primary) 0%, transparent 52%),
+    linear-gradient(180deg, var(--gradient-app-secondary) 0%, transparent 18%),
     linear-gradient(180deg, var(--surface-app-secondary) 0%, var(--surface-app) 100%);
   grid-template-columns: 272px minmax(0, 1fr);
   transition:
@@ -1771,7 +1804,10 @@ a {
 .sidebar-panel,
 .sidebar-footer-card {
   border: 1px solid var(--border-subtle);
-  background: linear-gradient(180deg, rgba(var(--surface-app-rgb), 0.08) 0%, transparent 100%), var(--surface-panel);
+  background:
+    linear-gradient(180deg, rgba(var(--surface-app-rgb), 0.08) 0%, transparent 100%),
+    radial-gradient(circle at top right, var(--gradient-highlight-secondary) 0%, transparent 40%),
+    var(--surface-panel);
   border-radius: var(--radius-xl);
   padding: 16px;
   box-shadow: var(--shadow-soft);
@@ -1914,7 +1950,8 @@ a {
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-xl);
   background:
-    linear-gradient(180deg, rgba(var(--accent-rgb), 0.07) 0%, transparent 100%),
+    radial-gradient(circle at top right, var(--gradient-header-secondary) 0%, transparent 36%),
+    linear-gradient(180deg, var(--gradient-header-primary) 0%, transparent 100%),
     linear-gradient(180deg, var(--surface-panel) 0%, var(--surface-panel-strong) 100%);
   box-shadow: var(--shadow-soft);
   backdrop-filter: blur(12px);
@@ -2026,7 +2063,9 @@ a {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, rgba(var(--accent-rgb), 0.08) 0%, transparent 45%);
+  background:
+    radial-gradient(circle at top right, var(--gradient-highlight-secondary) 0%, transparent 32%),
+    linear-gradient(135deg, var(--gradient-highlight-primary) 0%, transparent 45%);
   pointer-events: none;
 }
 
@@ -2449,7 +2488,10 @@ a {
 .analytics-conclusion-card {
   border-radius: var(--radius-lg);
   border: 1px solid rgba(var(--accent-rgb), 0.12);
-  background: linear-gradient(180deg, rgba(var(--accent-rgb), 0.07) 0%, transparent 100%), var(--surface-muted);
+  background:
+    radial-gradient(circle at top right, var(--gradient-highlight-secondary) 0%, transparent 34%),
+    linear-gradient(180deg, var(--gradient-highlight-primary) 0%, transparent 100%),
+    var(--surface-muted);
   padding: 16px;
 }
 
@@ -2595,7 +2637,10 @@ a {
 }
 
 .analytics-conclusion-card.active {
-  background: linear-gradient(180deg, rgba(var(--accent-rgb), 0.12) 0%, transparent 100%), var(--surface-muted);
+  background:
+    radial-gradient(circle at top right, var(--gradient-highlight-secondary) 0%, transparent 34%),
+    linear-gradient(180deg, color-mix(in srgb, var(--gradient-highlight-primary) 120%, transparent) 0%, transparent 100%),
+    var(--surface-muted);
   border-color: rgba(var(--accent-rgb), 0.24);
 }
 

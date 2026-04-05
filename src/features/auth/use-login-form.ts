@@ -1,14 +1,9 @@
 "use client";
 
-import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
+import { loginSchema } from "@/lib/validation/auth";
 import { LoginFormValues } from "./types";
-
-const loginSchema = z.object({
-  email: z.string().email("Correo inválido."),
-  password: z.string().min(6, "La contraseña es obligatoria.")
-});
 
 export function useLoginForm() {
   return useForm<LoginFormValues>({
@@ -20,4 +15,3 @@ export function useLoginForm() {
     mode: "onSubmit"
   });
 }
-

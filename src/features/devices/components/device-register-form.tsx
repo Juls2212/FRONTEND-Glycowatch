@@ -1,6 +1,7 @@
 import { FormEvent, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { RegisterDeviceResult } from "@/features/devices/types";
+import { deviceRegisterSchema } from "@/lib/validation/devices";
 
 type Props = {
   isSubmitting: boolean;
@@ -29,18 +30,17 @@ export function DeviceRegisterForm({
     event.preventDefault();
     setValidationError(null);
 
-    const nextName = name.trim();
-    const nextIdentifier = identifier.trim();
-    if (!nextName || !nextIdentifier) {
-      setValidationError("Completa nombre e identificador.");
-      return;
-    }
-    if (nextName.length > 255 || nextIdentifier.length > 255) {
-      setValidationError("Nombre e identificador no pueden superar 255 caracteres.");
+    const result = deviceRegisterSchema.safeParse({
+      name,
+      identifier
+    });
+
+    if (!result.success) {
+      setValidationError(result.error.issues[0]?.message ?? "No se pudo validar el formulario.");
       return;
     }
 
-    await onRegister(nextName, nextIdentifier);
+    await onRegister(result.data.name, result.data.identifier);
     setName("");
     setIdentifier("");
   };

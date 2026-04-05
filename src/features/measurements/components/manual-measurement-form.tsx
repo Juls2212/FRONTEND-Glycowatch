@@ -3,6 +3,7 @@
 import { FormEvent, useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { createManualMeasurement } from "@/features/measurements/api";
+import { manualMeasurementFormSchema, toManualMeasuredAtISOString } from "@/lib/validation/measurements";
 
 type Props = {
   onCreated: () => Promise<void>;
@@ -36,42 +37,31 @@ export function ManualMeasurementForm({ onCreated }: Props) {
     setError(null);
     setSuccess(null);
 
-    const parsedValue = Number(glucoseValue);
-    if (!parsedValue || parsedValue <= 0) {
-      setError("Ingresa un valor de glucosa válido.");
-      return;
-    }
-    if (!measuredDate || !measuredTime) {
-      setError("Selecciona fecha y hora de medición.");
+    const result = manualMeasurementFormSchema.safeParse({
+      glucoseValue,
+      measuredDate,
+      measuredTime
+    });
+
+    if (!result.success) {
+      setError(result.error.issues[0]?.message ?? "No se pudo validar la medicion.");
       return;
     }
 
     setIsSubmitting(true);
     try {
-      const measuredAt = new Date(`${measuredDate}T${measuredTime}`);
-      if (Number.isNaN(measuredAt.getTime())) {
-        setError("La fecha y hora ingresadas no son válidas.");
-        setIsSubmitting(false);
-        return;
-      }
-      if (measuredAt.getTime() > Date.now()) {
-        setError("La fecha y hora de medición no pueden estar en el futuro.");
-        setIsSubmitting(false);
-        return;
-      }
-
       await createManualMeasurement({
-        glucoseValue: parsedValue,
+        glucoseValue: Number(result.data.glucoseValue),
         unit: "mg/dL",
-        measuredAt: measuredAt.toISOString()
+        measuredAt: toManualMeasuredAtISOString(result.data.measuredDate, result.data.measuredTime)
       });
       setGlucoseValue("");
       setMeasuredDate("");
       setMeasuredTime("");
-      setSuccess("Medición guardada correctamente.");
+      setSuccess("Medicion guardada correctamente.");
       await onCreated();
     } catch (err) {
-      const message = err instanceof Error ? err.message : "No se pudo guardar la medición.";
+      const message = err instanceof Error ? err.message : "No se pudo guardar la medicion.";
       setError(message);
     } finally {
       setIsSubmitting(false);
@@ -94,12 +84,12 @@ export function ManualMeasurementForm({ onCreated }: Props) {
         </label>
 
         <label className="field">
-          <span>Fecha de medición</span>
+          <span>Fecha de medicion</span>
           <input type="date" max={maxDate} value={measuredDate} onChange={(event) => setMeasuredDate(event.target.value)} />
         </label>
 
         <label className="field">
-          <span>Hora de medición</span>
+          <span>Hora de medicion</span>
           <input type="time" value={measuredTime} onChange={(event) => setMeasuredTime(event.target.value)} />
         </label>
 
@@ -116,11 +106,10 @@ export function ManualMeasurementForm({ onCreated }: Props) {
             Usar hora actual
           </button>
           <button type="submit" className="primary-button" disabled={isSubmitting}>
-            {isSubmitting ? "Guardando..." : "Registrar medición"}
+            {isSubmitting ? "Guardando..." : "Registrar medicion"}
           </button>
         </div>
       </form>
     </Card>
   );
 }
-

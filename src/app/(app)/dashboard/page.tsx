@@ -15,6 +15,10 @@ import { GlucoseVisualization } from "@/components/charts/glucose-visualization"
 import { ChartRangeFilter } from "@/features/dashboard/components/chart-range-filter";
 import { ChartRange, filterChartByRange } from "@/features/dashboard/chart-range";
 import {
+  dashboardManualMeasurementSchema,
+  toDashboardMeasuredAtISOString
+} from "@/lib/validation/measurements";
+import {
   buildSpanishRiskMessage,
   translateRiskLevel,
   translateStatus,
@@ -197,34 +201,22 @@ export default function DashboardPage() {
     setFormError(null);
     setFormSuccess(null);
 
-    const glucoseValue = Number(glucoseValueInput);
-    if (!glucoseValue || glucoseValue <= 0) {
-      setFormError("Ingresa un valor de glucosa valido.");
-      return;
-    }
-    if (!measuredAtInput) {
-      setFormError("Selecciona fecha y hora de medicion.");
+    const result = dashboardManualMeasurementSchema.safeParse({
+      glucoseValue: glucoseValueInput,
+      measuredAt: measuredAtInput
+    });
+
+    if (!result.success) {
+      setFormError(result.error.issues[0]?.message ?? "No se pudo validar la medicion.");
       return;
     }
 
     setIsSubmitting(true);
     try {
-      const measuredAt = new Date(measuredAtInput);
-      if (Number.isNaN(measuredAt.getTime())) {
-        setFormError("La fecha y hora de medicion no son validas.");
-        setIsSubmitting(false);
-        return;
-      }
-      if (measuredAt.getTime() > Date.now()) {
-        setFormError("La fecha y hora de medicion no pueden estar en el futuro.");
-        setIsSubmitting(false);
-        return;
-      }
-
       await createManualMeasurement({
-        glucoseValue,
+        glucoseValue: Number(result.data.glucoseValue),
         unit: "mg/dL",
-        measuredAt: measuredAt.toISOString()
+        measuredAt: toDashboardMeasuredAtISOString(result.data.measuredAt)
       });
       setGlucoseValueInput("");
       setMeasuredAtInput("");

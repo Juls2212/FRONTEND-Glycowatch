@@ -2,6 +2,7 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { ProfileData, UpdateProfilePayload } from "@/features/profile/types";
 import { formatTimezoneLabel, getBrowserTimezoneOrDefault, getTimezoneOptions } from "@/lib/timezones";
+import { buildProfilePayload, profileFormSchema } from "@/lib/validation/profile";
 
 type Props = {
   profile: ProfileData | null;
@@ -47,14 +48,6 @@ function toFormState(profile: ProfileData): FormState {
   };
 }
 
-function parseOptionalNumber(value: string): number | null {
-  if (!value.trim()) return null;
-  const numeric = Number(value);
-  return Number.isNaN(numeric) ? Number.NaN : numeric;
-}
-
-
-// Formulario para editar el perfil del usuario, con validación básica y manejo de estados de carga y error.
 export function ProfileForm({ profile, isLoading, isSubmitting, error, success, onSubmit }: Props) {
   const [form, setForm] = useState<FormState>(INITIAL_STATE);
   const [validationError, setValidationError] = useState<string | null>(null);
@@ -70,42 +63,26 @@ export function ProfileForm({ profile, isLoading, isSubmitting, error, success, 
     }
   }, [profile]);
 
-  // Validación de campos antes de enviar el formulario.
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setValidationError(null);
 
-    const hypo = Number(form.hypoglycemiaThreshold);
-    const hyper = Number(form.hyperglycemiaThreshold);
-    const weight = parseOptionalNumber(form.weightKg);
-    const height = parseOptionalNumber(form.heightCm);
-
-    if (!hypo || hypo <= 0 || !hyper || hyper <= 0) {
-      setValidationError("Los umbrales de glucosa deben ser mayores a 0.");
-      return;
-    }
-    if (hyper <= hypo) {
-      setValidationError("El umbral máximo debe ser mayor que el mínimo.");
-      return;
-    }
-    if (Number.isNaN(weight) || (weight !== null && (weight < 1 || weight > 500))) {
-      setValidationError("El peso debe estar entre 1 y 500 kg.");
-      return;
-    }
-    if (Number.isNaN(height) || (height !== null && (height < 30 || height > 300))) {
-      setValidationError("La altura debe estar entre 30 y 300 cm.");
-      return;
-    }
-
-    await onSubmit({
-      fullName: form.fullName.trim() ? form.fullName.trim() : null,
-      birthDate: form.birthDate || null,
-      hypoglycemiaThreshold: hypo,
-      hyperglycemiaThreshold: hyper,
-      timezone: form.timezone.trim() ? form.timezone.trim() : null,
-      weightKg: weight,
-      heightCm: height
+    const result = profileFormSchema.safeParse({
+      fullName: form.fullName,
+      birthDate: form.birthDate,
+      hypoglycemiaThreshold: form.hypoglycemiaThreshold,
+      hyperglycemiaThreshold: form.hyperglycemiaThreshold,
+      timezone: form.timezone,
+      weightKg: form.weightKg,
+      heightCm: form.heightCm
     });
+
+    if (!result.success) {
+      setValidationError(result.error.issues[0]?.message ?? "No se pudo validar el formulario.");
+      return;
+    }
+
+    await onSubmit(buildProfilePayload(result.data));
   };
 
   const setField =
@@ -116,7 +93,7 @@ export function ProfileForm({ profile, isLoading, isSubmitting, error, success, 
   return (
     <Card>
       {isLoading ? <p className="soft-text">Cargando perfil...</p> : null}
-      {!isLoading && !profile ? <p className="soft-text">No se encontró información del perfil.</p> : null}
+      {!isLoading && !profile ? <p className="soft-text">No se encontro informacion del perfil.</p> : null}
 
       {profile ? (
         <form className="profile-form" onSubmit={(event) => void handleSubmit(event)}>
@@ -126,7 +103,7 @@ export function ProfileForm({ profile, isLoading, isSubmitting, error, success, 
           </label>
 
           <label className="field">
-            <span>Correo electrónico</span>
+            <span>Correo electronico</span>
             <input type="email" value={form.email} disabled />
           </label>
 
@@ -151,7 +128,7 @@ export function ProfileForm({ profile, isLoading, isSubmitting, error, success, 
           </label>
 
           <label className="field">
-            <span>Umbral mínimo (mg/dL)</span>
+            <span>Umbral minimo (mg/dL)</span>
             <input
               type="number"
               step="0.1"
@@ -162,7 +139,7 @@ export function ProfileForm({ profile, isLoading, isSubmitting, error, success, 
           </label>
 
           <label className="field">
-            <span>Umbral máximo (mg/dL)</span>
+            <span>Umbral maximo (mg/dL)</span>
             <input
               type="number"
               step="0.1"
