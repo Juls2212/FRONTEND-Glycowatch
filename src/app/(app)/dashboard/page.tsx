@@ -27,6 +27,10 @@ function formatMetric(value: number): string {
   return value.toLocaleString("es-CO", { maximumFractionDigits: 1 });
 }
 
+function formatWholeMetric(value: number): string {
+  return value.toLocaleString("es-CO", { maximumFractionDigits: 0 });
+}
+
 type BannerData = {
   variant: "critical" | "warning";
   message: string;
@@ -113,6 +117,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const mounted = { current: true };
+
     async function load() {
       setIsLoading(true);
       await loadDashboardData(mounted);
@@ -173,8 +178,7 @@ export default function DashboardPage() {
 
   const formattedLatest = useMemo(() => {
     if (!metrics?.latestMeasurement) return "Sin datos recientes";
-    const date = new Date(metrics.latestMeasurement.measuredAt);
-    return date.toLocaleString("es-CO");
+    return new Date(metrics.latestMeasurement.measuredAt).toLocaleString("es-CO");
   }, [metrics?.latestMeasurement]);
 
   const riskMessage = useMemo(() => {
@@ -184,6 +188,14 @@ export default function DashboardPage() {
 
   const filteredChartData = useMemo(() => filterChartByRange(chartData, chartRange), [chartData, chartRange]);
   const bannerData = useMemo(() => resolveBannerData(risk, alerts), [risk, alerts]);
+  const unreadAlertsCount = useMemo(() => alerts.filter((alert) => !alert.isRead).length, [alerts]);
+  const latestMeasurementLabel = metrics?.latestMeasurement
+    ? `${formatMetric(metrics.latestMeasurement.glucoseValue)} ${metrics.latestMeasurement.unit}`
+    : "--";
+  const rangeSummary = useMemo(() => {
+    if (!metrics) return "--";
+    return `${formatMetric(metrics.minGlucose)} - ${formatMetric(metrics.maxGlucose)} mg/dL`;
+  }, [metrics]);
 
   useEffect(() => {
     if (!bannerData) {
@@ -198,7 +210,7 @@ export default function DashboardPage() {
   const isBannerVisible = bannerData != null && dismissedBannerKey !== bannerData.key;
 
   return (
-    <div className="dashboard-grid">
+    <div className="dashboard-grid dashboard-page">
       {isBannerVisible && bannerData ? (
         <div className={`dashboard-alert-banner ${bannerData.variant}`} role="status" aria-live="polite">
           <p className="dashboard-alert-text">{bannerData.message}</p>
@@ -213,102 +225,174 @@ export default function DashboardPage() {
         </div>
       ) : null}
 
-      <Section title="Resumen clínico" subtitle="Indicadores recientes para seguimiento inmediato">
+      <div className="dashboard-hero">
+        <Card className="dashboard-hero-card dashboard-hero-primary">
+          <div className="dashboard-hero-copy">
+            <div>
+              <p className="hero-eyebrow">Resumen inmediato</p>
+              <h2 className="hero-title">Lectura clínica rápida para tomar decisiones con menos fricción.</h2>
+              <p className="hero-description">
+                Consulta estado actual, rango reciente y alertas activas desde un bloque principal más claro.
+              </p>
+            </div>
+
+            <div className="hero-pill-row">
+              <span className="hero-pill">Última medición: {latestMeasurementLabel}</span>
+              <span className="hero-pill">Alertas nuevas: {formatWholeMetric(unreadAlertsCount)}</span>
+            </div>
+          </div>
+
+          <div className="hero-metrics">
+            <div className="hero-metric-card">
+              <p className="metric-label">Último registro</p>
+              <p className="hero-metric-value">{latestMeasurementLabel}</p>
+              <p className="metric-meta">{formattedLatest}</p>
+            </div>
+
+            <div className="hero-metric-card">
+              <p className="metric-label">Rango reciente</p>
+              <p className="hero-metric-value">{rangeSummary}</p>
+              <p className="metric-meta">Mínimo y máximo observados</p>
+            </div>
+          </div>
+        </Card>
+
+        <div className="dashboard-hero-aside">
+          <Card className="dashboard-hero-card dashboard-hero-side">
+            <p className="metric-label">Estado actual</p>
+            <p className="hero-side-value">{risk ? translateStatus(risk.currentStatus) : "EN RANGO"}</p>
+            <p className="metric-meta">Nivel {risk ? translateRiskLevel(risk.riskLevel) : "BAJO"}</p>
+          </Card>
+
+          <Card className="dashboard-hero-card dashboard-hero-side">
+            <p className="metric-label">Alertas activas</p>
+            <p className="hero-side-value">{formatWholeMetric(unreadAlertsCount)}</p>
+            <p className="metric-meta">Total registradas: {formatWholeMetric(metrics?.alertsCount ?? 0)}</p>
+          </Card>
+        </div>
+      </div>
+
+      <Section title="Resumen clínico" subtitle="Indicadores recientes organizados para escaneo rápido">
         {error ? <p className="error-text">{error}</p> : null}
-        <div className="stat-grid">
-          <Card>
-            <p className="metric-label">Última medición</p>
-            <p className="metric-value">
-              {metrics?.latestMeasurement ? `${formatMetric(metrics.latestMeasurement.glucoseValue)} ${metrics.latestMeasurement.unit}` : "--"}
-            </p>
+        <div className="stat-grid dashboard-stat-grid">
+          <Card className="metric-card">
+            <div className="metric-card-top">
+              <p className="metric-label">Última medición</p>
+              <span className="metric-chip">Ahora</span>
+            </div>
+            <p className="metric-value">{latestMeasurementLabel}</p>
             <p className="metric-meta">{formattedLatest}</p>
           </Card>
 
-          <Card>
-            <p className="metric-label">Promedio reciente</p>
-            <p className="metric-value">{formatMetric(metrics?.averageGlucose ?? 0)} mg/dL</p>
+          <Card className="metric-card">
+            <div className="metric-card-top">
+              <p className="metric-label">Promedio reciente</p>
+              <span className="metric-chip">mg/dL</span>
+            </div>
+            <p className="metric-value">{formatMetric(metrics?.averageGlucose ?? 0)}</p>
             <p className="metric-meta">Ventana reciente</p>
           </Card>
 
-          <Card>
-            <p className="metric-label">Mínimo / Máximo</p>
+          <Card className="metric-card">
+            <div className="metric-card-top">
+              <p className="metric-label">Mínimo / Máximo</p>
+              <span className="metric-chip">Rango</span>
+            </div>
             <p className="metric-value">
               {formatMetric(metrics?.minGlucose ?? 0)} / {formatMetric(metrics?.maxGlucose ?? 0)}
             </p>
-            <p className="metric-meta">Valores recientes</p>
+            <p className="metric-meta">Variación observada</p>
           </Card>
 
-          <Card>
-            <p className="metric-label">Total de alertas</p>
+          <Card className="metric-card">
+            <div className="metric-card-top">
+              <p className="metric-label">Total de alertas</p>
+              <span className="metric-chip">Eventos</span>
+            </div>
             <p className="metric-value">{formatMetric(metrics?.alertsCount ?? 0)}</p>
             <p className="metric-meta">Eventos registrados</p>
           </Card>
         </div>
       </Section>
 
-      <Section
-        title="Tendencia glucémica"
-        subtitle="Últimas mediciones válidas para visualización rápida"
-        action={
-          <div className="section-actions">
-            <ChartRangeFilter value={chartRange} onChange={setChartRange} />
-            {isLoading ? <span className="soft-text">Cargando...</span> : null}
-          </div>
-        }
-      >
-        <Card>
-          {filteredChartData.length > 0 ? (
-            <GlucoseChart data={filteredChartData} />
-          ) : (
-            <p className="soft-text">No hay datos en el rango seleccionado.</p>
-          )}
-        </Card>
-      </Section>
-
-      <Section title="Estado de riesgo" subtitle="Evaluación actual basada en tus datos recientes">
-        <Card>
-          <div className="risk-grid">
-            <div>
-              <p className="metric-label">Estado actual</p>
-              <p className="metric-value">{risk ? translateStatus(risk.currentStatus) : "EN RANGO"}</p>
+      <div className="dashboard-main-grid">
+        <Section
+          title="Tendencia glucémica"
+          subtitle="Visualización central para seguir el comportamiento reciente"
+          action={
+            <div className="section-actions">
+              <ChartRangeFilter value={chartRange} onChange={setChartRange} />
+              {isLoading ? <span className="soft-text">Cargando...</span> : null}
             </div>
-            <div>
-              <p className="metric-label">Nivel de riesgo</p>
-              <p className="metric-value">{risk ? translateRiskLevel(risk.riskLevel) : "BAJO"}</p>
+          }
+        >
+          <Card className="chart-card">
+            <div className="chart-card-header">
+              <div>
+                <p className="chart-card-kicker">Comportamiento del rango seleccionado</p>
+                <p className="chart-card-summary">
+                  {filteredChartData.length > 0 ? `${filteredChartData.length} mediciones visibles` : "Sin datos visibles"}
+                </p>
+              </div>
             </div>
-            <div>
-              <p className="metric-label">Tendencia</p>
-              <p className="metric-value">{risk ? translateTrend(risk.trend) : "ESTABLE"}</p>
-            </div>
-          </div>
-          <p className="risk-message">{riskMessage}</p>
-        </Card>
-      </Section>
 
-      <Section title="Alertas recientes" subtitle="Vista rápida de los últimos eventos detectados">
-        <Card>
-          {alerts.length === 0 ? (
-            <p className="soft-text">No hay alertas registradas.</p>
-          ) : (
-            <ul className="alerts-list">
-              {alerts.slice(0, 6).map((alert) => (
-                <li key={alert.id} className="alert-row">
-                  <div>
-                    <p className="alert-type">{alert.type === "HIGH_GLUCOSE" ? "Glucosa alta" : "Glucosa baja"}</p>
-                    <p className="alert-message">{alert.message}</p>
-                  </div>
-                  <div className={`alert-badge ${alert.isRead ? "read" : "unread"}`}>
-                    {alert.isRead ? "Leída" : "Nueva"}
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-        </Card>
-      </Section>
+            {filteredChartData.length > 0 ? (
+              <GlucoseChart data={filteredChartData} />
+            ) : (
+              <p className="soft-text">No hay datos en el rango seleccionado.</p>
+            )}
+          </Card>
+        </Section>
 
-      <Section title="Registro manual" subtitle="Añade una medición sin usar el dispositivo IoT">
-        <Card>
+        <div className="dashboard-side-stack">
+          <Section title="Estado de riesgo" subtitle="Señales actuales basadas en registros recientes">
+            <Card className="risk-card">
+              <div className="risk-grid">
+                <div className="risk-stat">
+                  <p className="metric-label">Estado actual</p>
+                  <p className="metric-value">{risk ? translateStatus(risk.currentStatus) : "EN RANGO"}</p>
+                </div>
+                <div className="risk-stat">
+                  <p className="metric-label">Nivel de riesgo</p>
+                  <p className="metric-value">{risk ? translateRiskLevel(risk.riskLevel) : "BAJO"}</p>
+                </div>
+                <div className="risk-stat">
+                  <p className="metric-label">Tendencia</p>
+                  <p className="metric-value">{risk ? translateTrend(risk.trend) : "ESTABLE"}</p>
+                </div>
+              </div>
+              <p className="risk-message">{riskMessage}</p>
+            </Card>
+          </Section>
+
+          <Section title="Alertas recientes" subtitle="Bloque compacto para identificar eventos prioritarios">
+            <Card className="alerts-card">
+              {alerts.length === 0 ? (
+                <p className="soft-text">No hay alertas registradas.</p>
+              ) : (
+                <ul className="alerts-list">
+                  {alerts.slice(0, 4).map((alert) => (
+                    <li key={alert.id} className="alert-row">
+                      <div>
+                        <p className={`alert-type ${alert.type === "HIGH_GLUCOSE" ? "high" : "low"}`}>
+                          {alert.type === "HIGH_GLUCOSE" ? "Glucosa alta" : "Glucosa baja"}
+                        </p>
+                        <p className="alert-message">{alert.message}</p>
+                      </div>
+                      <div className={`alert-badge ${alert.isRead ? "read" : "unread"}`}>
+                        {alert.isRead ? "Leída" : "Nueva"}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </Card>
+          </Section>
+        </div>
+      </div>
+
+      <Section title="Registro manual" subtitle="Entrada rápida para añadir una medición sin salir del panel">
+        <Card className="manual-entry-card">
           <form className="manual-form" onSubmit={onManualSubmit}>
             <label className="field">
               <span>Valor de glucosa (mg/dL)</span>
@@ -341,6 +425,7 @@ export default function DashboardPage() {
             {formSuccess ? <p className="success-text">{formSuccess}</p> : null}
 
             <div className="manual-actions">
+              <p className="manual-helper-text">El registro se agrega al historial y actualiza el panel al guardarse.</p>
               <button type="submit" className="primary-button" disabled={isSubmitting}>
                 {isSubmitting ? "Guardando..." : "Guardar medición"}
               </button>
@@ -351,4 +436,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
