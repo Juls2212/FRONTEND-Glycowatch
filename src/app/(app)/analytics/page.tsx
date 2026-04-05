@@ -15,6 +15,8 @@ import {
   translateTrend
 } from "@/features/dashboard/risk-text";
 
+type InsightKey = "trend" | "predominance" | "stability";
+
 function formatMetric(value: number): string {
   return value.toLocaleString("es-CO", { maximumFractionDigits: 1 });
 }
@@ -34,7 +36,7 @@ function resolvePredominance(filteredData: ChartPoint[], average: number): strin
   const below = filteredData.filter((point) => point.glucoseValue < average).length;
   if (above > below) return "Predominan valores altos frente al promedio";
   if (below > above) return "Predominan valores bajos frente al promedio";
-  return "Distribución equilibrada entre altos y bajos";
+  return "Distribucion equilibrada entre altos y bajos";
 }
 
 function resolveStability(filteredData: ChartPoint[]): string {
@@ -57,27 +59,116 @@ function buildRecommendations(
   const recommendations: string[] = [];
 
   if (risk?.riskLevel === "HIGH" || risk?.currentStatus === "HIGH") {
-    recommendations.push("Prioriza una revisión rápida de tus últimas mediciones y tu plan de alimentación.");
+    recommendations.push("Prioriza una revision rapida de tus ultimas mediciones y tu plan de alimentacion.");
   }
   if (risk?.currentStatus === "LOW") {
-    recommendations.push("Mantén una colación de seguridad disponible y monitorea de nuevo en breve.");
+    recommendations.push("Manten una colacion de seguridad disponible y monitorea de nuevo en breve.");
   }
 
   if (filteredData.length > 0 && average > 0) {
     const predominance = resolvePredominance(filteredData, average);
     if (predominance.includes("altos")) {
-      recommendations.push("Refuerza hidratación y seguimiento postprandial para reducir picos altos.");
+      recommendations.push("Refuerza hidratacion y seguimiento postprandial para reducir picos altos.");
     }
     if (predominance.includes("bajos")) {
-      recommendations.push("Evita periodos largos sin ingesta y valida tus horarios de medición.");
+      recommendations.push("Evita periodos largos sin ingesta y valida tus horarios de medicion.");
     }
   }
 
   if (recommendations.length === 0) {
-    recommendations.push("Continúa con tu rutina actual y mantén controles periódicos para sostener estabilidad.");
+    recommendations.push("Continua con tu rutina actual y manten controles periodicos para sostener estabilidad.");
   }
 
   return recommendations.slice(0, 3);
+}
+
+function InsightIcon({ name }: { name: InsightKey | "risk" | "status" | "latest" }) {
+  if (name === "latest") {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true" className="icon-svg">
+        <path
+          d="M12 3.75c-2.95 3.3-5.25 6.34-5.25 9.08A5.25 5.25 0 0 0 12 18.08a5.25 5.25 0 0 0 5.25-5.25C17.25 10.09 14.95 7.05 12 3.75Z"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.7"
+          strokeLinejoin="round"
+        />
+      </svg>
+    );
+  }
+
+  if (name === "risk") {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true" className="icon-svg">
+        <path
+          d="m12 4 7 13H5L12 4Z"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.7"
+          strokeLinejoin="round"
+        />
+        <path d="M12 9.5v3.5m0 2.5h.01" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+      </svg>
+    );
+  }
+
+  if (name === "status") {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true" className="icon-svg">
+        <path
+          d="M4.75 12h3.2l2.1-4.2 4.05 8.4 2.05-4.2h3.1"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.7"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    );
+  }
+
+  if (name === "predominance") {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true" className="icon-svg">
+        <path
+          d="M6 16.75h3.5V9.5H6v7.25Zm4.75 0h3.5V6.75h-3.5v10Zm4.75 0H19v-4.5h-3.5v4.5Z"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.7"
+          strokeLinejoin="round"
+        />
+      </svg>
+    );
+  }
+
+  if (name === "stability") {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true" className="icon-svg">
+        <path
+          d="M5 12c2.25-3 4.5-3 7 0s4.75 3 7 0"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.7"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    );
+  }
+
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="icon-svg">
+      <path
+        d="M6 16.5 10 12l2.75 2.75L18 8.5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path d="M14.5 8.5H18v3.5" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+    </svg>
+  );
 }
 
 export default function AnalyticsPage() {
@@ -85,6 +176,7 @@ export default function AnalyticsPage() {
   const [risk, setRisk] = useState<RiskAnalysis | null>(null);
   const [chartData, setChartData] = useState<ChartPoint[]>([]);
   const [chartRange, setChartRange] = useState<ChartRange>("MONTH");
+  const [activeInsight, setActiveInsight] = useState<InsightKey>("trend");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -104,7 +196,7 @@ export default function AnalyticsPage() {
         setRisk(riskData);
         setChartData(chartPoints);
       } catch (err) {
-        const message = err instanceof Error ? err.message : "No se pudo cargar el análisis.";
+        const message = err instanceof Error ? err.message : "No se pudo cargar el analisis.";
         if (!mounted.current) return;
         setError(message);
       } finally {
@@ -119,7 +211,7 @@ export default function AnalyticsPage() {
   }, []);
 
   const filteredChartData = useMemo(() => filterChartByRange(chartData, chartRange), [chartData, chartRange]);
-  const riskMessage = useMemo(() => (risk ? buildSpanishRiskMessage(risk) : "Sin análisis disponible por el momento."), [risk]);
+  const riskMessage = useMemo(() => (risk ? buildSpanishRiskMessage(risk) : "Sin analisis disponible por el momento."), [risk]);
   const latestMeasurementLabel = useMemo(() => {
     if (!metrics?.latestMeasurement) return "Sin datos";
     return `${formatMetric(metrics.latestMeasurement.glucoseValue)} ${metrics.latestMeasurement.unit}`;
@@ -143,92 +235,203 @@ export default function AnalyticsPage() {
     [risk, filteredChartData, metrics?.averageGlucose]
   );
 
-  return (
-    <div className="dashboard-grid">
-      <Section title="Análisis de glucosa" subtitle="Panel dedicado para revisión de tendencias y comportamiento reciente">
-        <div className="stat-grid">
-          <Card>
-            <p className="metric-label">Última medición</p>
-            <p className="metric-value">{latestMeasurementLabel}</p>
-            <p className="metric-meta">{latestMeasurementTime}</p>
-          </Card>
-          <Card>
-            <p className="metric-label">Promedio</p>
-            <p className="metric-value">{formatMetric(metrics?.averageGlucose ?? 0)} mg/dL</p>
-            <p className="metric-meta">Ventana de análisis</p>
-          </Card>
-          <Card>
-            <p className="metric-label">Mínimo</p>
-            <p className="metric-value">{formatMetric(metrics?.minGlucose ?? 0)} mg/dL</p>
-            <p className="metric-meta">Valor más bajo observado</p>
-          </Card>
-          <Card>
-            <p className="metric-label">Máximo</p>
-            <p className="metric-value">{formatMetric(metrics?.maxGlucose ?? 0)} mg/dL</p>
-            <p className="metric-meta">Valor más alto observado</p>
-          </Card>
-        </div>
-      </Section>
+  const insightCards = useMemo(
+    () => [
+      {
+        key: "trend" as const,
+        title: "Tendencia general",
+        value: conclusions.trend,
+        description: "Lectura sintetica del desplazamiento entre el inicio y el cierre del rango.",
+        badge: "Direccion"
+      },
+      {
+        key: "predominance" as const,
+        title: "Predominio de valores",
+        value: conclusions.predominance,
+        description: "Comparacion relativa frente al promedio observado en el periodo filtrado.",
+        badge: "Distribucion"
+      },
+      {
+        key: "stability" as const,
+        title: "Estabilidad reciente",
+        value: conclusions.stability,
+        description: "Variacion de las ultimas mediciones disponibles para detectar dispersion.",
+        badge: "Ritmo"
+      }
+    ],
+    [conclusions]
+  );
 
-      <Section
-        title="Gráfica de tendencia"
-        subtitle="Comportamiento reciente filtrado por rango temporal"
-        action={<ChartRangeFilter value={chartRange} onChange={setChartRange} />}
-      >
-        <Card>
-          {isLoading ? <p className="soft-text">Cargando análisis...</p> : null}
+  const spotlightInsight = insightCards.find((card) => card.key === activeInsight) ?? insightCards[0];
+
+  return (
+    <div className="dashboard-grid analytics-page">
+      <div className="analytics-hero">
+        <Card className="analytics-hero-card analytics-hero-primary">
+          <div className="analytics-hero-copy">
+            <div>
+              <p className="hero-eyebrow">Modulo de analisis</p>
+              <h2 className="hero-title">Lectura visual para interpretar tendencia, riesgo y estabilidad sin perder contexto.</h2>
+              <p className="hero-description">
+                Usa esta vista para combinar la grafica, el estado actual y los hallazgos clave en una sola experiencia analitica.
+              </p>
+            </div>
+
+            <div className="hero-pill-row">
+              <span className="hero-pill">Ultima medicion: {latestMeasurementLabel}</span>
+              <span className="hero-pill">Tendencia: {risk ? translateTrend(risk.trend) : "ESTABLE"}</span>
+            </div>
+          </div>
+
+          <div className="analytics-overview-grid">
+            <div className="analytics-overview-card">
+              <div className="analytics-overview-header">
+                <span className="metric-icon-badge info" aria-hidden="true">
+                  <InsightIcon name="latest" />
+                </span>
+                <div>
+                  <p className="metric-label">Ultima medicion</p>
+                  <p className="metric-card-caption">Referencia operativa inmediata</p>
+                </div>
+              </div>
+              <p className="analytics-overview-value">{latestMeasurementLabel}</p>
+              <p className="metric-meta">{latestMeasurementTime}</p>
+            </div>
+
+            <div className="analytics-overview-card">
+              <div className="analytics-overview-header">
+                <span className="metric-icon-badge warning" aria-hidden="true">
+                  <InsightIcon name="risk" />
+                </span>
+                <div>
+                  <p className="metric-label">Nivel de riesgo</p>
+                  <p className="metric-card-caption">Contexto de lectura actual</p>
+                </div>
+              </div>
+              <p className="analytics-overview-value">{risk ? translateRiskLevel(risk.riskLevel) : "BAJO"}</p>
+              <p className="metric-meta">Estado: {risk ? translateStatus(risk.currentStatus) : "EN RANGO"}</p>
+            </div>
+          </div>
+        </Card>
+
+        <Card className="analytics-hero-card analytics-hero-side">
+          <div className="analytics-side-header">
+            <span className="metric-icon-badge success" aria-hidden="true">
+              <InsightIcon name="status" />
+            </span>
+            <div>
+              <p className="metric-label">Lectura clinica</p>
+              <p className="metric-card-caption">Interpretacion sintetica del estado actual</p>
+            </div>
+          </div>
+          <p className="analytics-side-value">{risk ? translateStatus(risk.currentStatus) : "EN RANGO"}</p>
+          <p className="risk-message">{riskMessage}</p>
+        </Card>
+      </div>
+
+      <Section title="Exploracion de tendencia" subtitle="Visualizacion interactiva con el mismo rango temporal del seguimiento" action={<ChartRangeFilter value={chartRange} onChange={setChartRange} />}>
+        <Card className="chart-card analytics-chart-card">
+          {isLoading ? <p className="soft-text">Cargando analisis...</p> : null}
           {error ? <p className="error-text">{error}</p> : null}
-          {!isLoading && !error && filteredChartData.length > 0 ? <GlucoseVisualization data={filteredChartData} /> : null}
+          {!isLoading && !error && filteredChartData.length > 0 ? <GlucoseVisualization data={filteredChartData} defaultView="TREND" /> : null}
           {!isLoading && !error && filteredChartData.length === 0 ? (
             <p className="soft-text">No hay datos en el rango seleccionado.</p>
           ) : null}
         </Card>
       </Section>
 
-      <Section title="Interpretación clínica" subtitle="Lectura basada en los datos actuales y nivel de riesgo">
-        <div className="analytics-grid">
-          <Card>
-            <p className="metric-label">Estado actual</p>
-            <p className="metric-value">{risk ? translateStatus(risk.currentStatus) : "EN RANGO"}</p>
-            <p className="soft-text">{riskMessage}</p>
+      <div className="analytics-main-grid">
+        <Section title="Insight principal" subtitle="El hallazgo mas relevante se presenta primero para facilitar interpretacion">
+          <Card className="analytics-spotlight-card">
+            <div className="analytics-spotlight-header">
+              <div className="analytics-spotlight-title">
+                <span className="metric-icon-badge info" aria-hidden="true">
+                  <InsightIcon name={spotlightInsight.key} />
+                </span>
+                <div>
+                  <p className="metric-label">{spotlightInsight.title}</p>
+                  <p className="metric-card-caption">Vista destacada del periodo filtrado</p>
+                </div>
+              </div>
+              <span className="metric-card-badge">{spotlightInsight.badge}</span>
+            </div>
+
+            <p className="analytics-spotlight-value">{spotlightInsight.value}</p>
+            <p className="analytics-spotlight-copy">{spotlightInsight.description}</p>
+
+            <div className="analytics-insight-switcher" role="tablist" aria-label="Selector de insight">
+              {insightCards.map((insight) => (
+                <button
+                  key={insight.key}
+                  type="button"
+                  className={`analytics-insight-tab ${activeInsight === insight.key ? "active" : ""}`}
+                  onClick={() => setActiveInsight(insight.key)}
+                  aria-pressed={activeInsight === insight.key}
+                >
+                  <span className="analytics-insight-tab-title">{insight.title}</span>
+                  <span className="analytics-insight-tab-value">{insight.badge}</span>
+                </button>
+              ))}
+            </div>
           </Card>
-          <Card>
-            <p className="metric-label">Nivel de riesgo</p>
-            <p className="metric-value">{risk ? translateRiskLevel(risk.riskLevel) : "BAJO"}</p>
-            <p className="soft-text">Tendencia: {risk ? translateTrend(risk.trend) : "ESTABLE"}</p>
-          </Card>
+        </Section>
+
+        <Section title="Lectura de estado" subtitle="Senales secundarias para ubicar el momento clinico actual">
+          <div className="analytics-side-grid">
+            <Card className="analytics-mini-card">
+              <div className="analytics-mini-header">
+                <span className="metric-icon-badge info" aria-hidden="true">
+                  <InsightIcon name="status" />
+                </span>
+                <p className="metric-label">Estado actual</p>
+              </div>
+              <p className="analytics-mini-value">{risk ? translateStatus(risk.currentStatus) : "EN RANGO"}</p>
+              <p className="soft-text">Condicion actual derivada del ultimo analisis disponible.</p>
+            </Card>
+
+            <Card className="analytics-mini-card">
+              <div className="analytics-mini-header">
+                <span className="metric-icon-badge warning" aria-hidden="true">
+                  <InsightIcon name="risk" />
+                </span>
+                <p className="metric-label">Nivel de riesgo</p>
+              </div>
+              <p className="analytics-mini-value">{risk ? translateRiskLevel(risk.riskLevel) : "BAJO"}</p>
+              <p className="soft-text">Tendencia: {risk ? translateTrend(risk.trend) : "ESTABLE"}</p>
+            </Card>
+          </div>
+        </Section>
+      </div>
+
+      <Section title="Recomendaciones" subtitle="Acciones practicas presentadas como guia operativa y no solo como texto plano">
+        <div className="analytics-recommendations-grid">
+          {recommendations.map((item, index) => (
+            <Card key={item} className="analytics-recommendation-card">
+              <div className="analytics-recommendation-header">
+                <span className="analytics-step-badge">{index + 1}</span>
+                <p className="metric-label">Accion sugerida</p>
+              </div>
+              <p className="analytics-recommendation-copy">{item}</p>
+            </Card>
+          ))}
         </div>
       </Section>
 
-      <Section title="Recomendaciones" subtitle="Acciones prácticas para tu seguimiento diario">
-        <Card>
-          <ul className="insights-list">
-            {recommendations.map((item) => (
-              <li key={item} className="insight-item">
-                {item}
-              </li>
-            ))}
-          </ul>
-        </Card>
-      </Section>
-
-      <Section title="Conclusiones e insights" subtitle="Resumen analítico de tu comportamiento reciente">
-        <div className="analytics-grid">
-          <Card>
-            <p className="metric-label">Tendencia general</p>
-            <p className="metric-value">{conclusions.trend}</p>
-            <p className="soft-text">Evaluación del cambio entre inicio y final del rango.</p>
-          </Card>
-          <Card>
-            <p className="metric-label">Predominio de valores</p>
-            <p className="metric-value">{conclusions.predominance}</p>
-            <p className="soft-text">Comparación relativa con el promedio observado.</p>
-          </Card>
-          <Card>
-            <p className="metric-label">Estabilidad reciente</p>
-            <p className="metric-value">{conclusions.stability}</p>
-            <p className="soft-text">Variación de las últimas mediciones disponibles.</p>
-          </Card>
+      <Section title="Conclusiones e insights" subtitle="Resumen visual para comparar hallazgos sin sentir bloques pesados de texto">
+        <div className="analytics-conclusion-grid">
+          {insightCards.map((insight) => (
+            <Card key={insight.key} className={`analytics-conclusion-card ${activeInsight === insight.key ? "active" : ""}`}>
+              <div className="analytics-conclusion-header">
+                <span className="metric-icon-badge info" aria-hidden="true">
+                  <InsightIcon name={insight.key} />
+                </span>
+                <span className="metric-card-badge">{insight.badge}</span>
+              </div>
+              <p className="metric-label">{insight.title}</p>
+              <p className="analytics-conclusion-value">{insight.value}</p>
+              <p className="soft-text">{insight.description}</p>
+            </Card>
+          ))}
         </div>
       </Section>
     </div>
