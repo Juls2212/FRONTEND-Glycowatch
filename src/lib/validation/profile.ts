@@ -1,15 +1,24 @@
 import { z } from "zod";
 import { UpdateProfilePayload } from "@/features/profile/types";
 
+const requiredTrimmedString = (message: string) => z.string().trim().min(1, message);
+const optionalTrimmedString = () => z.string().transform((value) => value.trim());
+
 export const profileFormSchema = z
   .object({
-    fullName: z.string(),
-    birthDate: z.string(),
-    hypoglycemiaThreshold: z.coerce.number().positive("Los umbrales de glucosa deben ser mayores a 0."),
-    hyperglycemiaThreshold: z.coerce.number().positive("Los umbrales de glucosa deben ser mayores a 0."),
-    timezone: z.string(),
-    weightKg: z.string(),
-    heightCm: z.string()
+    fullName: requiredTrimmedString("El nombre completo es obligatorio."),
+    birthDate: optionalTrimmedString(),
+    hypoglycemiaThreshold: z.coerce
+      .number()
+      .finite("Los umbrales de glucosa deben ser validos.")
+      .positive("Los umbrales de glucosa deben ser mayores a 0."),
+    hyperglycemiaThreshold: z.coerce
+      .number()
+      .finite("Los umbrales de glucosa deben ser validos.")
+      .positive("Los umbrales de glucosa deben ser mayores a 0."),
+    timezone: requiredTrimmedString("Selecciona una zona horaria."),
+    weightKg: optionalTrimmedString(),
+    heightCm: optionalTrimmedString()
   })
   .superRefine((values, ctx) => {
     if (values.hyperglycemiaThreshold <= values.hypoglycemiaThreshold) {
@@ -44,17 +53,17 @@ export const profileFormSchema = z
   });
 
 function parseOptionalNumber(value: string): number | null {
-  if (!value.trim()) return null;
+  if (!value) return null;
   return Number(value);
 }
 
 export function buildProfilePayload(values: z.infer<typeof profileFormSchema>): UpdateProfilePayload {
   return {
-    fullName: values.fullName.trim() ? values.fullName.trim() : null,
+    fullName: values.fullName,
     birthDate: values.birthDate || null,
     hypoglycemiaThreshold: values.hypoglycemiaThreshold,
     hyperglycemiaThreshold: values.hyperglycemiaThreshold,
-    timezone: values.timezone.trim() ? values.timezone.trim() : null,
+    timezone: values.timezone,
     weightKg: parseOptionalNumber(values.weightKg),
     heightCm: parseOptionalNumber(values.heightCm)
   };

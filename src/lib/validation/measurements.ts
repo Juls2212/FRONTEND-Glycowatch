@@ -6,7 +6,7 @@ const glucoseValueField = z
   .min(1, "Ingresa un valor de glucosa valido.")
   .refine((value) => {
     const parsed = Number(value);
-    return !Number.isNaN(parsed) && parsed > 0;
+    return Number.isFinite(parsed) && parsed > 0;
   }, "Ingresa un valor de glucosa valido.");
 
 export const dashboardManualMeasurementSchema = z
