@@ -88,6 +88,68 @@ function resolveBannerData(risk: RiskAnalysis | null, alerts: AlertItem[]): Bann
   };
 }
 
+type MetricTone = "info" | "success" | "warning" | "danger";
+type MetricIconName = "drop" | "pulse" | "range" | "alert";
+
+function MetricIcon({ name }: { name: MetricIconName }) {
+  if (name === "drop") {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true" className="icon-svg">
+        <path
+          d="M12 3.75c-2.95 3.3-5.25 6.34-5.25 9.08A5.25 5.25 0 0 0 12 18.08a5.25 5.25 0 0 0 5.25-5.25C17.25 10.09 14.95 7.05 12 3.75Z"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.7"
+          strokeLinejoin="round"
+        />
+      </svg>
+    );
+  }
+
+  if (name === "pulse") {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true" className="icon-svg">
+        <path
+          d="M3.75 12h3.2l2.1-4.2 4.05 8.4 2.05-4.2h5.1"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.7"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    );
+  }
+
+  if (name === "range") {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true" className="icon-svg">
+        <path
+          d="M6 7.25h12M6 16.75h12M8.25 7.25 6 5m2.25 2.25L6 9.5m9.75 7.25L18 14.5m-2.25 2.25L18 19"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.7"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    );
+  }
+
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="icon-svg">
+      <path
+        d="M12 4.75A4.25 4.25 0 0 0 7.75 9v2.1c0 .8-.23 1.58-.66 2.25l-1.18 1.8a.8.8 0 0 0 .67 1.23h10.84a.8.8 0 0 0 .67-1.23l-1.18-1.8a4.12 4.12 0 0 1-.66-2.25V9A4.25 4.25 0 0 0 12 4.75Z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinejoin="round"
+      />
+      <path d="M10.25 18.25a1.75 1.75 0 0 0 3.5 0" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 export default function DashboardPage() {
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
   const [chartData, setChartData] = useState<ChartPoint[]>([]);
@@ -259,14 +321,30 @@ export default function DashboardPage() {
           </div>
 
           <div className="hero-metrics">
-            <div className="hero-metric-card">
-              <p className="metric-label">Ultimo registro</p>
+            <div className="hero-metric-card hero-metric-card-info">
+              <div className="metric-card-header">
+                <div className="metric-card-copy">
+                  <p className="metric-label">Ultimo registro</p>
+                  <p className="metric-card-caption">Dato mas reciente disponible</p>
+                </div>
+                <span className="metric-icon-badge info" aria-hidden="true">
+                  <MetricIcon name="drop" />
+                </span>
+              </div>
               <p className="hero-metric-value">{latestMeasurementLabel}</p>
               <p className="metric-meta">{formattedLatest}</p>
             </div>
 
-            <div className="hero-metric-card">
-              <p className="metric-label">Rango reciente</p>
+            <div className="hero-metric-card hero-metric-card-success">
+              <div className="metric-card-header">
+                <div className="metric-card-copy">
+                  <p className="metric-label">Rango reciente</p>
+                  <p className="metric-card-caption">Limites observados en la ventana actual</p>
+                </div>
+                <span className="metric-icon-badge success" aria-hidden="true">
+                  <MetricIcon name="range" />
+                </span>
+              </div>
               <p className="hero-metric-value">{rangeSummary}</p>
               <p className="metric-meta">Minimo y maximo observados</p>
             </div>
@@ -293,42 +371,76 @@ export default function DashboardPage() {
       <Section title="Resumen clinico" subtitle="Indicadores recientes organizados para escaneo rapido">
         {error ? <p className="error-text">{error}</p> : null}
         <div className="stat-grid dashboard-stat-grid">
-          <Card className="metric-card">
-            <div className="metric-card-top">
-              <p className="metric-label">Ultima medicion</p>
-              <span className="metric-chip">Ahora</span>
+          <Card className="metric-card metric-card-info">
+            <div className="metric-card-header">
+              <div className="metric-card-copy">
+                <p className="metric-label">Ultima medicion</p>
+                <p className="metric-card-caption">Registro mas reciente recibido</p>
+              </div>
+              <span className="metric-icon-badge info" aria-hidden="true">
+                <MetricIcon name="drop" />
+              </span>
             </div>
-            <p className="metric-value">{latestMeasurementLabel}</p>
+            <div className="metric-card-value-row">
+              <p className="metric-value">{latestMeasurementLabel}</p>
+              <span className="metric-card-badge">Ahora</span>
+            </div>
             <p className="metric-meta">{formattedLatest}</p>
           </Card>
 
-          <Card className="metric-card">
-            <div className="metric-card-top">
-              <p className="metric-label">Promedio reciente</p>
-              <span className="metric-chip">mg/dL</span>
+          <Card className="metric-card metric-card-success">
+            <div className="metric-card-header">
+              <div className="metric-card-copy">
+                <p className="metric-label">Promedio reciente</p>
+                <p className="metric-card-caption">Valor medio dentro del periodo actual</p>
+              </div>
+              <span className="metric-icon-badge success" aria-hidden="true">
+                <MetricIcon name="pulse" />
+              </span>
             </div>
-            <p className="metric-value">{formatMetric(metrics?.averageGlucose ?? 0)}</p>
+            <div className="metric-card-value-row">
+              <p className="metric-value">
+                {formatMetric(metrics?.averageGlucose ?? 0)} <span className="metric-value-unit">mg/dL</span>
+              </p>
+              <span className="metric-card-badge">Promedio</span>
+            </div>
             <p className="metric-meta">Ventana reciente</p>
           </Card>
 
-          <Card className="metric-card">
-            <div className="metric-card-top">
-              <p className="metric-label">Minimo / Maximo</p>
-              <span className="metric-chip">Rango</span>
+          <Card className="metric-card metric-card-warning">
+            <div className="metric-card-header">
+              <div className="metric-card-copy">
+                <p className="metric-label">Minimo / Maximo</p>
+                <p className="metric-card-caption">Variacion detectada en el seguimiento</p>
+              </div>
+              <span className="metric-icon-badge warning" aria-hidden="true">
+                <MetricIcon name="range" />
+              </span>
             </div>
-            <p className="metric-value">
-              {formatMetric(metrics?.minGlucose ?? 0)} / {formatMetric(metrics?.maxGlucose ?? 0)}
-            </p>
+            <div className="metric-card-value-row">
+              <p className="metric-value">
+                {formatMetric(metrics?.minGlucose ?? 0)} / {formatMetric(metrics?.maxGlucose ?? 0)}
+              </p>
+              <span className="metric-card-badge">Rango</span>
+            </div>
             <p className="metric-meta">Variacion observada</p>
           </Card>
 
-          <Card className="metric-card">
-            <div className="metric-card-top">
-              <p className="metric-label">Total de alertas</p>
-              <span className="metric-chip">Eventos</span>
+          <Card className="metric-card metric-card-danger">
+            <div className="metric-card-header">
+              <div className="metric-card-copy">
+                <p className="metric-label">Total de alertas</p>
+                <p className="metric-card-caption">Eventos clinicos acumulados</p>
+              </div>
+              <span className="metric-icon-badge danger" aria-hidden="true">
+                <MetricIcon name="alert" />
+              </span>
             </div>
-            <p className="metric-value">{formatWholeMetric(metrics?.alertsCount ?? 0)}</p>
-            <p className="metric-meta">Eventos registrados</p>
+            <div className="metric-card-value-row">
+              <p className="metric-value">{formatWholeMetric(metrics?.alertsCount ?? 0)}</p>
+              <span className="metric-card-badge">Eventos</span>
+            </div>
+            <p className="metric-meta">Pendientes de revision: {formatWholeMetric(unreadAlertsCount)}</p>
           </Card>
         </div>
       </Section>
