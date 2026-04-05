@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import {
   Area,
   CartesianGrid,
@@ -15,28 +15,10 @@ import {
 } from "recharts";
 import { NameType, ValueType } from "recharts/types/component/DefaultTooltipContent";
 import { ChartPoint } from "@/features/dashboard/types";
+import { ChartTheme, useChartTheme } from "@/components/charts/chart-theme";
 
 type Props = {
   data: ChartPoint[];
-};
-
-type ChartTheme = {
-  lineStart: string;
-  lineEnd: string;
-  fillStart: string;
-  fillEnd: string;
-  grid: string;
-  gridStrong: string;
-  tick: string;
-  tooltipBackground: string;
-  tooltipBorder: string;
-  tooltipText: string;
-  tooltipMuted: string;
-  activeDot: string;
-  success: string;
-  warning: string;
-  danger: string;
-  info: string;
 };
 
 type EnhancedPoint = ChartPoint & {
@@ -84,29 +66,6 @@ function buildPointContext(value: number): string {
   return "Dentro del rango recomendado";
 }
 
-function createChartTheme(root: HTMLElement): ChartTheme {
-  const styles = window.getComputedStyle(root);
-
-  return {
-    lineStart: styles.getPropertyValue("--chart-line-start").trim() || "#7dc0ff",
-    lineEnd: styles.getPropertyValue("--chart-line-end").trim() || "#3a88dc",
-    fillStart: styles.getPropertyValue("--chart-fill-start").trim() || "rgba(79, 152, 245, 0.22)",
-    fillEnd: styles.getPropertyValue("--chart-fill-end").trim() || "rgba(79, 152, 245, 0.02)",
-    grid: styles.getPropertyValue("--chart-grid").trim() || "#1c2b48",
-    gridStrong: styles.getPropertyValue("--chart-grid-strong").trim() || "#31415d",
-    tick: styles.getPropertyValue("--text-secondary").trim() || "#8fa7d5",
-    tooltipBackground: styles.getPropertyValue("--chart-tooltip-bg").trim() || "#0f1626",
-    tooltipBorder: styles.getPropertyValue("--chart-tooltip-border").trim() || "#2e4267",
-    tooltipText: styles.getPropertyValue("--chart-tooltip-text").trim() || "#dce8ff",
-    tooltipMuted: styles.getPropertyValue("--text-secondary").trim() || "#8fa7d5",
-    activeDot: styles.getPropertyValue("--accent").trim() || "#8ec4ff",
-    success: styles.getPropertyValue("--success").trim() || "#43c27c",
-    warning: styles.getPropertyValue("--warning").trim() || "#f1b24c",
-    danger: styles.getPropertyValue("--danger").trim() || "#e46b7d",
-    info: styles.getPropertyValue("--info").trim() || "#4f98f5"
-  };
-}
-
 function ChartTooltip({
   active,
   label,
@@ -146,7 +105,7 @@ function renderPoint(theme: ChartTheme) {
 
     const point = payload as EnhancedPoint;
     const fill =
-      point.status === "high" ? theme.danger : point.status === "low" ? theme.warning : theme.success;
+      point.status === "high" ? theme.danger : point.status === "low" ? theme.warning : theme.accent;
 
     return (
       <g>
@@ -164,7 +123,7 @@ function renderActivePoint(theme: ChartTheme) {
 
     const point = payload as EnhancedPoint;
     const fill =
-      point.status === "high" ? theme.danger : point.status === "low" ? theme.warning : theme.info;
+      point.status === "high" ? theme.danger : point.status === "low" ? theme.warning : theme.accent;
 
     return (
       <g>
@@ -177,42 +136,7 @@ function renderActivePoint(theme: ChartTheme) {
 }
 
 export function GlucoseChart({ data }: Props) {
-  const [chartTheme, setChartTheme] = useState<ChartTheme>({
-    lineStart: "#7dc0ff",
-    lineEnd: "#3a88dc",
-    fillStart: "rgba(79, 152, 245, 0.22)",
-    fillEnd: "rgba(79, 152, 245, 0.02)",
-    grid: "#1c2b48",
-    gridStrong: "#31415d",
-    tick: "#8fa7d5",
-    tooltipBackground: "#0f1626",
-    tooltipBorder: "#2e4267",
-    tooltipText: "#dce8ff",
-    tooltipMuted: "#8fa7d5",
-    activeDot: "#8ec4ff",
-    success: "#43c27c",
-    warning: "#f1b24c",
-    danger: "#e46b7d",
-    info: "#4f98f5"
-  });
-
-  useEffect(() => {
-    const root = document.documentElement;
-
-    const syncChartTheme = () => {
-      setChartTheme(createChartTheme(root));
-    };
-
-    syncChartTheme();
-
-    const observer = new MutationObserver(syncChartTheme);
-    observer.observe(root, {
-      attributes: true,
-      attributeFilter: ["data-color-mode", "data-accent-theme"]
-    });
-
-    return () => observer.disconnect();
-  }, []);
+  const chartTheme = useChartTheme();
 
   const enhancedData = useMemo<EnhancedPoint[]>(
     () =>

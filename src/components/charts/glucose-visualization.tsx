@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Area,
   Bar,
@@ -18,27 +18,13 @@ import {
 import { NameType, ValueType } from "recharts/types/component/DefaultTooltipContent";
 import { ChartPoint } from "@/features/dashboard/types";
 import { GlucoseChart } from "@/components/charts/glucose-chart";
+import { ChartTheme, useChartTheme } from "@/components/charts/chart-theme";
 
 type VisualizationView = "LINE" | "BAR" | "TREND";
 
 type Props = {
   data: ChartPoint[];
   defaultView?: VisualizationView;
-};
-
-type ChartTheme = {
-  grid: string;
-  gridStrong: string;
-  tick: string;
-  tooltipBackground: string;
-  tooltipBorder: string;
-  tooltipText: string;
-  tooltipMuted: string;
-  success: string;
-  warning: string;
-  danger: string;
-  info: string;
-  accent: string;
 };
 
 type EnhancedPoint = ChartPoint & {
@@ -98,29 +84,10 @@ function buildTrendValue(data: ChartPoint[], index: number): number {
   return Number((total / window.length).toFixed(1));
 }
 
-function createChartTheme(root: HTMLElement): ChartTheme {
-  const styles = window.getComputedStyle(root);
-
-  return {
-    grid: styles.getPropertyValue("--chart-grid").trim() || "#1c2b48",
-    gridStrong: styles.getPropertyValue("--chart-grid-strong").trim() || "#31415d",
-    tick: styles.getPropertyValue("--text-secondary").trim() || "#8fa7d5",
-    tooltipBackground: styles.getPropertyValue("--chart-tooltip-bg").trim() || "#0f1626",
-    tooltipBorder: styles.getPropertyValue("--chart-tooltip-border").trim() || "#2e4267",
-    tooltipText: styles.getPropertyValue("--chart-tooltip-text").trim() || "#dce8ff",
-    tooltipMuted: styles.getPropertyValue("--text-secondary").trim() || "#8fa7d5",
-    success: styles.getPropertyValue("--success").trim() || "#43c27c",
-    warning: styles.getPropertyValue("--warning").trim() || "#f1b24c",
-    danger: styles.getPropertyValue("--danger").trim() || "#e46b7d",
-    info: styles.getPropertyValue("--info").trim() || "#4f98f5",
-    accent: styles.getPropertyValue("--accent").trim() || "#4da3ff"
-  };
-}
-
 function resolveColorByStatus(theme: ChartTheme, status: EnhancedPoint["status"]): string {
   if (status === "high") return theme.danger;
   if (status === "low") return theme.warning;
-  return theme.success;
+  return theme.accent;
 }
 
 function VisualizationTooltip({
@@ -160,35 +127,7 @@ function VisualizationTooltip({
 
 export function GlucoseVisualization({ data, defaultView = "LINE" }: Props) {
   const [view, setView] = useState<VisualizationView>(defaultView);
-  const [chartTheme, setChartTheme] = useState<ChartTheme>({
-    grid: "#1c2b48",
-    gridStrong: "#31415d",
-    tick: "#8fa7d5",
-    tooltipBackground: "#0f1626",
-    tooltipBorder: "#2e4267",
-    tooltipText: "#dce8ff",
-    tooltipMuted: "#8fa7d5",
-    success: "#43c27c",
-    warning: "#f1b24c",
-    danger: "#e46b7d",
-    info: "#4f98f5",
-    accent: "#4da3ff"
-  });
-
-  useEffect(() => {
-    const root = document.documentElement;
-
-    const syncChartTheme = () => setChartTheme(createChartTheme(root));
-    syncChartTheme();
-
-    const observer = new MutationObserver(syncChartTheme);
-    observer.observe(root, {
-      attributes: true,
-      attributeFilter: ["data-color-mode", "data-accent-theme"]
-    });
-
-    return () => observer.disconnect();
-  }, []);
+  const chartTheme = useChartTheme();
 
   const enhancedData = useMemo<EnhancedPoint[]>(
     () =>
@@ -273,9 +212,9 @@ export function GlucoseVisualization({ data, defaultView = "LINE" }: Props) {
                 activeBar={{ fillOpacity: 0.9, stroke: chartTheme.gridStrong, strokeOpacity: 0.45, strokeWidth: 1 }}
               >
                 {enhancedData.map((point) => (
-                  <Cell key={`${point.measuredAt}-${point.glucoseValue}`} fill={resolveColorByStatus(chartTheme, point.status)} fillOpacity={0.85} />
-                ))}
-              </Bar>
+                <Cell key={`${point.measuredAt}-${point.glucoseValue}`} fill={resolveColorByStatus(chartTheme, point.status)} fillOpacity={0.85} />
+              ))}
+            </Bar>
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -287,8 +226,8 @@ export function GlucoseVisualization({ data, defaultView = "LINE" }: Props) {
             <ComposedChart data={enhancedData} margin={{ top: 12, right: 8, bottom: 6, left: -8 }}>
               <defs>
                 <linearGradient id="trendAreaGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor={chartTheme.info} stopOpacity={0.22} />
-                  <stop offset="100%" stopColor={chartTheme.info} stopOpacity={0.03} />
+                  <stop offset="0%" stopColor={chartTheme.accent} stopOpacity={0.22} />
+                  <stop offset="100%" stopColor={chartTheme.accent} stopOpacity={0.03} />
                 </linearGradient>
               </defs>
               <CartesianGrid stroke={chartTheme.grid} strokeDasharray="4 6" vertical={false} />
@@ -333,10 +272,10 @@ export function GlucoseVisualization({ data, defaultView = "LINE" }: Props) {
               <Line
                 type="monotone"
                 dataKey="trendValue"
-                stroke={chartTheme.info}
+                stroke={chartTheme.accent}
                 strokeWidth={3}
                 dot={false}
-                activeDot={{ r: 5, fill: chartTheme.info, stroke: chartTheme.tooltipBackground, strokeWidth: 2 }}
+                activeDot={{ r: 5, fill: chartTheme.accent, stroke: chartTheme.tooltipBackground, strokeWidth: 2 }}
                 isAnimationActive
                 animationDuration={620}
               />
