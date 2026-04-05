@@ -206,6 +206,9 @@ a {
 
 .nav-link {
   position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
   padding: 10px 12px;
   border-radius: 10px;
   color: var(--text-secondary);
@@ -245,6 +248,20 @@ a {
   background: linear-gradient(180deg, rgba(var(--accent-rgb), 0.7) 0%, var(--accent) 100%);
 }
 
+.nav-icon {
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+
+.nav-icon-svg {
+  width: 18px;
+  height: 18px;
+}
+
 .app-main {
   padding: 22px 26px;
 }
@@ -274,6 +291,10 @@ a {
 }
 
 .user-menu {
+  position: relative;
+}
+
+.notification-menu {
   position: relative;
 }
 
@@ -344,6 +365,140 @@ a {
 .appearance-section {
   display: grid;
   gap: 8px;
+}
+
+.notification-dropdown {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 12px);
+  width: min(380px, calc(100vw - 32px));
+  background: linear-gradient(180deg, var(--surface-panel) 0%, var(--surface-panel-strong) 100%);
+  border: 1px solid var(--border-subtle);
+  border-radius: 18px;
+  box-shadow: var(--shadow-soft);
+  padding: 14px;
+  display: grid;
+  gap: 14px;
+  z-index: 28;
+  backdrop-filter: blur(18px);
+  animation: dropdown-in 0.16s ease-out;
+}
+
+.notification-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.notification-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.notification-subtitle,
+.notification-item-message {
+  margin: 0;
+  color: var(--text-secondary);
+  line-height: 1.45;
+}
+
+.notification-link {
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.notification-link:hover {
+  color: var(--accent-strong);
+}
+
+.notification-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.notification-item {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 16px;
+  background: var(--surface-muted);
+  border: 1px solid var(--border-subtle);
+}
+
+.notification-item-main {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+.notification-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  flex: 0 0 auto;
+  margin-top: 6px;
+}
+
+.notification-dot.info {
+  background: var(--info);
+}
+
+.notification-dot.danger {
+  background: var(--danger);
+}
+
+.notification-copy {
+  min-width: 0;
+  display: grid;
+  gap: 5px;
+}
+
+.notification-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.notification-item-title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.notification-action {
+  justify-self: flex-end;
+  padding: 8px 10px;
+  font-size: 12px;
+}
+
+.notification-button {
+  position: relative;
+}
+
+.notification-count {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: var(--danger);
+  color: var(--text-on-danger);
+  border: 1px solid var(--surface-panel);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
 }
 
 .appearance-title {
@@ -1581,17 +1736,9 @@ a {
   padding-inline: 0;
 }
 
-.nav-link.compact .nav-link-text {
-  font-size: 0;
-}
-
-.nav-link.compact::after {
-  content: "";
-  width: 10px;
-  height: 10px;
-  border-radius: 999px;
-  background: rgba(var(--accent-rgb), 0.9);
-  box-shadow: 0 0 0 5px rgba(var(--accent-rgb), 0.12);
+.nav-link.compact .nav-icon {
+  width: 22px;
+  height: 22px;
 }
 
 .app-main {
@@ -1831,6 +1978,10 @@ a {
   align-items: start;
 }
 
+.dashboard-main-grid-single-aside {
+  grid-template-columns: minmax(0, 1.5fr) minmax(300px, 0.85fr);
+}
+
 .dashboard-side-stack {
   display: grid;
   gap: 16px;
@@ -1956,6 +2107,12 @@ a {
     padding: 16px;
   }
 
+  .notification-dropdown {
+    right: 0;
+    left: auto;
+    width: min(360px, calc(100vw - 32px));
+  }
+
   .dashboard-hero,
   .dashboard-main-grid,
   .hero-metrics {
@@ -2001,6 +2158,12 @@ a {
   .appearance-dropdown {
     left: 16px !important;
     right: 16px !important;
+    width: auto;
+  }
+
+  .notification-dropdown {
+    left: 16px;
+    right: 16px;
     width: auto;
   }
 }

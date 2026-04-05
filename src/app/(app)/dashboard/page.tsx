@@ -315,7 +315,7 @@ export default function DashboardPage() {
         </div>
       </Section>
 
-      <div className="dashboard-main-grid">
+      <div className="dashboard-main-grid dashboard-main-grid-single-aside">
         <Section
           title="Tendencia glucémica"
           subtitle="Visualización central para seguir el comportamiento reciente"
@@ -344,51 +344,25 @@ export default function DashboardPage() {
           </Card>
         </Section>
 
-        <div className="dashboard-side-stack">
-          <Section title="Estado de riesgo" subtitle="Señales actuales basadas en registros recientes">
-            <Card className="risk-card">
-              <div className="risk-grid">
-                <div className="risk-stat">
-                  <p className="metric-label">Estado actual</p>
-                  <p className="metric-value">{risk ? translateStatus(risk.currentStatus) : "EN RANGO"}</p>
-                </div>
-                <div className="risk-stat">
-                  <p className="metric-label">Nivel de riesgo</p>
-                  <p className="metric-value">{risk ? translateRiskLevel(risk.riskLevel) : "BAJO"}</p>
-                </div>
-                <div className="risk-stat">
-                  <p className="metric-label">Tendencia</p>
-                  <p className="metric-value">{risk ? translateTrend(risk.trend) : "ESTABLE"}</p>
-                </div>
+        <Section title="Estado de riesgo" subtitle="Señales actuales basadas en registros recientes">
+          <Card className="risk-card">
+            <div className="risk-grid">
+              <div className="risk-stat">
+                <p className="metric-label">Estado actual</p>
+                <p className="metric-value">{risk ? translateStatus(risk.currentStatus) : "EN RANGO"}</p>
               </div>
-              <p className="risk-message">{riskMessage}</p>
-            </Card>
-          </Section>
-
-          <Section title="Alertas recientes" subtitle="Bloque compacto para identificar eventos prioritarios">
-            <Card className="alerts-card">
-              {alerts.length === 0 ? (
-                <p className="soft-text">No hay alertas registradas.</p>
-              ) : (
-                <ul className="alerts-list">
-                  {alerts.slice(0, 4).map((alert) => (
-                    <li key={alert.id} className="alert-row">
-                      <div>
-                        <p className={`alert-type ${alert.type === "HIGH_GLUCOSE" ? "high" : "low"}`}>
-                          {alert.type === "HIGH_GLUCOSE" ? "Glucosa alta" : "Glucosa baja"}
-                        </p>
-                        <p className="alert-message">{alert.message}</p>
-                      </div>
-                      <div className={`alert-badge ${alert.isRead ? "read" : "unread"}`}>
-                        {alert.isRead ? "Leída" : "Nueva"}
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </Card>
-          </Section>
-        </div>
+              <div className="risk-stat">
+                <p className="metric-label">Nivel de riesgo</p>
+                <p className="metric-value">{risk ? translateRiskLevel(risk.riskLevel) : "BAJO"}</p>
+              </div>
+              <div className="risk-stat">
+                <p className="metric-label">Tendencia</p>
+                <p className="metric-value">{risk ? translateTrend(risk.trend) : "ESTABLE"}</p>
+              </div>
+            </div>
+            <p className="risk-message">{riskMessage}</p>
+          </Card>
+        </Section>
       </div>
 
       <Section title="Registro manual" subtitle="Entrada rápida para añadir una medición sin salir del panel">

@@ -1,6 +1,7 @@
 "use client";
 
 import { AppearanceMenu } from "@/components/layout/appearance-menu";
+import { NotificationMenu } from "@/components/layout/notification-menu";
 import { UserMenu } from "@/components/layout/user-menu";
 
 type TopbarProps = {
@@ -26,11 +27,12 @@ export function Topbar({ sidebarCollapsed, onToggleSidebar }: TopbarProps) {
         <div className="topbar-copy">
           <p className="topbar-eyebrow">Centro de monitoreo</p>
           <h1 className="topbar-title">Panel de control</h1>
-          <p className="topbar-subtitle">Seguimiento glucémico claro, continuo y preparado para una experiencia más final.</p>
+          <p className="topbar-subtitle">Alertas, apariencia y perfil reunidos en una cabecera más clara y estable.</p>
         </div>
       </div>
 
       <div className="topbar-actions">
+        <NotificationMenu />
         <AppearanceMenu />
         <UserMenu />
       </div>
