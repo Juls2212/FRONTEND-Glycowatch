@@ -1826,8 +1826,8 @@ a {
 
 .dashboard-hero {
   display: grid;
-  grid-template-columns: minmax(0, 1.45fr) minmax(280px, 0.9fr);
-  gap: 16px;
+  grid-template-columns: minmax(0, 1.7fr) minmax(280px, 0.72fr);
+  gap: 18px;
   min-width: 0;
 }
 
@@ -1863,8 +1863,8 @@ a {
 
 .dashboard-hero-primary {
   display: grid;
-  gap: 18px;
-  min-height: 212px;
+  gap: 20px;
+  min-height: 220px;
 }
 
 .dashboard-hero-copy,
@@ -1916,7 +1916,7 @@ a {
 .hero-metrics {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
+  gap: 14px;
 }
 
 .hero-metric-card,
@@ -1937,13 +1937,30 @@ a {
 
 .dashboard-hero-aside {
   display: grid;
-  gap: 12px;
+  gap: 14px;
+  align-content: start;
 }
 
 .dashboard-hero-side {
-  min-height: 100px;
+  min-height: 100%;
   display: grid;
-  align-content: space-between;
+  align-content: start;
+  gap: 14px;
+}
+
+.dashboard-context-card {
+  min-height: 220px;
+}
+
+.dashboard-context-row {
+  display: grid;
+  gap: 14px;
+}
+
+.dashboard-context-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .dashboard-stat-grid {
@@ -1951,7 +1968,7 @@ a {
 }
 
 .dashboard-stat-grid .metric-card {
-  min-height: 160px;
+  min-height: 146px;
 }
 
 .metric-card {
@@ -1973,13 +1990,13 @@ a {
 
 .dashboard-main-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.28fr) minmax(300px, 0.98fr);
-  gap: 16px;
+  grid-template-columns: minmax(0, 1.7fr) minmax(280px, 0.82fr);
+  gap: 18px;
   align-items: start;
 }
 
 .dashboard-main-grid-single-aside {
-  grid-template-columns: minmax(0, 1.5fr) minmax(300px, 0.85fr);
+  grid-template-columns: minmax(0, 1.72fr) minmax(280px, 0.78fr);
 }
 
 .dashboard-side-stack {
@@ -2004,12 +2021,12 @@ a {
 }
 
 .dashboard-main-grid .chart-wrap {
-  min-height: 312px;
+  min-height: 324px;
 }
 
 .risk-grid {
   grid-template-columns: 1fr;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 }
 
 .risk-stat {
@@ -2020,8 +2037,59 @@ a {
 }
 
 .risk-message {
+  margin: 0;
   line-height: 1.55;
   text-wrap: pretty;
+}
+
+.dashboard-secondary-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.dashboard-alerts-compact {
+  display: grid;
+  gap: 16px;
+}
+
+.dashboard-alerts-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.dashboard-alerts-summary-item {
+  border-radius: 14px;
+  border: 1px solid rgba(var(--accent-rgb), 0.12);
+  background: var(--surface-muted);
+  padding: 14px;
+}
+
+.dashboard-alerts-summary-item .metric-value {
+  margin: 8px 0 0;
+}
+
+.dashboard-alerts-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 10px;
+}
+
+.dashboard-alerts-item {
+  border-radius: 14px;
+  border: 1px solid rgba(var(--border-rgb), 0.8);
+  background: var(--surface-muted);
+  padding: 12px 14px;
+}
+
+.dashboard-alerts-item-main {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
 }
 
 .alerts-list {
@@ -2115,12 +2183,13 @@ a {
 
   .dashboard-hero,
   .dashboard-main-grid,
+  .dashboard-secondary-grid,
   .hero-metrics {
     grid-template-columns: 1fr;
   }
 
   .dashboard-hero-aside {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: 1fr;
   }
 
   .manual-actions {
@@ -2134,10 +2203,6 @@ a {
 }
 
 @media (max-width: 640px) {
-  .dashboard-hero-aside {
-    grid-template-columns: 1fr;
-  }
-
   .hero-title {
     font-size: 30px;
   }
@@ -2153,6 +2218,10 @@ a {
   .sidebar-panel,
   .sidebar-footer-card {
     border-radius: 18px;
+  }
+
+  .dashboard-alerts-summary {
+    grid-template-columns: 1fr;
   }
 
   .appearance-dropdown {

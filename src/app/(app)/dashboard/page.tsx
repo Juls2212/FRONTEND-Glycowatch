@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import {
   createManualMeasurement,
@@ -29,6 +30,14 @@ function formatMetric(value: number): string {
 
 function formatWholeMetric(value: number): string {
   return value.toLocaleString("es-CO", { maximumFractionDigits: 0 });
+}
+
+function formatAlertType(type: AlertItem["type"]): string {
+  return type === "HIGH_GLUCOSE" ? "Glucosa alta" : "Glucosa baja";
+}
+
+function resolveAlertTone(type: AlertItem["type"]): "danger" | "info" {
+  return type === "HIGH_GLUCOSE" ? "danger" : "info";
 }
 
 type BannerData = {
@@ -67,7 +76,7 @@ function resolveBannerData(risk: RiskAnalysis | null, alerts: AlertItem[]): Bann
   if (hasHighSignals) {
     return {
       variant: "critical",
-      message: "Riesgo detectado. Tienes alertas activas que requieren atención.",
+      message: "Riesgo detectado. Tienes alertas activas que requieren atencion.",
       key
     };
   }
@@ -137,11 +146,11 @@ export default function DashboardPage() {
 
     const glucoseValue = Number(glucoseValueInput);
     if (!glucoseValue || glucoseValue <= 0) {
-      setFormError("Ingresa un valor de glucosa válido.");
+      setFormError("Ingresa un valor de glucosa valido.");
       return;
     }
     if (!measuredAtInput) {
-      setFormError("Selecciona fecha y hora de medición.");
+      setFormError("Selecciona fecha y hora de medicion.");
       return;
     }
 
@@ -149,12 +158,12 @@ export default function DashboardPage() {
     try {
       const measuredAt = new Date(measuredAtInput);
       if (Number.isNaN(measuredAt.getTime())) {
-        setFormError("La fecha y hora de medición no son válidas.");
+        setFormError("La fecha y hora de medicion no son validas.");
         setIsSubmitting(false);
         return;
       }
       if (measuredAt.getTime() > Date.now()) {
-        setFormError("La fecha y hora de medición no pueden estar en el futuro.");
+        setFormError("La fecha y hora de medicion no pueden estar en el futuro.");
         setIsSubmitting(false);
         return;
       }
@@ -166,10 +175,10 @@ export default function DashboardPage() {
       });
       setGlucoseValueInput("");
       setMeasuredAtInput("");
-      setFormSuccess("Medición registrada correctamente.");
+      setFormSuccess("Medicion registrada correctamente.");
       await loadDashboardData();
     } catch (err) {
-      const message = err instanceof Error ? err.message : "No se pudo guardar la medición.";
+      const message = err instanceof Error ? err.message : "No se pudo guardar la medicion.";
       setFormError(message);
     } finally {
       setIsSubmitting(false);
@@ -182,7 +191,7 @@ export default function DashboardPage() {
   }, [metrics?.latestMeasurement]);
 
   const riskMessage = useMemo(() => {
-    if (!risk) return "Sin análisis disponible por el momento.";
+    if (!risk) return "Sin analisis disponible por el momento.";
     return buildSpanishRiskMessage(risk);
   }, [risk]);
 
@@ -196,6 +205,13 @@ export default function DashboardPage() {
     if (!metrics) return "--";
     return `${formatMetric(metrics.minGlucose)} - ${formatMetric(metrics.maxGlucose)} mg/dL`;
   }, [metrics]);
+  const recentAlerts = useMemo(
+    () =>
+      [...alerts]
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+        .slice(0, 3),
+    [alerts]
+  );
 
   useEffect(() => {
     if (!bannerData) {
@@ -220,7 +236,7 @@ export default function DashboardPage() {
             aria-label="Cerrar alerta"
             onClick={() => setDismissedBannerKey(bannerData.key)}
           >
-            ×
+            x
           </button>
         </div>
       ) : null}
@@ -230,21 +246,21 @@ export default function DashboardPage() {
           <div className="dashboard-hero-copy">
             <div>
               <p className="hero-eyebrow">Resumen inmediato</p>
-              <h2 className="hero-title">Lectura clínica rápida para tomar decisiones con menos fricción.</h2>
+              <h2 className="hero-title">Lectura clinica rapida para priorizar decisiones y contexto.</h2>
               <p className="hero-description">
-                Consulta estado actual, rango reciente y alertas activas desde un bloque principal más claro.
+                Consulta el estado actual, el rango reciente y el volumen de alertas desde una sola cabecera.
               </p>
             </div>
 
             <div className="hero-pill-row">
-              <span className="hero-pill">Última medición: {latestMeasurementLabel}</span>
+              <span className="hero-pill">Ultima medicion: {latestMeasurementLabel}</span>
               <span className="hero-pill">Alertas nuevas: {formatWholeMetric(unreadAlertsCount)}</span>
             </div>
           </div>
 
           <div className="hero-metrics">
             <div className="hero-metric-card">
-              <p className="metric-label">Último registro</p>
+              <p className="metric-label">Ultimo registro</p>
               <p className="hero-metric-value">{latestMeasurementLabel}</p>
               <p className="metric-meta">{formattedLatest}</p>
             </div>
@@ -252,32 +268,34 @@ export default function DashboardPage() {
             <div className="hero-metric-card">
               <p className="metric-label">Rango reciente</p>
               <p className="hero-metric-value">{rangeSummary}</p>
-              <p className="metric-meta">Mínimo y máximo observados</p>
+              <p className="metric-meta">Minimo y maximo observados</p>
             </div>
           </div>
         </Card>
 
         <div className="dashboard-hero-aside">
-          <Card className="dashboard-hero-card dashboard-hero-side">
-            <p className="metric-label">Estado actual</p>
-            <p className="hero-side-value">{risk ? translateStatus(risk.currentStatus) : "EN RANGO"}</p>
-            <p className="metric-meta">Nivel {risk ? translateRiskLevel(risk.riskLevel) : "BAJO"}</p>
-          </Card>
-
-          <Card className="dashboard-hero-card dashboard-hero-side">
-            <p className="metric-label">Alertas activas</p>
-            <p className="hero-side-value">{formatWholeMetric(unreadAlertsCount)}</p>
-            <p className="metric-meta">Total registradas: {formatWholeMetric(metrics?.alertsCount ?? 0)}</p>
+          <Card className="dashboard-hero-card dashboard-hero-side dashboard-context-card">
+            <div className="dashboard-context-row">
+              <div>
+                <p className="metric-label">Estado actual</p>
+                <p className="hero-side-value">{risk ? translateStatus(risk.currentStatus) : "EN RANGO"}</p>
+              </div>
+              <div className="dashboard-context-meta">
+                <span className="metric-chip">Riesgo {risk ? translateRiskLevel(risk.riskLevel) : "BAJO"}</span>
+                <span className="metric-chip">Tendencia {risk ? translateTrend(risk.trend) : "ESTABLE"}</span>
+              </div>
+            </div>
+            <p className="metric-meta">Referencia compacta para interpretar la lectura principal sin duplicar bloques.</p>
           </Card>
         </div>
       </div>
 
-      <Section title="Resumen clínico" subtitle="Indicadores recientes organizados para escaneo rápido">
+      <Section title="Resumen clinico" subtitle="Indicadores recientes organizados para escaneo rapido">
         {error ? <p className="error-text">{error}</p> : null}
         <div className="stat-grid dashboard-stat-grid">
           <Card className="metric-card">
             <div className="metric-card-top">
-              <p className="metric-label">Última medición</p>
+              <p className="metric-label">Ultima medicion</p>
               <span className="metric-chip">Ahora</span>
             </div>
             <p className="metric-value">{latestMeasurementLabel}</p>
@@ -295,13 +313,13 @@ export default function DashboardPage() {
 
           <Card className="metric-card">
             <div className="metric-card-top">
-              <p className="metric-label">Mínimo / Máximo</p>
+              <p className="metric-label">Minimo / Maximo</p>
               <span className="metric-chip">Rango</span>
             </div>
             <p className="metric-value">
               {formatMetric(metrics?.minGlucose ?? 0)} / {formatMetric(metrics?.maxGlucose ?? 0)}
             </p>
-            <p className="metric-meta">Variación observada</p>
+            <p className="metric-meta">Variacion observada</p>
           </Card>
 
           <Card className="metric-card">
@@ -309,7 +327,7 @@ export default function DashboardPage() {
               <p className="metric-label">Total de alertas</p>
               <span className="metric-chip">Eventos</span>
             </div>
-            <p className="metric-value">{formatMetric(metrics?.alertsCount ?? 0)}</p>
+            <p className="metric-value">{formatWholeMetric(metrics?.alertsCount ?? 0)}</p>
             <p className="metric-meta">Eventos registrados</p>
           </Card>
         </div>
@@ -317,8 +335,8 @@ export default function DashboardPage() {
 
       <div className="dashboard-main-grid dashboard-main-grid-single-aside">
         <Section
-          title="Tendencia glucémica"
-          subtitle="Visualización central para seguir el comportamiento reciente"
+          title="Tendencia glucemica"
+          subtitle="Visualizacion central para seguir el comportamiento reciente"
           action={
             <div className="section-actions">
               <ChartRangeFilter value={chartRange} onChange={setChartRange} />
@@ -344,7 +362,7 @@ export default function DashboardPage() {
           </Card>
         </Section>
 
-        <Section title="Estado de riesgo" subtitle="Señales actuales basadas en registros recientes">
+        <Section title="Insights" subtitle="Senales secundarias para interpretar el comportamiento reciente">
           <Card className="risk-card">
             <div className="risk-grid">
               <div className="risk-stat">
@@ -365,48 +383,97 @@ export default function DashboardPage() {
         </Section>
       </div>
 
-      <Section title="Registro manual" subtitle="Entrada rápida para añadir una medición sin salir del panel">
-        <Card className="manual-entry-card">
-          <form className="manual-form" onSubmit={onManualSubmit}>
-            <label className="field">
-              <span>Valor de glucosa (mg/dL)</span>
-              <input
-                type="number"
-                step="0.1"
-                min="1"
-                value={glucoseValueInput}
-                onChange={(event) => setGlucoseValueInput(event.target.value)}
-                placeholder="Ej. 112.5"
-              />
-            </label>
+      <div className="dashboard-secondary-grid">
+        <Section title="Registro manual" subtitle="Entrada rapida para anadir una medicion sin salir del panel">
+          <Card className="manual-entry-card">
+            <form className="manual-form" onSubmit={onManualSubmit}>
+              <label className="field">
+                <span>Valor de glucosa (mg/dL)</span>
+                <input
+                  type="number"
+                  step="0.1"
+                  min="1"
+                  value={glucoseValueInput}
+                  onChange={(event) => setGlucoseValueInput(event.target.value)}
+                  placeholder="Ej. 112.5"
+                />
+              </label>
 
-            <label className="field">
-              <span>Fecha y hora de medición</span>
-              <input
-                type="datetime-local"
-                max={new Date().toISOString().slice(0, 16)}
-                value={measuredAtInput}
-                onChange={(event) => setMeasuredAtInput(event.target.value)}
-              />
-            </label>
+              <label className="field">
+                <span>Fecha y hora de medicion</span>
+                <input
+                  type="datetime-local"
+                  max={new Date().toISOString().slice(0, 16)}
+                  value={measuredAtInput}
+                  onChange={(event) => setMeasuredAtInput(event.target.value)}
+                />
+              </label>
 
-            <label className="field">
-              <span>Unidad</span>
-              <input type="text" value="mg/dL" disabled />
-            </label>
+              <label className="field">
+                <span>Unidad</span>
+                <input type="text" value="mg/dL" disabled />
+              </label>
 
-            {formError ? <p className="error-text">{formError}</p> : null}
-            {formSuccess ? <p className="success-text">{formSuccess}</p> : null}
+              {formError ? <p className="error-text">{formError}</p> : null}
+              {formSuccess ? <p className="success-text">{formSuccess}</p> : null}
 
-            <div className="manual-actions">
-              <p className="manual-helper-text">El registro se agrega al historial y actualiza el panel al guardarse.</p>
-              <button type="submit" className="primary-button" disabled={isSubmitting}>
-                {isSubmitting ? "Guardando..." : "Guardar medición"}
-              </button>
+              <div className="manual-actions">
+                <p className="manual-helper-text">El registro se agrega al historial y actualiza el panel al guardarse.</p>
+                <button type="submit" className="primary-button" disabled={isSubmitting}>
+                  {isSubmitting ? "Guardando..." : "Guardar medicion"}
+                </button>
+              </div>
+            </form>
+          </Card>
+        </Section>
+
+        <Section
+          title="Actividad de alertas"
+          subtitle="Resumen breve para mantener contexto sin competir con el analisis principal"
+          action={
+            <Link href="/alerts" className="notification-link">
+              Ver todas
+            </Link>
+          }
+        >
+          <Card className="alerts-card dashboard-alerts-compact">
+            <div className="dashboard-alerts-summary">
+              <div className="dashboard-alerts-summary-item">
+                <p className="metric-label">Nuevas</p>
+                <p className="metric-value">{formatWholeMetric(unreadAlertsCount)}</p>
+              </div>
+              <div className="dashboard-alerts-summary-item">
+                <p className="metric-label">Totales</p>
+                <p className="metric-value">{formatWholeMetric(metrics?.alertsCount ?? 0)}</p>
+              </div>
             </div>
-          </form>
-        </Card>
-      </Section>
+
+            {recentAlerts.length > 0 ? (
+              <ul className="dashboard-alerts-list">
+                {recentAlerts.map((alert) => (
+                  <li key={alert.id} className="dashboard-alerts-item">
+                    <div className="dashboard-alerts-item-main">
+                      <span className={`notification-dot ${resolveAlertTone(alert.type)}`} aria-hidden="true" />
+                      <div className="notification-copy">
+                        <div className="notification-meta">
+                          <p className="notification-item-title">{formatAlertType(alert.type)}</p>
+                          <span className={`alert-badge ${alert.isRead ? "read" : "unread"}`}>
+                            {alert.isRead ? "Leida" : "Nueva"}
+                          </span>
+                        </div>
+                        <p className="notification-item-message">{alert.message}</p>
+                        <p className="soft-text">{new Date(alert.createdAt).toLocaleString("es-CO")}</p>
+                      </div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="soft-text">No hay alertas recientes.</p>
+            )}
+          </Card>
+        </Section>
+      </div>
     </div>
   );
 }
