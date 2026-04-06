@@ -49,6 +49,7 @@ export default function RegisterPage() {
             <input
               type="text"
               placeholder="Nombre Apellido"
+              maxLength={100}
               aria-invalid={errors.fullName ? "true" : "false"}
               aria-describedby={errors.fullName ? "register-full-name-error" : undefined}
               disabled={isLoading}
@@ -62,6 +63,7 @@ export default function RegisterPage() {
             <input
               type="email"
               placeholder="usuario@correo.com"
+              maxLength={254}
               aria-invalid={errors.email ? "true" : "false"}
               aria-describedby={errors.email ? "register-email-error" : undefined}
               disabled={isLoading}
@@ -74,6 +76,7 @@ export default function RegisterPage() {
             <span>Contrasena</span>
             <input
               type="password"
+              maxLength={72}
               placeholder="••••••••"
               aria-invalid={errors.password ? "true" : "false"}
               aria-describedby={errors.password ? "register-password-error" : undefined}

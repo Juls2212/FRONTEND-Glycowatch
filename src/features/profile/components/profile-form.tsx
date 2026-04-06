@@ -115,6 +115,7 @@ export function ProfileForm({ profile, isLoading, isSubmitting, error, success, 
             <input
               type="text"
               value={form.fullName}
+              maxLength={100}
               disabled={isSubmitting}
               aria-invalid={fieldErrors.fullName ? "true" : "false"}
               aria-describedby={fieldErrors.fullName ? "profile-full-name-error" : undefined}

@@ -9,12 +9,16 @@ const MAX_WEIGHT_KG = 350;
 const MIN_HEIGHT_CM = 30;
 const MAX_HEIGHT_CM = 250;
 const MIN_BIRTH_YEAR = 1900;
+const FULL_NAME_MAX_LENGTH = 100;
+const BIRTH_DATE_MAX_LENGTH = 10;
+const TIMEZONE_MAX_LENGTH = 100;
+const NUMERIC_TEXT_MAX_LENGTH = 16;
 
 const timezoneOptions = new Set(getTimezoneOptions());
 const requiredTrimmedString = (message: string) => z.string().trim().min(1, message);
 const optionalTrimmedString = () => z.string().trim();
 const normalizedFullName = requiredTrimmedString("El nombre completo es obligatorio.")
-  .max(120, "El nombre completo no puede superar 120 caracteres.")
+  .max(FULL_NAME_MAX_LENGTH, `El nombre completo no puede superar ${FULL_NAME_MAX_LENGTH} caracteres.`)
   .refine((value) => /[A-Za-zÀ-ÿ]/.test(value), "El nombre completo debe incluir al menos una letra.");
 const glucoseThresholdField = z.coerce
   .number()
@@ -25,15 +29,20 @@ const glucoseThresholdField = z.coerce
 export const profileFormSchema = z
   .object({
     fullName: normalizedFullName,
-    birthDate: optionalTrimmedString(),
+    birthDate: optionalTrimmedString().max(
+      BIRTH_DATE_MAX_LENGTH,
+      `La fecha de nacimiento no puede superar ${BIRTH_DATE_MAX_LENGTH} caracteres.`
+    ),
     hypoglycemiaThreshold: glucoseThresholdField,
     hyperglycemiaThreshold: glucoseThresholdField,
-    timezone: requiredTrimmedString("Selecciona una zona horaria.").refine(
+    timezone: requiredTrimmedString("Selecciona una zona horaria.")
+      .max(TIMEZONE_MAX_LENGTH, `La zona horaria no puede superar ${TIMEZONE_MAX_LENGTH} caracteres.`)
+      .refine(
       (value) => timezoneOptions.has(value),
       "Selecciona una zona horaria valida."
     ),
-    weightKg: optionalTrimmedString(),
-    heightCm: optionalTrimmedString()
+    weightKg: optionalTrimmedString().max(NUMERIC_TEXT_MAX_LENGTH, "El peso ingresado es demasiado largo."),
+    heightCm: optionalTrimmedString().max(NUMERIC_TEXT_MAX_LENGTH, "La altura ingresada es demasiado larga.")
   })
   .superRefine((values, ctx) => {
     if (values.birthDate) {

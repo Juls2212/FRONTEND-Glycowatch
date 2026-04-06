@@ -54,6 +54,7 @@ export function DeviceRegisterForm({
           <input
             type="text"
             value={name}
+            maxLength={80}
             disabled={isSubmitting}
             aria-invalid={fieldErrors.name ? "true" : "false"}
             aria-describedby={fieldErrors.name ? "device-name-error" : undefined}
@@ -76,6 +77,7 @@ export function DeviceRegisterForm({
           <input
             type="text"
             value={identifier}
+            maxLength={120}
             disabled={isSubmitting}
             aria-invalid={fieldErrors.identifier ? "true" : "false"}
             aria-describedby={fieldErrors.identifier ? "device-identifier-error" : undefined}

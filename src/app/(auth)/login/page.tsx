@@ -49,6 +49,7 @@ export default function LoginPage() {
             <input
               type="email"
               placeholder="usuario@correo.com"
+              maxLength={254}
               aria-invalid={errors.email ? "true" : "false"}
               aria-describedby={errors.email ? "login-email-error" : undefined}
               disabled={isLoading}
@@ -61,6 +62,7 @@ export default function LoginPage() {
             <span>Contrasena</span>
             <input
               type="password"
+              maxLength={72}
               placeholder="••••••••"
               aria-invalid={errors.password ? "true" : "false"}
               aria-describedby={errors.password ? "login-password-error" : undefined}
