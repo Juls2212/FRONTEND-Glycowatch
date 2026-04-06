@@ -52,19 +52,19 @@ export function DevicesList({ devices, isLoading, error, togglingId, onToggle }:
                 <th>Identificador</th>
                 <th>Estado</th>
                 <th>Activo</th>
-                <th>Acción</th>
+                <th>Accion</th>
               </tr>
             </thead>
             <tbody>
               {devices.map((device) => (
                 <tr key={device.id}>
-                  <td>{device.name}</td>
-                  <td>{device.identifier}</td>
-                  <td>
+                  <td data-label="Nombre">{device.name}</td>
+                  <td data-label="Identificador">{device.identifier}</td>
+                  <td data-label="Estado">
                     <span className={`status-pill ${resolveStatusClass(device.status)}`}>{resolveStatusLabel(device.status)}</span>
                   </td>
-                  <td>{device.active ? "Sí" : "No"}</td>
-                  <td>
+                  <td data-label="Activo">{device.active ? "Si" : "No"}</td>
+                  <td data-label="Accion">
                     <DeviceRowActions
                       deviceId={device.id}
                       active={device.active}

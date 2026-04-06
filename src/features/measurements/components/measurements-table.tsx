@@ -33,7 +33,7 @@ export function MeasurementsTable({ measurements, isLoading, error, deletingId, 
       {!isLoading && !error && measurements.length === 0 ? (
         <div className="empty-state">
           <p className="empty-title">Sin mediciones disponibles</p>
-          <p className="soft-text">Aún no hay resultados para los filtros seleccionados.</p>
+          <p className="soft-text">Aun no hay resultados para los filtros seleccionados.</p>
         </div>
       ) : null}
 
@@ -46,17 +46,17 @@ export function MeasurementsTable({ measurements, isLoading, error, deletingId, 
                 <th>Unidad</th>
                 <th>Fecha</th>
                 <th>Origen</th>
-                <th>Acción</th>
+                <th>Accion</th>
               </tr>
             </thead>
             <tbody>
               {measurements.map((item) => (
                 <tr key={item.id}>
-                  <td>{item.glucoseValue}</td>
-                  <td>{item.unit}</td>
-                  <td>{new Date(item.measuredAt).toLocaleString("es-CO")}</td>
-                  <td>{resolveOrigin(item)}</td>
-                  <td>
+                  <td data-label="Glucosa">{item.glucoseValue}</td>
+                  <td data-label="Unidad">{item.unit}</td>
+                  <td data-label="Fecha">{new Date(item.measuredAt).toLocaleString("es-CO")}</td>
+                  <td data-label="Origen">{resolveOrigin(item)}</td>
+                  <td data-label="Accion">
                     <MeasurementRowActions
                       measurementId={item.id}
                       isDeleting={deletingId === item.id}
