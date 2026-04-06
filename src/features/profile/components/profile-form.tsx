@@ -2,6 +2,7 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { ProfileData, UpdateProfilePayload } from "@/features/profile/types";
 import { formatTimezoneLabel, getBrowserTimezoneOrDefault, getTimezoneOptions } from "@/lib/timezones";
+import { mapZodIssuesToFieldErrors } from "@/lib/validation/errors";
 import { buildProfilePayload, profileFormSchema } from "@/lib/validation/profile";
 
 type Props = {
@@ -50,7 +51,7 @@ function toFormState(profile: ProfileData): FormState {
 
 export function ProfileForm({ profile, isLoading, isSubmitting, error, success, onSubmit }: Props) {
   const [form, setForm] = useState<FormState>(INITIAL_STATE);
-  const [validationError, setValidationError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Partial<Record<keyof FormState, string>>>({});
   const timezoneOptions = useMemo(() => getTimezoneOptions(), []);
 
   useEffect(() => {
@@ -65,7 +66,7 @@ export function ProfileForm({ profile, isLoading, isSubmitting, error, success, 
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setValidationError(null);
+    setFieldErrors({});
 
     const result = profileFormSchema.safeParse({
       fullName: form.fullName,
@@ -78,7 +79,7 @@ export function ProfileForm({ profile, isLoading, isSubmitting, error, success, 
     });
 
     if (!result.success) {
-      setValidationError(result.error.issues[0]?.message ?? "No se pudo validar el formulario.");
+      setFieldErrors(mapZodIssuesToFieldErrors<keyof FormState>(result.error.issues));
       return;
     }
 
@@ -90,6 +91,18 @@ export function ProfileForm({ profile, isLoading, isSubmitting, error, success, 
     (value: string): void =>
       setForm((current) => ({ ...current, [field]: value }));
 
+  const updateField =
+    (field: keyof FormState) =>
+    (value: string): void => {
+      setFieldErrors((current) => {
+        if (!current[field]) return current;
+        const next = { ...current };
+        delete next[field];
+        return next;
+      });
+      setField(field)(value);
+    };
+
   return (
     <Card>
       {isLoading ? <p className="soft-text">Cargando perfil...</p> : null}
@@ -97,9 +110,17 @@ export function ProfileForm({ profile, isLoading, isSubmitting, error, success, 
 
       {profile ? (
         <form className="profile-form" onSubmit={(event) => void handleSubmit(event)}>
-          <label className="field">
+          <label className={`field ${fieldErrors.fullName ? "has-error" : ""}`}>
             <span>Nombre completo</span>
-            <input type="text" value={form.fullName} onChange={(event) => setField("fullName")(event.target.value)} />
+            <input
+              type="text"
+              value={form.fullName}
+              disabled={isSubmitting}
+              aria-invalid={fieldErrors.fullName ? "true" : "false"}
+              aria-describedby={fieldErrors.fullName ? "profile-full-name-error" : undefined}
+              onChange={(event) => updateField("fullName")(event.target.value)}
+            />
+            {fieldErrors.fullName ? <small id="profile-full-name-error">{fieldErrors.fullName}</small> : null}
           </label>
 
           <label className="field">
@@ -107,14 +128,28 @@ export function ProfileForm({ profile, isLoading, isSubmitting, error, success, 
             <input type="email" value={form.email} disabled />
           </label>
 
-          <label className="field">
+          <label className={`field ${fieldErrors.birthDate ? "has-error" : ""}`}>
             <span>Fecha de nacimiento</span>
-            <input type="date" value={form.birthDate} onChange={(event) => setField("birthDate")(event.target.value)} />
+            <input
+              type="date"
+              value={form.birthDate}
+              disabled={isSubmitting}
+              aria-invalid={fieldErrors.birthDate ? "true" : "false"}
+              aria-describedby={fieldErrors.birthDate ? "profile-birth-date-error" : undefined}
+              onChange={(event) => updateField("birthDate")(event.target.value)}
+            />
+            {fieldErrors.birthDate ? <small id="profile-birth-date-error">{fieldErrors.birthDate}</small> : null}
           </label>
 
-          <label className="field">
+          <label className={`field ${fieldErrors.timezone ? "has-error" : ""}`}>
             <span>Zona horaria</span>
-            <select value={form.timezone} onChange={(event) => setField("timezone")(event.target.value)}>
+            <select
+              value={form.timezone}
+              disabled={isSubmitting}
+              aria-invalid={fieldErrors.timezone ? "true" : "false"}
+              aria-describedby={fieldErrors.timezone ? "profile-timezone-error" : undefined}
+              onChange={(event) => updateField("timezone")(event.target.value)}
+            >
               <option value="">Selecciona una zona horaria</option>
               {!timezoneOptions.includes(form.timezone) && form.timezone ? (
                 <option value={form.timezone}>{formatTimezoneLabel(form.timezone)}</option>
@@ -125,43 +160,71 @@ export function ProfileForm({ profile, isLoading, isSubmitting, error, success, 
                 </option>
               ))}
             </select>
+            {fieldErrors.timezone ? <small id="profile-timezone-error">{fieldErrors.timezone}</small> : null}
           </label>
 
-          <label className="field">
+          <label className={`field ${fieldErrors.hypoglycemiaThreshold ? "has-error" : ""}`}>
             <span>Umbral minimo (mg/dL)</span>
             <input
               type="number"
               step="0.1"
               min="1"
               value={form.hypoglycemiaThreshold}
-              onChange={(event) => setField("hypoglycemiaThreshold")(event.target.value)}
+              disabled={isSubmitting}
+              aria-invalid={fieldErrors.hypoglycemiaThreshold ? "true" : "false"}
+              aria-describedby={fieldErrors.hypoglycemiaThreshold ? "profile-hypo-error" : undefined}
+              onChange={(event) => updateField("hypoglycemiaThreshold")(event.target.value)}
             />
+            {fieldErrors.hypoglycemiaThreshold ? <small id="profile-hypo-error">{fieldErrors.hypoglycemiaThreshold}</small> : null}
           </label>
 
-          <label className="field">
+          <label className={`field ${fieldErrors.hyperglycemiaThreshold ? "has-error" : ""}`}>
             <span>Umbral maximo (mg/dL)</span>
             <input
               type="number"
               step="0.1"
               min="1"
               value={form.hyperglycemiaThreshold}
-              onChange={(event) => setField("hyperglycemiaThreshold")(event.target.value)}
+              disabled={isSubmitting}
+              aria-invalid={fieldErrors.hyperglycemiaThreshold ? "true" : "false"}
+              aria-describedby={fieldErrors.hyperglycemiaThreshold ? "profile-hyper-error" : undefined}
+              onChange={(event) => updateField("hyperglycemiaThreshold")(event.target.value)}
             />
+            {fieldErrors.hyperglycemiaThreshold ? <small id="profile-hyper-error">{fieldErrors.hyperglycemiaThreshold}</small> : null}
           </label>
 
-          <label className="field">
+          <label className={`field ${fieldErrors.weightKg ? "has-error" : ""}`}>
             <span>Peso (kg)</span>
-            <input type="number" step="0.1" min="1" value={form.weightKg} onChange={(event) => setField("weightKg")(event.target.value)} />
+            <input
+              type="number"
+              step="0.1"
+              min="1"
+              value={form.weightKg}
+              disabled={isSubmitting}
+              aria-invalid={fieldErrors.weightKg ? "true" : "false"}
+              aria-describedby={fieldErrors.weightKg ? "profile-weight-error" : undefined}
+              onChange={(event) => updateField("weightKg")(event.target.value)}
+            />
+            {fieldErrors.weightKg ? <small id="profile-weight-error">{fieldErrors.weightKg}</small> : null}
           </label>
 
-          <label className="field">
+          <label className={`field ${fieldErrors.heightCm ? "has-error" : ""}`}>
             <span>Altura (cm)</span>
-            <input type="number" step="0.1" min="30" value={form.heightCm} onChange={(event) => setField("heightCm")(event.target.value)} />
+            <input
+              type="number"
+              step="0.1"
+              min="30"
+              value={form.heightCm}
+              disabled={isSubmitting}
+              aria-invalid={fieldErrors.heightCm ? "true" : "false"}
+              aria-describedby={fieldErrors.heightCm ? "profile-height-error" : undefined}
+              onChange={(event) => updateField("heightCm")(event.target.value)}
+            />
+            {fieldErrors.heightCm ? <small id="profile-height-error">{fieldErrors.heightCm}</small> : null}
           </label>
 
-          {validationError ? <p className="error-text">{validationError}</p> : null}
-          {error ? <p className="error-text">{error}</p> : null}
-          {success ? <p className="success-text">{success}</p> : null}
+          {error ? <p className="form-feedback form-feedback-error">{error}</p> : null}
+          {success ? <p className="form-feedback form-feedback-success">{success}</p> : null}
 
           <div className="profile-actions">
             <button type="submit" className="primary-button" disabled={isSubmitting}>

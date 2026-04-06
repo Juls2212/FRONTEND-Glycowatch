@@ -18,6 +18,7 @@ import {
   dashboardManualMeasurementSchema,
   toDashboardMeasuredAtISOString
 } from "@/lib/validation/measurements";
+import { mapZodIssuesToFieldErrors } from "@/lib/validation/errors";
 import {
   buildSpanishRiskMessage,
   translateRiskLevel,
@@ -153,6 +154,7 @@ export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [formFieldErrors, setFormFieldErrors] = useState<Partial<Record<"glucoseValue" | "measuredAt", string>>>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [formSuccess, setFormSuccess] = useState<string | null>(null);
   const [glucoseValueInput, setGlucoseValueInput] = useState("");
@@ -198,6 +200,7 @@ export default function DashboardPage() {
 
   const onManualSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    setFormFieldErrors({});
     setFormError(null);
     setFormSuccess(null);
 
@@ -207,7 +210,7 @@ export default function DashboardPage() {
     });
 
     if (!result.success) {
-      setFormError(result.error.issues[0]?.message ?? "No se pudo validar la medicion.");
+      setFormFieldErrors(mapZodIssuesToFieldErrors(result.error.issues));
       return;
     }
 
@@ -480,26 +483,50 @@ export default function DashboardPage() {
         <Section title="Registro manual" subtitle="Entrada rapida para anadir una medicion sin salir del panel">
           <Card className="manual-entry-card">
             <form className="manual-form" onSubmit={onManualSubmit}>
-              <label className="field">
+              <label className={`field ${formFieldErrors.glucoseValue ? "has-error" : ""}`}>
                 <span>Valor de glucosa (mg/dL)</span>
                 <input
                   type="number"
                   step="0.1"
                   min="1"
                   value={glucoseValueInput}
-                  onChange={(event) => setGlucoseValueInput(event.target.value)}
+                  disabled={isSubmitting}
+                  aria-invalid={formFieldErrors.glucoseValue ? "true" : "false"}
+                  aria-describedby={formFieldErrors.glucoseValue ? "dashboard-glucose-error" : undefined}
+                  onChange={(event) => {
+                    setFormFieldErrors((current) => {
+                      if (!current.glucoseValue) return current;
+                      const next = { ...current };
+                      delete next.glucoseValue;
+                      return next;
+                    });
+                    setGlucoseValueInput(event.target.value);
+                  }}
                   placeholder="Ej. 112.5"
                 />
+                {formFieldErrors.glucoseValue ? <small id="dashboard-glucose-error">{formFieldErrors.glucoseValue}</small> : null}
               </label>
 
-              <label className="field">
+              <label className={`field ${formFieldErrors.measuredAt ? "has-error" : ""}`}>
                 <span>Fecha y hora de medicion</span>
                 <input
                   type="datetime-local"
                   max={new Date().toISOString().slice(0, 16)}
                   value={measuredAtInput}
-                  onChange={(event) => setMeasuredAtInput(event.target.value)}
+                  disabled={isSubmitting}
+                  aria-invalid={formFieldErrors.measuredAt ? "true" : "false"}
+                  aria-describedby={formFieldErrors.measuredAt ? "dashboard-measured-at-error" : undefined}
+                  onChange={(event) => {
+                    setFormFieldErrors((current) => {
+                      if (!current.measuredAt) return current;
+                      const next = { ...current };
+                      delete next.measuredAt;
+                      return next;
+                    });
+                    setMeasuredAtInput(event.target.value);
+                  }}
                 />
+                {formFieldErrors.measuredAt ? <small id="dashboard-measured-at-error">{formFieldErrors.measuredAt}</small> : null}
               </label>
 
               <label className="field">
@@ -507,8 +534,8 @@ export default function DashboardPage() {
                 <input type="text" value="mg/dL" disabled />
               </label>
 
-              {formError ? <p className="error-text">{formError}</p> : null}
-              {formSuccess ? <p className="success-text">{formSuccess}</p> : null}
+              {formError ? <p className="form-feedback form-feedback-error">{formError}</p> : null}
+              {formSuccess ? <p className="form-feedback form-feedback-success">{formSuccess}</p> : null}
 
               <div className="manual-actions">
                 <p className="manual-helper-text">El registro se agrega al historial y actualiza el panel al guardarse.</p>

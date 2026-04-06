@@ -1,6 +1,7 @@
 import { FormEvent, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { RegisterDeviceResult } from "@/features/devices/types";
+import { mapZodIssuesToFieldErrors } from "@/lib/validation/errors";
 import { deviceRegisterSchema } from "@/lib/validation/devices";
 
 type Props = {
@@ -24,11 +25,11 @@ export function DeviceRegisterForm({
 }: Props) {
   const [name, setName] = useState("");
   const [identifier, setIdentifier] = useState("");
-  const [validationError, setValidationError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Partial<Record<"name" | "identifier", string>>>({});
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setValidationError(null);
+    setFieldErrors({});
 
     const result = deviceRegisterSchema.safeParse({
       name,
@@ -36,7 +37,7 @@ export function DeviceRegisterForm({
     });
 
     if (!result.success) {
-      setValidationError(result.error.issues[0]?.message ?? "No se pudo validar el formulario.");
+      setFieldErrors(mapZodIssuesToFieldErrors(result.error.issues));
       return;
     }
 
@@ -48,24 +49,52 @@ export function DeviceRegisterForm({
   return (
     <Card>
       <form className="devices-form" onSubmit={(event) => void handleSubmit(event)}>
-        <label className="field">
+        <label className={`field ${fieldErrors.name ? "has-error" : ""}`}>
           <span>Nombre del dispositivo</span>
-          <input type="text" value={name} onChange={(event) => setName(event.target.value)} placeholder="Ej. Sensor 1" />
+          <input
+            type="text"
+            value={name}
+            disabled={isSubmitting}
+            aria-invalid={fieldErrors.name ? "true" : "false"}
+            aria-describedby={fieldErrors.name ? "device-name-error" : undefined}
+            onChange={(event) => {
+              setFieldErrors((current) => {
+                if (!current.name) return current;
+                const next = { ...current };
+                delete next.name;
+                return next;
+              });
+              setName(event.target.value);
+            }}
+            placeholder="Ej. Sensor 1"
+          />
+          {fieldErrors.name ? <small id="device-name-error">{fieldErrors.name}</small> : null}
         </label>
 
-        <label className="field">
+        <label className={`field ${fieldErrors.identifier ? "has-error" : ""}`}>
           <span>Identificador</span>
           <input
             type="text"
             value={identifier}
-            onChange={(event) => setIdentifier(event.target.value)}
+            disabled={isSubmitting}
+            aria-invalid={fieldErrors.identifier ? "true" : "false"}
+            aria-describedby={fieldErrors.identifier ? "device-identifier-error" : undefined}
+            onChange={(event) => {
+              setFieldErrors((current) => {
+                if (!current.identifier) return current;
+                const next = { ...current };
+                delete next.identifier;
+                return next;
+              });
+              setIdentifier(event.target.value);
+            }}
             placeholder="Ej. ESP32-003"
           />
+          {fieldErrors.identifier ? <small id="device-identifier-error">{fieldErrors.identifier}</small> : null}
         </label>
 
-        {validationError ? <p className="error-text">{validationError}</p> : null}
-        {error ? <p className="error-text">{error}</p> : null}
-        {success ? <p className="success-text">{success}</p> : null}
+        {error ? <p className="form-feedback form-feedback-error">{error}</p> : null}
+        {success ? <p className="form-feedback form-feedback-success">{success}</p> : null}
 
         <div className="devices-actions">
           <button type="submit" className="primary-button" disabled={isSubmitting}>

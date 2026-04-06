@@ -1,4 +1,4 @@
-"use client"; // This page is rendered on the client side because it manages authentication state and form interactions.
+"use client";
 
 import { useEffect } from "react";
 import Link from "next/link";
@@ -11,8 +11,6 @@ function resolvePostLoginPath(): string {
   return onboardingStorage.isProfilePending() ? "/profile" : "/dashboard";
 }
 
-
-// The LoginPage component renders a login form and manages the authentication flow.
 export default function LoginPage() {
   const router = useRouter();
   const login = useAuthStore((state) => state.login);
@@ -42,23 +40,37 @@ export default function LoginPage() {
     <div className="auth-page">
       <div className="auth-card">
         <p className="auth-eyebrow">Bienvenido</p>
-        <h1 className="auth-title">Inicia sesión en GlycoWatch</h1>
-        <p className="auth-subtitle">Monitorea métricas glucémicas desde un panel profesional.</p>
+        <h1 className="auth-title">Inicia sesion en GlycoWatch</h1>
+        <p className="auth-subtitle">Monitorea metricas glucemicas desde un panel profesional.</p>
 
         <form onSubmit={onSubmit} className="auth-form">
-          <label className="field">
-            <span>Correo electrónico</span>
-            <input type="email" placeholder="usuario@correo.com" {...register("email")} />
-            {errors.email ? <small>{errors.email.message}</small> : null}
+          <label className={`field ${errors.email ? "has-error" : ""}`}>
+            <span>Correo electronico</span>
+            <input
+              type="email"
+              placeholder="usuario@correo.com"
+              aria-invalid={errors.email ? "true" : "false"}
+              aria-describedby={errors.email ? "login-email-error" : undefined}
+              disabled={isLoading}
+              {...register("email")}
+            />
+            {errors.email ? <small id="login-email-error">{errors.email.message}</small> : null}
           </label>
 
-          <label className="field">
-            <span>Contraseña</span>
-            <input type="password" placeholder="••••••••" {...register("password")} />
-            {errors.password ? <small>{errors.password.message}</small> : null}
+          <label className={`field ${errors.password ? "has-error" : ""}`}>
+            <span>Contrasena</span>
+            <input
+              type="password"
+              placeholder="••••••••"
+              aria-invalid={errors.password ? "true" : "false"}
+              aria-describedby={errors.password ? "login-password-error" : undefined}
+              disabled={isLoading}
+              {...register("password")}
+            />
+            {errors.password ? <small id="login-password-error">{errors.password.message}</small> : null}
           </label>
 
-          {error ? <p className="error-text">{error}</p> : null}
+          {error ? <p className="form-feedback form-feedback-error">{error}</p> : null}
 
           <button type="submit" className="primary-button" disabled={isLoading}>
             {isLoading ? "Ingresando..." : "Entrar"}

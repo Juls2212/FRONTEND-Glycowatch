@@ -13,6 +13,7 @@ export function useRegisterForm() {
       email: "",
       password: ""
     },
-    mode: "onSubmit"
+    mode: "onSubmit",
+    reValidateMode: "onChange"
   });
 }

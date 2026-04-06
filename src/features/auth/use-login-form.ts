@@ -12,6 +12,7 @@ export function useLoginForm() {
       email: "",
       password: ""
     },
-    mode: "onSubmit"
+    mode: "onSubmit",
+    reValidateMode: "onChange"
   });
 }

@@ -26,7 +26,7 @@ export default function RegisterPage() {
     try {
       await registerRequest(values);
       onboardingStorage.markProfilePending();
-      setSuccess("Cuenta creada correctamente. Inicia sesión para completar tu perfil.");
+      setSuccess("Cuenta creada correctamente. Inicia sesion para completar tu perfil.");
       setTimeout(() => router.replace("/login"), 900);
     } catch (err) {
       const message = err instanceof Error ? err.message : "No se pudo crear la cuenta.";
@@ -41,29 +41,50 @@ export default function RegisterPage() {
       <div className="auth-card">
         <p className="auth-eyebrow">Registro</p>
         <h1 className="auth-title">Crea tu cuenta en GlycoWatch</h1>
-        <p className="auth-subtitle">Configura tu acceso para comenzar a monitorear tus métricas.</p>
+        <p className="auth-subtitle">Configura tu acceso para comenzar a monitorear tus metricas.</p>
 
         <form onSubmit={onSubmit} className="auth-form">
-          <label className="field">
+          <label className={`field ${errors.fullName ? "has-error" : ""}`}>
             <span>Nombre completo</span>
-            <input type="text" placeholder="Nombre Apellido" {...register("fullName")} />
-            {errors.fullName ? <small>{errors.fullName.message}</small> : null}
+            <input
+              type="text"
+              placeholder="Nombre Apellido"
+              aria-invalid={errors.fullName ? "true" : "false"}
+              aria-describedby={errors.fullName ? "register-full-name-error" : undefined}
+              disabled={isLoading}
+              {...register("fullName")}
+            />
+            {errors.fullName ? <small id="register-full-name-error">{errors.fullName.message}</small> : null}
           </label>
 
-          <label className="field">
-            <span>Correo electrónico</span>
-            <input type="email" placeholder="usuario@correo.com" {...register("email")} />
-            {errors.email ? <small>{errors.email.message}</small> : null}
+          <label className={`field ${errors.email ? "has-error" : ""}`}>
+            <span>Correo electronico</span>
+            <input
+              type="email"
+              placeholder="usuario@correo.com"
+              aria-invalid={errors.email ? "true" : "false"}
+              aria-describedby={errors.email ? "register-email-error" : undefined}
+              disabled={isLoading}
+              {...register("email")}
+            />
+            {errors.email ? <small id="register-email-error">{errors.email.message}</small> : null}
           </label>
 
-          <label className="field">
-            <span>Contraseña</span>
-            <input type="password" placeholder="••••••••" {...register("password")} />
-            {errors.password ? <small>{errors.password.message}</small> : null}
+          <label className={`field ${errors.password ? "has-error" : ""}`}>
+            <span>Contrasena</span>
+            <input
+              type="password"
+              placeholder="••••••••"
+              aria-invalid={errors.password ? "true" : "false"}
+              aria-describedby={errors.password ? "register-password-error" : undefined}
+              disabled={isLoading}
+              {...register("password")}
+            />
+            {errors.password ? <small id="register-password-error">{errors.password.message}</small> : null}
           </label>
 
-          {error ? <p className="error-text">{error}</p> : null}
-          {success ? <p className="success-text">{success}</p> : null}
+          {error ? <p className="form-feedback form-feedback-error">{error}</p> : null}
+          {success ? <p className="form-feedback form-feedback-success">{success}</p> : null}
 
           <button type="submit" className="primary-button" disabled={isLoading}>
             {isLoading ? "Creando cuenta..." : "Crear cuenta"}
@@ -73,7 +94,7 @@ export default function RegisterPage() {
         <p className="auth-switch">
           ¿Ya tienes cuenta?{" "}
           <Link href="/login" className="auth-link">
-            Iniciar sesión
+            Iniciar sesion
           </Link>
         </p>
       </div>
