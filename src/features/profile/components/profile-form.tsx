@@ -1,6 +1,7 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { ProfileData, UpdateProfilePayload } from "@/features/profile/types";
+import { normalizeRestrictedDecimalInput } from "@/lib/forms/input-normalizers";
 import { formatTimezoneLabel, getBrowserTimezoneOrDefault, getTimezoneOptions } from "@/lib/timezones";
 import { mapZodIssuesToFieldErrors } from "@/lib/validation/errors";
 import { buildProfilePayload, profileFormSchema } from "@/lib/validation/profile";
@@ -103,6 +104,11 @@ export function ProfileForm({ profile, isLoading, isSubmitting, error, success, 
       setField(field)(value);
     };
 
+  const updateRestrictedDecimalField =
+    (field: keyof FormState) =>
+    (value: string): void =>
+      updateField(field)(normalizeRestrictedDecimalInput(value, { maxIntegerDigits: 3, maxFractionDigits: 1 }));
+
   return (
     <Card>
       {isLoading ? <p className="soft-text">Cargando perfil...</p> : null}
@@ -175,7 +181,7 @@ export function ProfileForm({ profile, isLoading, isSubmitting, error, success, 
               disabled={isSubmitting}
               aria-invalid={fieldErrors.hypoglycemiaThreshold ? "true" : "false"}
               aria-describedby={fieldErrors.hypoglycemiaThreshold ? "profile-hypo-error" : undefined}
-              onChange={(event) => updateField("hypoglycemiaThreshold")(event.target.value)}
+              onChange={(event) => updateRestrictedDecimalField("hypoglycemiaThreshold")(event.target.value)}
             />
             {fieldErrors.hypoglycemiaThreshold ? <small id="profile-hypo-error">{fieldErrors.hypoglycemiaThreshold}</small> : null}
           </label>
@@ -191,7 +197,7 @@ export function ProfileForm({ profile, isLoading, isSubmitting, error, success, 
               disabled={isSubmitting}
               aria-invalid={fieldErrors.hyperglycemiaThreshold ? "true" : "false"}
               aria-describedby={fieldErrors.hyperglycemiaThreshold ? "profile-hyper-error" : undefined}
-              onChange={(event) => updateField("hyperglycemiaThreshold")(event.target.value)}
+              onChange={(event) => updateRestrictedDecimalField("hyperglycemiaThreshold")(event.target.value)}
             />
             {fieldErrors.hyperglycemiaThreshold ? <small id="profile-hyper-error">{fieldErrors.hyperglycemiaThreshold}</small> : null}
           </label>
@@ -207,7 +213,7 @@ export function ProfileForm({ profile, isLoading, isSubmitting, error, success, 
               disabled={isSubmitting}
               aria-invalid={fieldErrors.weightKg ? "true" : "false"}
               aria-describedby={fieldErrors.weightKg ? "profile-weight-error" : undefined}
-              onChange={(event) => updateField("weightKg")(event.target.value)}
+              onChange={(event) => updateRestrictedDecimalField("weightKg")(event.target.value)}
             />
             {fieldErrors.weightKg ? <small id="profile-weight-error">{fieldErrors.weightKg}</small> : null}
           </label>
@@ -223,7 +229,7 @@ export function ProfileForm({ profile, isLoading, isSubmitting, error, success, 
               disabled={isSubmitting}
               aria-invalid={fieldErrors.heightCm ? "true" : "false"}
               aria-describedby={fieldErrors.heightCm ? "profile-height-error" : undefined}
-              onChange={(event) => updateField("heightCm")(event.target.value)}
+              onChange={(event) => updateRestrictedDecimalField("heightCm")(event.target.value)}
             />
             {fieldErrors.heightCm ? <small id="profile-height-error">{fieldErrors.heightCm}</small> : null}
           </label>

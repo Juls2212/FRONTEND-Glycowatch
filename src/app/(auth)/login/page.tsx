@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { normalizeEmailInput, trimInputValue } from "@/lib/forms/input-normalizers";
 import { useLoginForm } from "@/features/auth/use-login-form";
 import { useAuthStore } from "@/stores/auth-store";
 import { onboardingStorage } from "@/lib/auth/onboarding";
@@ -24,6 +25,9 @@ export default function LoginPage() {
     handleSubmit,
     formState: { errors }
   } = useLoginForm();
+
+  const emailRegistration = register("email");
+  const passwordRegistration = register("password");
 
   useEffect(() => {
     if (isHydrated && accessToken) {
@@ -53,7 +57,14 @@ export default function LoginPage() {
               aria-invalid={errors.email ? "true" : "false"}
               aria-describedby={errors.email ? "login-email-error" : undefined}
               disabled={isLoading}
-              {...register("email")}
+              {...emailRegistration}
+              onInput={(event) => {
+                event.currentTarget.value = normalizeEmailInput(event.currentTarget.value);
+              }}
+              onBlur={(event) => {
+                event.currentTarget.value = trimInputValue(event.currentTarget.value);
+                emailRegistration.onBlur(event);
+              }}
             />
             {errors.email ? <small id="login-email-error">{errors.email.message}</small> : null}
           </label>
@@ -67,7 +78,11 @@ export default function LoginPage() {
               aria-invalid={errors.password ? "true" : "false"}
               aria-describedby={errors.password ? "login-password-error" : undefined}
               disabled={isLoading}
-              {...register("password")}
+              {...passwordRegistration}
+              onBlur={(event) => {
+                event.currentTarget.value = trimInputValue(event.currentTarget.value);
+                passwordRegistration.onBlur(event);
+              }}
             />
             {errors.password ? <small id="login-password-error">{errors.password.message}</small> : null}
           </label>

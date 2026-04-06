@@ -3,6 +3,7 @@
 import { FormEvent, useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { createManualMeasurement } from "@/features/measurements/api";
+import { normalizeRestrictedDecimalInput } from "@/lib/forms/input-normalizers";
 import { mapZodIssuesToFieldErrors } from "@/lib/validation/errors";
 import { manualMeasurementFormSchema, toManualMeasuredAtISOString } from "@/lib/validation/measurements";
 
@@ -101,7 +102,7 @@ export function ManualMeasurementForm({ onCreated }: Props) {
                 delete next.glucoseValue;
                 return next;
               });
-              setGlucoseValue(event.target.value);
+              setGlucoseValue(normalizeRestrictedDecimalInput(event.target.value, { maxIntegerDigits: 3, maxFractionDigits: 1 }));
             }}
             placeholder="Ej. 110.5"
           />

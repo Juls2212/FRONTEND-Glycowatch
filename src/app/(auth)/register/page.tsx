@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { normalizeEmailInput, trimInputValue } from "@/lib/forms/input-normalizers";
 import { registerRequest } from "@/features/auth/api";
 import { useRegisterForm } from "@/features/auth/use-register-form";
 import { onboardingStorage } from "@/lib/auth/onboarding";
@@ -18,6 +19,10 @@ export default function RegisterPage() {
     handleSubmit,
     formState: { errors }
   } = useRegisterForm();
+
+  const fullNameRegistration = register("fullName");
+  const emailRegistration = register("email");
+  const passwordRegistration = register("password");
 
   const onSubmit = handleSubmit(async (values) => {
     setIsLoading(true);
@@ -53,7 +58,11 @@ export default function RegisterPage() {
               aria-invalid={errors.fullName ? "true" : "false"}
               aria-describedby={errors.fullName ? "register-full-name-error" : undefined}
               disabled={isLoading}
-              {...register("fullName")}
+              {...fullNameRegistration}
+              onBlur={(event) => {
+                event.currentTarget.value = trimInputValue(event.currentTarget.value);
+                fullNameRegistration.onBlur(event);
+              }}
             />
             {errors.fullName ? <small id="register-full-name-error">{errors.fullName.message}</small> : null}
           </label>
@@ -67,7 +76,14 @@ export default function RegisterPage() {
               aria-invalid={errors.email ? "true" : "false"}
               aria-describedby={errors.email ? "register-email-error" : undefined}
               disabled={isLoading}
-              {...register("email")}
+              {...emailRegistration}
+              onInput={(event) => {
+                event.currentTarget.value = normalizeEmailInput(event.currentTarget.value);
+              }}
+              onBlur={(event) => {
+                event.currentTarget.value = trimInputValue(event.currentTarget.value);
+                emailRegistration.onBlur(event);
+              }}
             />
             {errors.email ? <small id="register-email-error">{errors.email.message}</small> : null}
           </label>
@@ -81,7 +97,11 @@ export default function RegisterPage() {
               aria-invalid={errors.password ? "true" : "false"}
               aria-describedby={errors.password ? "register-password-error" : undefined}
               disabled={isLoading}
-              {...register("password")}
+              {...passwordRegistration}
+              onBlur={(event) => {
+                event.currentTarget.value = trimInputValue(event.currentTarget.value);
+                passwordRegistration.onBlur(event);
+              }}
             />
             {errors.password ? <small id="register-password-error">{errors.password.message}</small> : null}
           </label>

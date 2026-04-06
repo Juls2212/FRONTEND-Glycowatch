@@ -14,6 +14,7 @@ import { GlucoseChart } from "@/components/charts/glucose-chart";
 import { GlucoseVisualization } from "@/components/charts/glucose-visualization";
 import { ChartRangeFilter } from "@/features/dashboard/components/chart-range-filter";
 import { ChartRange, filterChartByRange } from "@/features/dashboard/chart-range";
+import { normalizeRestrictedDecimalInput } from "@/lib/forms/input-normalizers";
 import {
   dashboardManualMeasurementSchema,
   toDashboardMeasuredAtISOString
@@ -501,7 +502,7 @@ export default function DashboardPage() {
                       delete next.glucoseValue;
                       return next;
                     });
-                    setGlucoseValueInput(event.target.value);
+                    setGlucoseValueInput(normalizeRestrictedDecimalInput(event.target.value, { maxIntegerDigits: 3, maxFractionDigits: 1 }));
                   }}
                   placeholder="Ej. 112.5"
                 />
