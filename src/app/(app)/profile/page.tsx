@@ -34,6 +34,13 @@ export default function ProfilePage() {
   useEffect(() => {
     const mounted = { current: true };
 
+    if (onboardingStorage.isProfilePending()) {
+      router.replace("/onboarding");
+      return () => {
+        mounted.current = false;
+      };
+    }
+
     async function initialize() {
       setIsLoading(true);
       await loadProfile(mounted);

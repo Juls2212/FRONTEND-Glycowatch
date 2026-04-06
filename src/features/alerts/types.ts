@@ -7,5 +7,3 @@ export type AlertItem = {
   measurementId: number;
   createdAt: string;
 };
-
-

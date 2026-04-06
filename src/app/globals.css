@@ -1400,6 +1400,105 @@ a {
   gap: 14px;
 }
 
+.onboarding-shell {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 28px 20px;
+}
+
+.onboarding-card {
+  width: min(940px, 100%);
+  border-radius: 24px;
+  border: 1px solid var(--border-subtle);
+  background:
+    radial-gradient(circle at top right, var(--gradient-highlight-secondary) 0%, transparent 34%),
+    linear-gradient(180deg, var(--gradient-highlight-primary) 0%, transparent 100%),
+    linear-gradient(180deg, var(--surface-panel) 0%, var(--surface-panel-strong) 100%);
+  box-shadow: var(--shadow-strong);
+  padding: 28px;
+  display: grid;
+  gap: 22px;
+}
+
+.onboarding-copy {
+  display: grid;
+  gap: 10px;
+  max-width: 640px;
+}
+
+.onboarding-title {
+  margin: 0;
+  font-size: clamp(32px, 4vw, 46px);
+  line-height: 1.02;
+  letter-spacing: -0.04em;
+}
+
+.onboarding-subtitle {
+  margin: 0;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  font-size: 15px;
+}
+
+.onboarding-form {
+  display: grid;
+  gap: 20px;
+}
+
+.onboarding-section {
+  display: grid;
+  gap: 16px;
+  padding: 18px;
+  border-radius: var(--radius-xl);
+  border: 1px solid rgba(var(--accent-rgb), 0.14);
+  background: var(--surface-muted);
+}
+
+.onboarding-section-header {
+  display: grid;
+  gap: 6px;
+}
+
+.onboarding-section-header h2 {
+  margin: 0;
+  font-size: 18px;
+  letter-spacing: -0.02em;
+}
+
+.onboarding-section-header p,
+.field-helper {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.onboarding-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 16px;
+}
+
+.onboarding-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding-top: 4px;
+}
+
+.onboarding-progress {
+  min-width: 0;
+}
+
+.metric-chip.ready {
+  border-color: rgba(var(--success-rgb), 0.28);
+  background: rgba(var(--success-rgb), 0.12);
+  color: rgba(var(--success-rgb), 0.96);
+}
+
 .field {
   display: flex;
   flex-direction: column;
@@ -3192,6 +3291,19 @@ a {
   .manual-helper-text {
     max-width: none;
   }
+
+  .onboarding-card {
+    padding: 22px;
+  }
+
+  .onboarding-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .onboarding-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
 }
 
 @media (max-width: 720px) {
@@ -3361,6 +3473,19 @@ a {
   .notification-item,
   .risk-stat {
     padding: 12px;
+  }
+
+  .onboarding-shell {
+    padding: 12px;
+  }
+
+  .onboarding-card {
+    border-radius: 20px;
+    padding: 18px;
+  }
+
+  .onboarding-section {
+    padding: 14px;
   }
 }
 

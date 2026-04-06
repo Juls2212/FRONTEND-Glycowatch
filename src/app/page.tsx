@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { onboardingStorage } from "@/lib/auth/onboarding";
 import { useAuthStore } from "@/stores/auth-store";
 
 export default function HomePage() {
@@ -12,7 +13,7 @@ export default function HomePage() {
   useEffect(()=> {
     if (!isHydrated) return;
     if (accessToken) {
-      router.replace("/dashboard");
+      router.replace(onboardingStorage.isProfilePending() ? "/onboarding" : "/dashboard");
       return;
     }
     router.replace("/login");

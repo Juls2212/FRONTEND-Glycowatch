@@ -9,7 +9,7 @@ import { useAuthStore } from "@/stores/auth-store";
 import { onboardingStorage } from "@/lib/auth/onboarding";
 
 function resolvePostLoginPath(): string {
-  return onboardingStorage.isProfilePending() ? "/profile" : "/dashboard";
+  return onboardingStorage.isProfilePending() ? "/onboarding" : "/dashboard";
 }
 
 export default function LoginPage() {

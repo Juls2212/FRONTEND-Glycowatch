@@ -11,4 +11,3 @@ export async function fetchAlerts(): Promise<AlertItem[]> {
 export async function markAlertAsRead(alertId: number): Promise<void> {
   await apiClient.put(`${API_ENDPOINTS.alerts.base}/${alertId}/read`);
 }
-
