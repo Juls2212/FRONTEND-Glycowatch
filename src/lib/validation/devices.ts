@@ -1,14 +1,19 @@
 import { z } from "zod";
 
+const normalizedDeviceName = z
+  .string()
+  .trim()
+  .min(1, "Completa nombre e identificador.")
+  .max(80, "El nombre del dispositivo no puede superar 80 caracteres.");
+
+const normalizedIdentifier = z
+  .string()
+  .trim()
+  .min(1, "Completa nombre e identificador.")
+  .max(120, "El identificador no puede superar 120 caracteres.")
+  .regex(/^[A-Za-z0-9._:-]+$/, "El identificador solo puede incluir letras, numeros, punto, guion, guion bajo o dos puntos.");
+
 export const deviceRegisterSchema = z.object({
-  name: z
-    .string()
-    .trim()
-    .min(1, "Completa nombre e identificador.")
-    .max(255, "Nombre e identificador no pueden superar 255 caracteres."),
-  identifier: z
-    .string()
-    .trim()
-    .min(1, "Completa nombre e identificador.")
-    .max(255, "Nombre e identificador no pueden superar 255 caracteres.")
+  name: normalizedDeviceName,
+  identifier: normalizedIdentifier
 });

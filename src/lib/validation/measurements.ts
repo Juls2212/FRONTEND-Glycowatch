@@ -1,13 +1,16 @@
 import { z } from "zod";
 
+const MIN_GLUCOSE_MG_DL = 20;
+const MAX_GLUCOSE_MG_DL = 600;
+
 const glucoseValueField = z
   .string()
   .trim()
   .min(1, "Ingresa un valor de glucosa valido.")
   .refine((value) => {
     const parsed = Number(value);
-    return Number.isFinite(parsed) && parsed > 0;
-  }, "Ingresa un valor de glucosa valido.");
+    return Number.isFinite(parsed) && parsed >= MIN_GLUCOSE_MG_DL && parsed <= MAX_GLUCOSE_MG_DL;
+  }, `Ingresa un valor de glucosa entre ${MIN_GLUCOSE_MG_DL} y ${MAX_GLUCOSE_MG_DL} mg/dL.`);
 
 export const dashboardManualMeasurementSchema = z
   .object({
