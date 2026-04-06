@@ -1,18 +1,17 @@
 "use client";
 
-// This page is for user profile management, allowing users to view and update their personal information and health parameters.
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Section } from "@/components/ui/section";
+import { FeedbackBanner } from "@/components/ui/feedback-banner";
 import { fetchProfile, updateProfile } from "@/features/profile/api";
 import { ProfileForm } from "@/features/profile/components/profile-form";
 import { ProfileData, UpdateProfilePayload } from "@/features/profile/types";
-import { onboardingStorage } from "@/lib/auth/onboarding";
-import { FeedbackBanner } from "@/components/ui/feedback-banner";
+import { DiabetesType, onboardingStorage } from "@/lib/auth/onboarding";
 
 export default function ProfilePage() {
   const router = useRouter();
   const [profile, setProfile] = useState<ProfileData | null>(null);
+  const [diabetesType, setDiabetesType] = useState<DiabetesType | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -33,6 +32,7 @@ export default function ProfilePage() {
 
   useEffect(() => {
     const mounted = { current: true };
+    setDiabetesType(onboardingStorage.getDiabetesType());
 
     if (onboardingStorage.isProfilePending()) {
       router.replace("/onboarding");
@@ -51,15 +51,18 @@ export default function ProfilePage() {
     return () => {
       mounted.current = false;
     };
-  }, []);
+  }, [router]);
 
-  const onSubmit = async (payload: UpdateProfilePayload) => {
+  const onSubmit = async (payload: UpdateProfilePayload, nextDiabetesType: DiabetesType) => {
     setError(null);
     setSuccess(null);
     setIsSubmitting(true);
     try {
       const updated = await updateProfile(payload);
       setProfile(updated);
+      onboardingStorage.setDiabetesType(nextDiabetesType);
+      setDiabetesType(nextDiabetesType);
+
       const wasPendingOnboarding = onboardingStorage.isProfilePending();
       if (wasPendingOnboarding) {
         onboardingStorage.clearProfilePending();
@@ -67,6 +70,7 @@ export default function ProfilePage() {
         router.replace("/dashboard");
         return;
       }
+
       setSuccess("Perfil actualizado correctamente.");
     } catch (err) {
       const message = err instanceof Error ? err.message : "No se pudo actualizar el perfil.";
@@ -77,20 +81,23 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="dashboard-grid">
-      <Section title="Perfil de usuario" subtitle="Gestiona tus datos personales y parámetros de salud">
+    <div className="profile-page">
+      <div className="profile-page-feedback">
         {success ? <FeedbackBanner type="success" message={success} /> : null}
         {error ? <FeedbackBanner type="error" message={error} /> : null}
+      </div>
+
+      <section className="profile-page-shell">
         <ProfileForm
           profile={profile}
+          diabetesType={diabetesType}
           isLoading={isLoading}
           isSubmitting={isSubmitting}
           error={null}
           success={null}
           onSubmit={onSubmit}
         />
-      </Section>
+      </section>
     </div>
   );
 }
-

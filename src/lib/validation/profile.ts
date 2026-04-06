@@ -23,6 +23,10 @@ export const DIABETES_TYPE_OPTIONS: Array<{ value: DiabetesType; label: string }
   { value: "OTHER", label: "Otro" }
 ];
 
+const diabetesTypeSchema = z.enum(["TYPE_1", "TYPE_2", "GESTATIONAL", "OTHER"], {
+  message: "Selecciona un tipo de diabetes."
+});
+
 const timezoneOptions = new Set(getTimezoneOptions());
 
 const requiredTrimmedString = (message: string) => z.string().trim().min(1, message);
@@ -140,18 +144,31 @@ function addRequiredBodyMetricsValidation(values: { weightKg: string; heightCm: 
   addOptionalBodyMetricsValidation(values, ctx);
 }
 
+const profileFormShape = {
+  fullName: normalizedFullName,
+  birthDate: optionalTrimmedString().max(
+    BIRTH_DATE_MAX_LENGTH,
+    `La fecha de nacimiento no puede superar ${BIRTH_DATE_MAX_LENGTH} caracteres.`
+  ),
+  hypoglycemiaThreshold: requiredNumericTextField("Ingresa un umbral minimo valido."),
+  hyperglycemiaThreshold: requiredNumericTextField("Ingresa un umbral maximo valido."),
+  timezone: requiredTimezoneField,
+  weightKg: optionalTrimmedString().max(NUMERIC_TEXT_MAX_LENGTH, "El peso ingresado es demasiado largo."),
+  heightCm: optionalTrimmedString().max(NUMERIC_TEXT_MAX_LENGTH, "La altura ingresada es demasiado larga.")
+};
+
 export const profileFormSchema = z
+  .object(profileFormShape)
+  .superRefine((values, ctx) => {
+    addBirthDateValidation(values, ctx);
+    addThresholdValidation(values, ctx);
+    addOptionalBodyMetricsValidation(values, ctx);
+  });
+
+export const profileViewSchema = z
   .object({
-    fullName: normalizedFullName,
-    birthDate: optionalTrimmedString().max(
-      BIRTH_DATE_MAX_LENGTH,
-      `La fecha de nacimiento no puede superar ${BIRTH_DATE_MAX_LENGTH} caracteres.`
-    ),
-    hypoglycemiaThreshold: requiredNumericTextField("Ingresa un umbral minimo valido."),
-    hyperglycemiaThreshold: requiredNumericTextField("Ingresa un umbral maximo valido."),
-    timezone: requiredTimezoneField,
-    weightKg: optionalTrimmedString().max(NUMERIC_TEXT_MAX_LENGTH, "El peso ingresado es demasiado largo."),
-    heightCm: optionalTrimmedString().max(NUMERIC_TEXT_MAX_LENGTH, "La altura ingresada es demasiado larga.")
+    ...profileFormShape,
+    diabetesType: diabetesTypeSchema
   })
   .superRefine((values, ctx) => {
     addBirthDateValidation(values, ctx);
@@ -167,9 +184,7 @@ export const onboardingProfileSchema = z
       `La fecha de nacimiento no puede superar ${BIRTH_DATE_MAX_LENGTH} caracteres.`
     ),
     timezone: requiredTimezoneField,
-    diabetesType: z.enum(["TYPE_1", "TYPE_2", "GESTATIONAL", "OTHER"], {
-      message: "Selecciona un tipo de diabetes."
-    }),
+    diabetesType: diabetesTypeSchema,
     hypoglycemiaThreshold: requiredNumericTextField("Ingresa un umbral minimo valido."),
     hyperglycemiaThreshold: requiredNumericTextField("Ingresa un umbral maximo valido."),
     weightKg: requiredNumericTextField("Ingresa un peso valido."),
