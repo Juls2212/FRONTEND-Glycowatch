@@ -88,7 +88,8 @@ export function ManualMeasurementForm({ onCreated }: Props) {
           <input
             type="number"
             step="0.1"
-            min="1"
+            min="20"
+            max="600"
             value={glucoseValue}
             disabled={isSubmitting}
             aria-invalid={fieldErrors.glucoseValue ? "true" : "false"}

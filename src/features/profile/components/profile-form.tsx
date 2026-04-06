@@ -169,7 +169,8 @@ export function ProfileForm({ profile, isLoading, isSubmitting, error, success, 
             <input
               type="number"
               step="0.1"
-              min="1"
+              min="20"
+              max="600"
               value={form.hypoglycemiaThreshold}
               disabled={isSubmitting}
               aria-invalid={fieldErrors.hypoglycemiaThreshold ? "true" : "false"}
@@ -184,7 +185,8 @@ export function ProfileForm({ profile, isLoading, isSubmitting, error, success, 
             <input
               type="number"
               step="0.1"
-              min="1"
+              min="20"
+              max="600"
               value={form.hyperglycemiaThreshold}
               disabled={isSubmitting}
               aria-invalid={fieldErrors.hyperglycemiaThreshold ? "true" : "false"}
@@ -199,7 +201,8 @@ export function ProfileForm({ profile, isLoading, isSubmitting, error, success, 
             <input
               type="number"
               step="0.1"
-              min="1"
+              min="2"
+              max="350"
               value={form.weightKg}
               disabled={isSubmitting}
               aria-invalid={fieldErrors.weightKg ? "true" : "false"}
@@ -215,6 +218,7 @@ export function ProfileForm({ profile, isLoading, isSubmitting, error, success, 
               type="number"
               step="0.1"
               min="30"
+              max="250"
               value={form.heightCm}
               disabled={isSubmitting}
               aria-invalid={fieldErrors.heightCm ? "true" : "false"}

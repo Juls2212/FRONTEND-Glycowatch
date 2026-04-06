@@ -488,7 +488,8 @@ export default function DashboardPage() {
                 <input
                   type="number"
                   step="0.1"
-                  min="1"
+                  min="20"
+                  max="600"
                   value={glucoseValueInput}
                   disabled={isSubmitting}
                   aria-invalid={formFieldErrors.glucoseValue ? "true" : "false"}
