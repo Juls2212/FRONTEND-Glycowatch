@@ -1,6 +1,11 @@
 import { FormEvent, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { RegisterDeviceResult } from "@/features/devices/types";
+import {
+  normalizeDeviceIdentifierInput,
+  normalizeDeviceNameInput,
+  normalizeDeviceNameOnBlur
+} from "@/lib/forms/input-normalizers";
 import { mapZodIssuesToFieldErrors } from "@/lib/validation/errors";
 import { deviceRegisterSchema } from "@/lib/validation/devices";
 
@@ -65,8 +70,9 @@ export function DeviceRegisterForm({
                 delete next.name;
                 return next;
               });
-              setName(event.target.value);
+              setName(normalizeDeviceNameInput(event.target.value));
             }}
+            onBlur={(event) => setName(normalizeDeviceNameOnBlur(event.target.value))}
             placeholder="Ej. Sensor 1"
           />
           {fieldErrors.name ? <small id="device-name-error">{fieldErrors.name}</small> : null}
@@ -88,7 +94,7 @@ export function DeviceRegisterForm({
                 delete next.identifier;
                 return next;
               });
-              setIdentifier(event.target.value);
+              setIdentifier(normalizeDeviceIdentifierInput(event.target.value));
             }}
             placeholder="Ej. ESP32-003"
           />

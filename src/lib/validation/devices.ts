@@ -4,7 +4,8 @@ const normalizedDeviceName = z
   .string()
   .trim()
   .min(1, "Completa nombre e identificador.")
-  .max(80, "El nombre del dispositivo no puede superar 80 caracteres.");
+  .max(80, "El nombre del dispositivo no puede superar 80 caracteres.")
+  .transform((value) => value.replace(/\s+/g, " "));
 
 const normalizedIdentifier = z
   .string()
