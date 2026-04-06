@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { LoginFormValues, RegisterFormValues } from "@/features/auth/types";
 
 const EMAIL_MAX_LENGTH = 254;
 const PASSWORD_MAX_LENGTH = 72;
@@ -33,3 +34,11 @@ export const registerSchema = z.object({
   email: normalizedEmail,
   password: registerPassword
 });
+
+export function parseLoginPayload(values: LoginFormValues): LoginFormValues {
+  return loginSchema.parse(values);
+}
+
+export function parseRegisterPayload(values: RegisterFormValues): RegisterFormValues {
+  return registerSchema.parse(values);
+}
