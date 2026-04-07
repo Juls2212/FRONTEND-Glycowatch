@@ -23,6 +23,7 @@ export default function ProfilePage() {
       const data = await fetchProfile();
       if (mountedRef && !mountedRef.current) return;
       setProfile(data);
+      setDiabetesType(data.diabetesType ?? onboardingStorage.getDiabetesType());
     } catch (err) {
       const message = err instanceof Error ? err.message : "No fue posible cargar el perfil";
       if (mountedRef && !mountedRef.current) return;

@@ -34,7 +34,7 @@ function toDefaultValues(profile: ProfileData | null): OnboardingFormValues {
     fullName: profile?.fullName ?? "",
     birthDate: profile?.birthDate ?? "",
     timezone: profile?.timezone ?? getBrowserTimezoneOrDefault(),
-    diabetesType: onboardingStorage.getDiabetesType() ?? "TYPE_2",
+    diabetesType: profile?.diabetesType ?? onboardingStorage.getDiabetesType() ?? "TYPE_2",
     hypoglycemiaThreshold: profile?.hypoglycemiaThreshold != null ? String(profile.hypoglycemiaThreshold) : "70",
     hyperglycemiaThreshold: profile?.hyperglycemiaThreshold != null ? String(profile.hyperglycemiaThreshold) : "180",
     weightKg: profile?.weightKg != null ? String(profile.weightKg) : "",
@@ -211,13 +211,14 @@ export default function OnboardingPage() {
                       aria-describedby={errors.diabetesType ? "onboarding-diabetes-type-error" : undefined}
                       {...diabetesTypeRegistration}
                     >
+                      <option value="">Selecciona una opcion</option>
                       {DIABETES_TYPE_OPTIONS.map((option) => (
                         <option key={option.value} value={option.value}>
                           {option.label}
                         </option>
                       ))}
                     </select>
-                    <small className="field-helper">Nos ayuda a personalizar tu configuracion inicial.</small>
+                    <small className="field-helper">Esto ayuda a personalizar alertas y analisis.</small>
                     {errors.diabetesType ? <small id="onboarding-diabetes-type-error">{errors.diabetesType.message}</small> : null}
                   </label>
                 </div>

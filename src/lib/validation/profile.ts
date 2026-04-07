@@ -19,11 +19,11 @@ const DECIMAL_NUMBER_PATTERN = /^\d+(?:\.\d+)?$/;
 export const DIABETES_TYPE_OPTIONS: Array<{ value: DiabetesType; label: string }> = [
   { value: "TYPE_1", label: "Tipo 1" },
   { value: "TYPE_2", label: "Tipo 2" },
-  { value: "GESTATIONAL", label: "Gestacional" },
+  { value: "PREDIABETES", label: "Prediabetes" },
   { value: "OTHER", label: "Otro" }
 ];
 
-const diabetesTypeSchema = z.enum(["TYPE_1", "TYPE_2", "GESTATIONAL", "OTHER"], {
+const diabetesTypeSchema = z.enum(["TYPE_1", "TYPE_2", "PREDIABETES", "OTHER"], {
   message: "Selecciona un tipo de diabetes."
 });
 
@@ -196,10 +196,11 @@ export const onboardingProfileSchema = z
     addRequiredBodyMetricsValidation(values, ctx);
   });
 
-export function buildProfilePayload(values: z.infer<typeof profileFormSchema>): UpdateProfilePayload {
+export function buildProfilePayload(values: z.infer<typeof profileViewSchema>): UpdateProfilePayload {
   return {
     fullName: values.fullName.replace(/\s+/g, " "),
     birthDate: values.birthDate || null,
+    diabetesType: values.diabetesType,
     hypoglycemiaThreshold: Number(values.hypoglycemiaThreshold),
     hyperglycemiaThreshold: Number(values.hyperglycemiaThreshold),
     timezone: values.timezone,
@@ -212,6 +213,7 @@ export function buildOnboardingProfilePayload(values: z.infer<typeof onboardingP
   return {
     fullName: values.fullName.replace(/\s+/g, " "),
     birthDate: values.birthDate,
+    diabetesType: values.diabetesType,
     hypoglycemiaThreshold: Number(values.hypoglycemiaThreshold),
     hyperglycemiaThreshold: Number(values.hyperglycemiaThreshold),
     timezone: values.timezone,
@@ -222,11 +224,12 @@ export function buildOnboardingProfilePayload(values: z.infer<typeof onboardingP
 
 export function isProfileComplete(profile: ProfileData | null, diabetesType: DiabetesType | null): boolean {
   if (!profile) return false;
+  const resolvedDiabetesType = profile.diabetesType ?? diabetesType;
   return Boolean(
     profile.fullName &&
       profile.birthDate &&
       profile.timezone &&
-      diabetesType &&
+      resolvedDiabetesType &&
       profile.hypoglycemiaThreshold >= MIN_GLUCOSE_THRESHOLD &&
       profile.hypoglycemiaThreshold <= MAX_GLUCOSE_THRESHOLD &&
       profile.hyperglycemiaThreshold >= MIN_GLUCOSE_THRESHOLD &&

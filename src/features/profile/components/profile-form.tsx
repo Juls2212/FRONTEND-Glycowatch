@@ -49,7 +49,7 @@ function toFormState(profile: ProfileData, diabetesType: DiabetesType | null): F
     email: profile.email ?? "",
     birthDate: profile.birthDate ?? "",
     timezone: profile.timezone ?? "",
-    diabetesType: diabetesType ?? "",
+    diabetesType: profile.diabetesType ?? diabetesType ?? "",
     hypoglycemiaThreshold: String(profile.hypoglycemiaThreshold ?? ""),
     hyperglycemiaThreshold: String(profile.hyperglycemiaThreshold ?? ""),
     weightKg: profile.weightKg == null ? "" : String(profile.weightKg),
@@ -342,7 +342,7 @@ export function ProfileForm({
                   ))}
                 </select>
                 <small className="field-helper" id="profile-diabetes-type-help">
-                  Personaliza la interpretación de tus datos clínicos.
+                  Esto ayuda a personalizar alertas y analisis.
                 </small>
                 {fieldErrors.diabetesType ? (
                   <small id="profile-diabetes-type-error">{fieldErrors.diabetesType}</small>
