@@ -1803,19 +1803,28 @@ a {
   border-color: var(--accent-outline-strong);
 }
 
-.field small,
+.field small {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--text-secondary);
+}
+
+.field-helper {
+  color: var(--text-secondary);
+}
+
 .error-text {
   color: var(--danger);
   margin: 0;
 }
 
-.field small {
-  font-size: 12px;
-  line-height: 1.45;
-}
-
 .field.has-error span {
   color: rgba(var(--danger-rgb), 0.92);
+}
+
+.field.has-error small:not(.field-helper) {
+  color: var(--danger);
 }
 
 .field.has-error input,
