@@ -1,5 +1,5 @@
 "use client";
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import {
   createManualMeasurement,
   fetchAlerts,
@@ -28,6 +28,7 @@ import {
 } from "@/features/dashboard/risk-text";
 
 const RECENT_ALERT_WINDOW_HOURS = 76;
+const DASHBOARD_POLLING_INTERVAL_MS = 10_000;
 
 function formatMetric(value: number): string {
   return value.toLocaleString("es-CO", { maximumFractionDigits: 1 });
@@ -162,9 +163,16 @@ export default function DashboardPage() {
   const [measuredAtInput, setMeasuredAtInput] = useState("");
   const [chartRange, setChartRange] = useState<ChartRange>("WEEK");
   const [dismissedBannerKey, setDismissedBannerKey] = useState<string | null>(null);
+  const isRefreshInFlightRef = useRef(false);
 
-  const loadDashboardData = async (mountedRef?: { current: boolean }) => {
-    setError(null);
+  const loadDashboardData = async (options?: { mountedRef?: { current: boolean }; silent?: boolean }) => {
+    const mountedRef = options?.mountedRef;
+    const silent = options?.silent ?? false;
+
+    if (!silent) {
+      setError(null);
+    }
+
     try {
       const [metricsData, chartPoints, riskData, alertsData] = await Promise.all([
         fetchDashboardMetrics(),
@@ -177,7 +185,9 @@ export default function DashboardPage() {
       setChartData(chartPoints);
       setRisk(riskData);
       setAlerts(alertsData);
+      setError(null);
     } catch (err) {
+      if (silent) return;
       const message = err instanceof Error ? err.message : "No se pudieron cargar los datos.";
       if (mountedRef && !mountedRef.current) return;
       setError(message);
@@ -187,15 +197,34 @@ export default function DashboardPage() {
   useEffect(() => {
     const mounted = { current: true };
 
-    async function load() {
-      setIsLoading(true);
-      await loadDashboardData(mounted);
-      if (mounted.current) setIsLoading(false);
+    async function runDashboardRefresh({ silent, withInitialLoading }: { silent: boolean; withInitialLoading?: boolean }) {
+      if (isRefreshInFlightRef.current) return;
+      isRefreshInFlightRef.current = true;
+
+      if (withInitialLoading) {
+        setIsLoading(true);
+      }
+
+      try {
+        await loadDashboardData({ mountedRef: mounted, silent });
+      } finally {
+        isRefreshInFlightRef.current = false;
+        if (withInitialLoading && mounted.current) {
+          setIsLoading(false);
+        }
+      }
     }
 
-    void load();
+    void runDashboardRefresh({ silent: false, withInitialLoading: true });
+
+    const intervalId = window.setInterval(() => {
+      if (!mounted.current) return;
+      void runDashboardRefresh({ silent: true });
+    }, DASHBOARD_POLLING_INTERVAL_MS);
+
     return () => {
       mounted.current = false;
+      window.clearInterval(intervalId);
     };
   }, []);
 
@@ -225,11 +254,14 @@ export default function DashboardPage() {
       setGlucoseValueInput("");
       setMeasuredAtInput("");
       setFormSuccess("Medicion registrada correctamente.");
+
+      isRefreshInFlightRef.current = true;
       await loadDashboardData();
     } catch (err) {
       const message = err instanceof Error ? err.message : "No se pudo guardar la medicion.";
       setFormError(message);
     } finally {
+      isRefreshInFlightRef.current = false;
       setIsSubmitting(false);
     }
   };
