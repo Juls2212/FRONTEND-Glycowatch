@@ -10,6 +10,7 @@ type Props = {
   error: string | null;
   togglingId: number | null;
   onToggle: (deviceId: number) => Promise<void>;
+  onRequestDelete: (deviceId: number, deviceName: string) => void;
 };
 
 function resolveStatusLabel(status: DeviceItem["status"]): string {
@@ -24,7 +25,7 @@ function resolveStatusClass(status: DeviceItem["status"]): string {
   return "status-registered";
 }
 
-export function DevicesList({ devices, isLoading, error, togglingId, onToggle }: Props) {
+export function DevicesList({ devices, isLoading, error, togglingId, onToggle, onRequestDelete }: Props) {
   return (
     <Card>
       {isLoading ? (
@@ -67,9 +68,11 @@ export function DevicesList({ devices, isLoading, error, togglingId, onToggle }:
                   <td data-label="Accion">
                     <DeviceRowActions
                       deviceId={device.id}
+                      deviceName={device.name}
                       active={device.active}
                       isLoading={togglingId === device.id}
                       onToggle={onToggle}
+                      onRequestDelete={onRequestDelete}
                     />
                   </td>
                 </tr>

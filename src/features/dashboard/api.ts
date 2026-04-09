@@ -36,9 +36,31 @@ export async function fetchDashboardMetrics(): Promise<DashboardMetrics> {
   return normalizeDashboardMetrics(response.data.data);
 }
 
-export async function fetchChartData(): Promise<ChartPoint[]> {
-  const response = await apiClient.get<ApiSuccess<ChartPoint[]>>(API_ENDPOINTS.analytics.chart);
-  return response.data.data;
+type ChartDataPoint = {
+  measuredAt: string;
+  glucoseValue: number;
+};
+
+type ChartMeasurementsPage = {
+  content: ChartDataPoint[];
+};
+
+export async function fetchChartData(from: string, to: string): Promise<ChartPoint[]> {
+  const response = await apiClient.get<ApiSuccess<ChartMeasurementsPage>>(API_ENDPOINTS.measurements.base, {
+    params: {
+      page: 0,
+      size: 200,
+      from,
+      to
+    }
+  });
+
+  return response.data.data.content
+    .map((point) => ({
+      measuredAt: point.measuredAt,
+      glucoseValue: toNumeric(point.glucoseValue)
+    }))
+    .sort((left, right) => new Date(left.measuredAt).getTime() - new Date(right.measuredAt).getTime());
 }
 
 export async function fetchRiskAnalysis(): Promise<RiskAnalysis> {

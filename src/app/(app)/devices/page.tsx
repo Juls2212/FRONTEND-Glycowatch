@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Section } from "@/components/ui/section";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DeviceRegisterForm } from "@/features/devices/components/device-register-form";
 import { DevicesList } from "@/features/devices/components/devices-list";
 import { fetchDevices, linkDevice, registerDevice, toggleDevice } from "@/features/devices/api";
@@ -14,6 +15,8 @@ export default function DevicesPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLinking, setIsLinking] = useState(false);
   const [togglingId, setTogglingId] = useState<number | null>(null);
+  const [removingId, setRemovingId] = useState<number | null>(null);
+  const [pendingDeleteDevice, setPendingDeleteDevice] = useState<{ id: number; name: string } | null>(null);
   const [createdDevice, setCreatedDevice] = useState<RegisterDeviceResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -28,6 +31,29 @@ export default function DevicesPage() {
       const message = err instanceof Error ? err.message : "No se pudieron cargar los dispositivos.";
       if (mountedRef && !mountedRef.current) return;
       setError(message);
+    }
+  };
+
+  const onRequestDelete = (deviceId: number, deviceName: string) => {
+    setPendingDeleteDevice({ id: deviceId, name: deviceName });
+  };
+
+  const confirmDeleteDevice = async () => {
+    if (!pendingDeleteDevice) return;
+
+    setRemovingId(pendingDeleteDevice.id);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      // TODO: Integrate the real device removal request when a frontend API endpoint is available.
+      throw new Error("La eliminación de dispositivos todavía no está disponible en el servidor.");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "No se pudo eliminar el dispositivo.";
+      setError(message);
+    } finally {
+      setRemovingId(null);
+      setPendingDeleteDevice(null);
     }
   };
 
@@ -115,10 +141,21 @@ export default function DevicesPage() {
             error={null}
             togglingId={togglingId}
             onToggle={onToggle}
+            onRequestDelete={onRequestDelete}
           />
         </div>
       </Section>
+
+      <ConfirmDialog
+        open={pendingDeleteDevice != null}
+        title="Eliminar dispositivo"
+        description={`Esta acción quitará ${pendingDeleteDevice?.name ?? "el dispositivo"} de tu lista de gestión. ¿Deseas continuar?`}
+        confirmLabel="Sí, eliminar"
+        cancelLabel="Cancelar"
+        isProcessing={removingId != null}
+        onConfirm={confirmDeleteDevice}
+        onCancel={() => setPendingDeleteDevice(null)}
+      />
     </div>
   );
 }
-

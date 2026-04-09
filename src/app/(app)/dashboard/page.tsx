@@ -13,7 +13,7 @@ import { Section } from "@/components/ui/section";
 import { GlucoseChart } from "@/components/charts/glucose-chart";
 import { GlucoseVisualization } from "@/components/charts/glucose-visualization";
 import { ChartRangeFilter } from "@/features/dashboard/components/chart-range-filter";
-import { ChartRange, filterChartByRange } from "@/features/dashboard/chart-range";
+import { buildChartRangeParams, ChartRange, filterChartByRange } from "@/features/dashboard/chart-range";
 import { normalizeRestrictedDecimalInput } from "@/lib/forms/input-normalizers";
 import {
   dashboardManualMeasurementSchema,
@@ -154,6 +154,7 @@ export default function DashboardPage() {
   const [risk, setRisk] = useState<RiskAnalysis | null>(null);
   const [alerts, setAlerts] = useState<AlertItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isChartRefreshing, setIsChartRefreshing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [formFieldErrors, setFormFieldErrors] = useState<Partial<Record<"glucoseValue" | "measuredAt", string>>>({});
@@ -164,10 +165,13 @@ export default function DashboardPage() {
   const [chartRange, setChartRange] = useState<ChartRange>("WEEK");
   const [dismissedBannerKey, setDismissedBannerKey] = useState<string | null>(null);
   const isRefreshInFlightRef = useRef(false);
+  const chartRangeRef = useRef<ChartRange>("WEEK");
+  const hasMountedChartRangeEffectRef = useRef(false);
 
   const loadDashboardData = async (options?: { mountedRef?: { current: boolean }; silent?: boolean }) => {
     const mountedRef = options?.mountedRef;
     const silent = options?.silent ?? false;
+    const { from, to } = buildChartRangeParams(chartRangeRef.current);
 
     if (!silent) {
       setError(null);
@@ -176,7 +180,7 @@ export default function DashboardPage() {
     try {
       const [metricsData, chartPoints, riskData, alertsData] = await Promise.all([
         fetchDashboardMetrics(),
-        fetchChartData(),
+        fetchChartData(from, to),
         fetchRiskAnalysis(),
         fetchAlerts()
       ]);
@@ -227,6 +231,41 @@ export default function DashboardPage() {
       window.clearInterval(intervalId);
     };
   }, []);
+
+  useEffect(() => {
+    chartRangeRef.current = chartRange;
+  }, [chartRange]);
+
+  useEffect(() => {
+    if (!hasMountedChartRangeEffectRef.current) {
+      hasMountedChartRangeEffectRef.current = true;
+      return;
+    }
+
+    let mounted = true;
+
+    async function refreshChartForRange() {
+      setIsChartRefreshing(true);
+      try {
+        const { from, to } = buildChartRangeParams(chartRange);
+        const chartPoints = await fetchChartData(from, to);
+        if (!mounted) return;
+        setChartData(chartPoints);
+        setError(null);
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "No se pudieron cargar los datos.";
+        if (!mounted) return;
+        setError(message);
+      } finally {
+        if (mounted) setIsChartRefreshing(false);
+      }
+    }
+
+    void refreshChartForRange();
+    return () => {
+      mounted = false;
+    };
+  }, [chartRange]);
 
   const onManualSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -463,7 +502,7 @@ export default function DashboardPage() {
           action={
             <div className="section-actions">
               <ChartRangeFilter value={chartRange} onChange={setChartRange} />
-              {isLoading ? <span className="soft-text">Cargando...</span> : null}
+              {isLoading || isChartRefreshing ? <span className="soft-text">Cargando...</span> : null}
             </div>
           }
         >

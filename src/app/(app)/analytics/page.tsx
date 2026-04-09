@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Section } from "@/components/ui/section";
 import { GlucoseVisualization } from "@/components/charts/glucose-visualization";
 import { fetchChartData, fetchDashboardMetrics, fetchRiskAnalysis } from "@/features/dashboard/api";
 import { ChartPoint, DashboardMetrics, RiskAnalysis } from "@/features/dashboard/types";
 import { ChartRangeFilter } from "@/features/dashboard/components/chart-range-filter";
-import { ChartRange, filterChartByRange } from "@/features/dashboard/chart-range";
+import { buildChartRangeParams, ChartRange, filterChartByRange } from "@/features/dashboard/chart-range";
 import {
   buildSpanishRiskMessage,
   translateRiskLevel,
@@ -178,7 +178,9 @@ export default function AnalyticsPage() {
   const [chartRange, setChartRange] = useState<ChartRange>("MONTH");
   const [activeInsight, setActiveInsight] = useState<InsightKey>("trend");
   const [isLoading, setIsLoading] = useState(true);
+  const [isChartRefreshing, setIsChartRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const hasMountedChartRangeEffectRef = useRef(false);
 
   useEffect(() => {
     const mounted = { current: true };
@@ -189,7 +191,7 @@ export default function AnalyticsPage() {
         const [metricsData, riskData, chartPoints] = await Promise.all([
           fetchDashboardMetrics(),
           fetchRiskAnalysis(),
-          fetchChartData()
+          fetchChartData(buildChartRangeParams(chartRange).from, buildChartRangeParams(chartRange).to)
         ]);
         if (!mounted.current) return;
         setMetrics(metricsData);
@@ -209,6 +211,37 @@ export default function AnalyticsPage() {
       mounted.current = false;
     };
   }, []);
+
+  useEffect(() => {
+    if (!hasMountedChartRangeEffectRef.current) {
+      hasMountedChartRangeEffectRef.current = true;
+      return;
+    }
+
+    let mounted = true;
+
+    async function refreshChartForRange() {
+      setIsChartRefreshing(true);
+      try {
+        const { from, to } = buildChartRangeParams(chartRange);
+        const chartPoints = await fetchChartData(from, to);
+        if (!mounted) return;
+        setChartData(chartPoints);
+        setError(null);
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "No se pudo cargar el analisis.";
+        if (!mounted) return;
+        setError(message);
+      } finally {
+        if (mounted) setIsChartRefreshing(false);
+      }
+    }
+
+    void refreshChartForRange();
+    return () => {
+      mounted = false;
+    };
+  }, [chartRange]);
 
   const filteredChartData = useMemo(() => filterChartByRange(chartData, chartRange), [chartData, chartRange]);
   const riskMessage = useMemo(() => (risk ? buildSpanishRiskMessage(risk) : "Sin analisis disponible por el momento."), [risk]);
@@ -331,7 +364,8 @@ export default function AnalyticsPage() {
 
       <Section title="Exploracion de tendencia" subtitle="Visualizacion interactiva con el mismo rango temporal del seguimiento" action={<ChartRangeFilter value={chartRange} onChange={setChartRange} />}>
         <Card className="chart-card analytics-chart-card">
-          {isLoading ? <p className="soft-text">Cargando analisis...</p> : null}
+          {isLoading && chartData.length === 0 ? <p className="soft-text">Cargando analisis...</p> : null}
+          {!isLoading && isChartRefreshing ? <p className="soft-text">Actualizando grafica...</p> : null}
           {error ? <p className="error-text">{error}</p> : null}
           {!isLoading && !error && filteredChartData.length > 0 ? <GlucoseVisualization data={filteredChartData} defaultView="TREND" /> : null}
           {!isLoading && !error && filteredChartData.length === 0 ? (
