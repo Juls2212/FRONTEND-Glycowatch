@@ -21,3 +21,6 @@ export async function toggleDevice(deviceId: number): Promise<void> {
   await apiClient.put(`${API_ENDPOINTS.devices.base}/${deviceId}/toggle`);
 }
 
+export async function deleteDevice(deviceId: number): Promise<void> {
+  await apiClient.delete(`${API_ENDPOINTS.devices.base}/${deviceId}`);
+}
