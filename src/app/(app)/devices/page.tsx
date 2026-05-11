@@ -5,7 +5,7 @@ import { Section } from "@/components/ui/section";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { DeviceRegisterForm } from "@/features/devices/components/device-register-form";
 import { DevicesList } from "@/features/devices/components/devices-list";
-import { fetchDevices, linkDevice, registerDevice, toggleDevice } from "@/features/devices/api";
+import { deleteDevice, fetchDevices, linkDevice, registerDevice, toggleDevice } from "@/features/devices/api";
 import { DeviceItem, RegisterDeviceResult } from "@/features/devices/types";
 import { FeedbackBanner } from "@/components/ui/feedback-banner";
 
@@ -34,36 +34,15 @@ export default function DevicesPage() {
     }
   };
 
-  const onRequestDelete = (deviceId: number, deviceName: string) => {
-    setPendingDeleteDevice({ id: deviceId, name: deviceName });
-  };
-
-  const confirmDeleteDevice = async () => {
-    if (!pendingDeleteDevice) return;
-
-    setRemovingId(pendingDeleteDevice.id);
-    setError(null);
-    setSuccess(null);
-
-    try {
-      // TODO: Integrate the real device removal request when a frontend API endpoint is available.
-      throw new Error("La eliminación de dispositivos todavía no está disponible en el servidor.");
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "No se pudo eliminar el dispositivo.";
-      setError(message);
-    } finally {
-      setRemovingId(null);
-      setPendingDeleteDevice(null);
-    }
-  };
-
   useEffect(() => {
     const mounted = { current: true };
+
     async function initialize() {
       setIsLoading(true);
       await loadDevices(mounted);
       if (mounted.current) setIsLoading(false);
     }
+
     void initialize();
     return () => {
       mounted.current = false;
@@ -115,6 +94,29 @@ export default function DevicesPage() {
       setError(message);
     } finally {
       setTogglingId(null);
+    }
+  };
+
+  const onRequestDelete = (deviceId: number, deviceName: string) => {
+    setPendingDeleteDevice({ id: deviceId, name: deviceName });
+  };
+
+  const confirmDeleteDevice = async () => {
+    if (!pendingDeleteDevice) return;
+
+    setRemovingId(pendingDeleteDevice.id);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      await deleteDevice(pendingDeleteDevice.id);
+      await loadDevices();
+      setSuccess("Dispositivo eliminado correctamente.");
+    } catch {
+      setError("No se pudo eliminar el dispositivo.");
+    } finally {
+      setRemovingId(null);
+      setPendingDeleteDevice(null);
     }
   };
 
