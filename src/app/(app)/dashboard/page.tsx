@@ -8,6 +8,8 @@ import {
   fetchRiskAnalysis
 } from "@/features/dashboard/api";
 import { AlertItem, ChartPoint, DashboardMetrics, RiskAnalysis } from "@/features/dashboard/types";
+import { getIntelligenceSummary } from "@/features/intelligence/api";
+import { IntelligenceSummary } from "@/features/intelligence/types";
 import { Card } from "@/components/ui/card";
 import { Section } from "@/components/ui/section";
 import { GlucoseChart } from "@/components/charts/glucose-chart";
@@ -36,6 +38,33 @@ function formatMetric(value: number): string {
 
 function formatWholeMetric(value: number): string {
   return value.toLocaleString("es-CO", { maximumFractionDigits: 0 });
+}
+
+function translateAssistantRiskLevel(value: string): string {
+  if (value === "LOW") return "Bajo";
+  if (value === "MODERATE") return "Moderado";
+  if (value === "HIGH") return "Alto";
+  if (value === "CRITICAL") return "Crítico";
+  if (value === "INSUFFICIENT_DATA") return "Datos insuficientes";
+  return "Datos insuficientes";
+}
+
+function translateAssistantTrend(value: string): string {
+  if (value === "STABLE") return "Estable";
+  if (value === "RISING") return "En aumento";
+  if (value === "FALLING") return "En descenso";
+  if (value === "VARIABLE") return "Variable";
+  if (value === "UNKNOWN") return "Sin datos suficientes";
+  return "Sin datos suficientes";
+}
+
+function translateAgreementStatus(value: string): string {
+  if (value === "FULL_AGREEMENT") return "Coincidencia completa";
+  if (value === "PARTIAL_AGREEMENT") return "Coincidencia parcial";
+  if (value === "DISAGREEMENT") return "Diferencia detectada";
+  if (value === "GEMINI_UNAVAILABLE") return "IA externa no disponible";
+  if (value === "NOT_APPLICABLE") return "No aplica";
+  return "No aplica";
 }
 
 type BannerData = {
@@ -153,10 +182,13 @@ export default function DashboardPage() {
   const [chartData, setChartData] = useState<ChartPoint[]>([]);
   const [risk, setRisk] = useState<RiskAnalysis | null>(null);
   const [alerts, setAlerts] = useState<AlertItem[]>([]);
+  const [intelligenceSummary, setIntelligenceSummary] = useState<IntelligenceSummary | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isChartRefreshing, setIsChartRefreshing] = useState(false);
+  const [isIntelligenceLoading, setIsIntelligenceLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [intelligenceError, setIntelligenceError] = useState<string | null>(null);
   const [formFieldErrors, setFormFieldErrors] = useState<Partial<Record<"glucoseValue" | "measuredAt", string>>>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [formSuccess, setFormSuccess] = useState<string | null>(null);
@@ -190,11 +222,30 @@ export default function DashboardPage() {
       setRisk(riskData);
       setAlerts(alertsData);
       setError(null);
+
+      try {
+        const nextIntelligenceSummary = await getIntelligenceSummary();
+        if (mountedRef && !mountedRef.current) return;
+        setIntelligenceSummary(nextIntelligenceSummary);
+        setIntelligenceError(null);
+      } catch (intelligenceErr) {
+        if (mountedRef && !mountedRef.current) return;
+        if (!silent) {
+          const message =
+            intelligenceErr instanceof Error ? intelligenceErr.message : "No se pudo cargar el asistente.";
+          setIntelligenceError(message);
+        }
+      } finally {
+        if ((!mountedRef || mountedRef.current) && !silent) {
+          setIsIntelligenceLoading(false);
+        }
+      }
     } catch (err) {
       if (silent) return;
       const message = err instanceof Error ? err.message : "No se pudieron cargar los datos.";
       if (mountedRef && !mountedRef.current) return;
       setError(message);
+      setIsIntelligenceLoading(false);
     }
   };
 
@@ -336,6 +387,11 @@ export default function DashboardPage() {
   }, [bannerData, dismissedBannerKey]);
 
   const isBannerVisible = bannerData != null && dismissedBannerKey !== bannerData.key;
+  const assistantRiskLabel = intelligenceSummary ? translateAssistantRiskLevel(intelligenceSummary.finalRiskLevel) : "Datos insuficientes";
+  const assistantTrendLabel = intelligenceSummary ? translateAssistantTrend(intelligenceSummary.trend) : "Sin datos suficientes";
+  const assistantAgreementLabel = intelligenceSummary
+    ? translateAgreementStatus(intelligenceSummary.agreementStatus)
+    : "No aplica";
 
   return (
     <div className="dashboard-grid dashboard-page">
@@ -525,23 +581,61 @@ export default function DashboardPage() {
         </Section>
 
         <Section title="Insights" subtitle="Senales secundarias para interpretar el comportamiento reciente">
-          <Card className="risk-card">
-            <div className="risk-grid">
-              <div className="risk-stat">
-                <p className="metric-label">Estado actual</p>
-                <p className="metric-value">{risk ? translateStatus(risk.currentStatus) : "EN RANGO"}</p>
+          <div className="dashboard-side-stack">
+            <Card className="risk-card">
+              <div className="risk-grid">
+                <div className="risk-stat">
+                  <p className="metric-label">Estado actual</p>
+                  <p className="metric-value">{risk ? translateStatus(risk.currentStatus) : "EN RANGO"}</p>
+                </div>
+                <div className="risk-stat">
+                  <p className="metric-label">Nivel de riesgo</p>
+                  <p className="metric-value">{risk ? translateRiskLevel(risk.riskLevel) : "BAJO"}</p>
+                </div>
+                <div className="risk-stat">
+                  <p className="metric-label">Tendencia</p>
+                  <p className="metric-value">{risk ? translateTrend(risk.trend) : "ESTABLE"}</p>
+                </div>
               </div>
-              <div className="risk-stat">
-                <p className="metric-label">Nivel de riesgo</p>
-                <p className="metric-value">{risk ? translateRiskLevel(risk.riskLevel) : "BAJO"}</p>
+              <p className="risk-message">{riskMessage}</p>
+            </Card>
+
+            <Card className="risk-card assistant-card">
+              <div className="chart-card-header assistant-card-header">
+                <div>
+                  <p className="chart-card-kicker">Asistente GlycoWatch</p>
+                  <p className="chart-card-summary">Resumen asistido del riesgo y consistencia entre motores de análisis.</p>
+                </div>
+                {intelligenceSummary ? (
+                  <span className={`metric-chip ${intelligenceSummary.geminiAvailable ? "ready" : ""}`}>
+                    {intelligenceSummary.geminiAvailable ? "Disponible" : "No disponible"}
+                  </span>
+                ) : null}
               </div>
-              <div className="risk-stat">
-                <p className="metric-label">Tendencia</p>
-                <p className="metric-value">{risk ? translateTrend(risk.trend) : "ESTABLE"}</p>
-              </div>
-            </div>
-            <p className="risk-message">{riskMessage}</p>
-          </Card>
+
+              {isIntelligenceLoading ? <p className="soft-text">Cargando asistente...</p> : null}
+              {!isIntelligenceLoading && intelligenceError ? <p className="soft-text">{intelligenceError}</p> : null}
+              {!isIntelligenceLoading && !intelligenceError && intelligenceSummary ? (
+                <>
+                  <p className="assistant-card-message">{intelligenceSummary.assistantMessage}</p>
+                  <div className="assistant-card-grid">
+                    <div className="risk-stat">
+                      <p className="metric-label">Riesgo final</p>
+                      <p className="assistant-stat-value">{assistantRiskLabel}</p>
+                    </div>
+                    <div className="risk-stat">
+                      <p className="metric-label">Tendencia</p>
+                      <p className="assistant-stat-value">{assistantTrendLabel}</p>
+                    </div>
+                    <div className="risk-stat assistant-stat-wide">
+                      <p className="metric-label">Estado de IA</p>
+                      <p className="assistant-stat-value">{assistantAgreementLabel}</p>
+                    </div>
+                  </div>
+                </>
+              ) : null}
+            </Card>
+          </div>
         </Section>
       </div>
 
