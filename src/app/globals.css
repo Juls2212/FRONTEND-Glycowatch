@@ -2548,6 +2548,38 @@ a {
   min-width: 0;
 }
 
+.assistant-card {
+  display: grid;
+  gap: 16px;
+}
+
+.assistant-card-header {
+  align-items: flex-start;
+}
+
+.assistant-card-message {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--text-primary);
+}
+
+.assistant-card-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.assistant-stat-wide {
+  grid-column: 1 / -1;
+}
+
+.assistant-stat-value {
+  margin: 8px 0 0;
+  font-size: 18px;
+  font-weight: 700;
+}
+
 .hero-title {
   margin: 8px 0 0;
   font-size: clamp(28px, 3vw, 38px);
