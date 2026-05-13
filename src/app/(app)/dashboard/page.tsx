@@ -10,6 +10,7 @@ import {
 import { AlertItem, ChartPoint, DashboardMetrics, RiskAnalysis } from "@/features/dashboard/types";
 import { getIntelligenceSummary } from "@/features/intelligence/api";
 import { IntelligenceSummary } from "@/features/intelligence/types";
+import { getRiskBadgeLabel, getRiskThemeClass } from "@/features/intelligence/display";
 import { Card } from "@/components/ui/card";
 import { Section } from "@/components/ui/section";
 import { GlucoseChart } from "@/components/charts/glucose-chart";
@@ -23,6 +24,7 @@ import {
   toDashboardMeasuredAtISOString
 } from "@/lib/validation/measurements";
 import { mapZodIssuesToFieldErrors } from "@/lib/validation/errors";
+import { requestIntelligenceRefresh } from "@/lib/intelligence/refresh";
 import {
   buildSpanishRiskMessage,
   translateRiskLevel,
@@ -187,9 +189,11 @@ export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isChartRefreshing, setIsChartRefreshing] = useState(false);
   const [isIntelligenceLoading, setIsIntelligenceLoading] = useState(true);
+  const [isIntelligenceRefreshing, setIsIntelligenceRefreshing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [intelligenceError, setIntelligenceError] = useState<string | null>(null);
+  const [intelligenceRefreshError, setIntelligenceRefreshError] = useState<string | null>(null);
   const [formFieldErrors, setFormFieldErrors] = useState<Partial<Record<"glucoseValue" | "measuredAt", string>>>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [formSuccess, setFormSuccess] = useState<string | null>(null);
@@ -200,6 +204,36 @@ export default function DashboardPage() {
   const isRefreshInFlightRef = useRef(false);
   const chartRangeRef = useRef<ChartRange>("WEEK");
   const hasMountedChartRangeEffectRef = useRef(false);
+  const latestMeasurementFingerprintRef = useRef<string | null>(null);
+
+  const refreshAssistantSummary = async (options?: { silent?: boolean; keepLoadingState?: boolean }): Promise<boolean> => {
+    const silent = options?.silent ?? false;
+    const keepLoadingState = options?.keepLoadingState ?? false;
+
+    if (!silent) {
+      setIntelligenceRefreshError(null);
+    }
+
+    try {
+      const nextIntelligenceSummary = await getIntelligenceSummary();
+      setIntelligenceSummary(nextIntelligenceSummary);
+      setIntelligenceError(null);
+      return true;
+    } catch (intelligenceErr) {
+      if (!silent) {
+        const message =
+          intelligenceErr instanceof Error ? intelligenceErr.message : "No se pudo cargar el asistente.";
+        if (!keepLoadingState || intelligenceSummary) {
+          setIntelligenceError(message);
+        }
+      }
+      return false;
+    } finally {
+      if (!keepLoadingState) {
+        setIsIntelligenceLoading(false);
+      }
+    }
+  };
 
   const loadDashboardData = async (options?: { mountedRef?: { current: boolean }; silent?: boolean }) => {
     const mountedRef = options?.mountedRef;
@@ -217,29 +251,33 @@ export default function DashboardPage() {
         fetchRiskAnalysis(),
         fetchAlerts()
       ]);
+      const nextMeasurementFingerprint = metricsData.latestMeasurement
+        ? `${metricsData.latestMeasurement.measuredAt}|${metricsData.latestMeasurement.glucoseValue}`
+        : null;
+      const previousMeasurementFingerprint = latestMeasurementFingerprintRef.current;
+
       if (mountedRef && !mountedRef.current) return;
       setMetrics(metricsData);
       setChartData(chartPoints);
       setRisk(riskData);
       setAlerts(alertsData);
       setError(null);
+      latestMeasurementFingerprintRef.current = nextMeasurementFingerprint;
 
-      try {
-        const nextIntelligenceSummary = await getIntelligenceSummary();
-        if (mountedRef && !mountedRef.current) return;
-        setIntelligenceSummary(nextIntelligenceSummary);
-        setIntelligenceError(null);
-      } catch (intelligenceErr) {
-        if (mountedRef && !mountedRef.current) return;
-        if (!silent) {
-          const message =
-            intelligenceErr instanceof Error ? intelligenceErr.message : "No se pudo cargar el asistente.";
-          setIntelligenceError(message);
-        }
-      } finally {
-        if ((!mountedRef || mountedRef.current) && !silent) {
-          setIsIntelligenceLoading(false);
-        }
+      const intelligenceLoaded = await refreshAssistantSummary({ silent, keepLoadingState: true });
+      if (mountedRef && !mountedRef.current) return;
+
+      if (
+        silent &&
+        intelligenceLoaded &&
+        previousMeasurementFingerprint &&
+        previousMeasurementFingerprint !== nextMeasurementFingerprint
+      ) {
+        requestIntelligenceRefresh("glucose-data-changed");
+      }
+
+      if (!silent) {
+        setIsIntelligenceLoading(false);
       }
     } catch (err) {
       if (silent) return;
@@ -248,6 +286,18 @@ export default function DashboardPage() {
       setError(message);
       setIsIntelligenceLoading(false);
     }
+  };
+
+  const handleManualAssistantRefresh = async () => {
+    if (isIntelligenceRefreshing || isIntelligenceLoading) return;
+
+    setIsIntelligenceRefreshing(true);
+    setIntelligenceRefreshError(null);
+    const refreshed = await refreshAssistantSummary({ keepLoadingState: true });
+    if (!refreshed) {
+      setIntelligenceRefreshError("No se pudo actualizar el análisis.");
+    }
+    setIsIntelligenceRefreshing(false);
   };
 
   useEffect(() => {
@@ -348,6 +398,7 @@ export default function DashboardPage() {
 
       isRefreshInFlightRef.current = true;
       await loadDashboardData();
+      requestIntelligenceRefresh("manual-measurement-created");
     } catch (err) {
       const message = err instanceof Error ? err.message : "No se pudo guardar la medicion.";
       setFormError(message);
@@ -393,6 +444,10 @@ export default function DashboardPage() {
   const assistantAgreementLabel = intelligenceSummary
     ? translateAgreementStatus(intelligenceSummary.agreementStatus)
     : "No aplica";
+  const assistantThemeClass = getRiskThemeClass(
+    intelligenceSummary?.finalRiskLevel,
+    intelligenceSummary?.assistantMood
+  );
 
   return (
     <div className="dashboard-grid dashboard-page">
@@ -601,7 +656,7 @@ export default function DashboardPage() {
               <p className="risk-message">{riskMessage}</p>
             </Card>
 
-            <Card className="risk-card assistant-card">
+            <Card className={`risk-card assistant-card risk-theme-card ${assistantThemeClass}`}>
               <div className="assistant-card-hero">
                 <IntelligenceAssistantRobot
                   assistantMood={intelligenceSummary?.assistantMood}
@@ -616,17 +671,43 @@ export default function DashboardPage() {
                     <p className="chart-card-summary">Resumen asistido del riesgo y consistencia entre motores de análisis.</p>
                   </div>
                   {intelligenceSummary ? (
-                    <span className={`metric-chip ${intelligenceSummary.geminiAvailable ? "ready" : ""}`}>
-                      {intelligenceSummary.geminiAvailable ? "Disponible" : "No disponible"}
-                    </span>
-                  ) : null}
+                    <div className="assistant-card-chip-group">
+                      <span className={`metric-chip risk-theme-badge ${assistantThemeClass}`}>
+                        {getRiskBadgeLabel(intelligenceSummary.finalRiskLevel)}
+                      </span>
+                      <span className={`metric-chip ${intelligenceSummary.geminiAvailable ? "ready" : ""}`}>
+                        {intelligenceSummary.geminiAvailable ? "Disponible" : "No disponible"}
+                      </span>
+                      <button
+                        type="button"
+                        className="ghost-button intelligence-refresh-button"
+                        onClick={handleManualAssistantRefresh}
+                        disabled={isIntelligenceRefreshing || isIntelligenceLoading}
+                      >
+                        {isIntelligenceRefreshing ? "Actualizando..." : "Actualizar análisis"}
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="assistant-card-chip-group">
+                      <span className={`metric-chip risk-theme-badge ${assistantThemeClass}`}>Sin datos</span>
+                      <button
+                        type="button"
+                        className="ghost-button intelligence-refresh-button"
+                        onClick={handleManualAssistantRefresh}
+                        disabled={isIntelligenceRefreshing || isIntelligenceLoading}
+                      >
+                        {isIntelligenceRefreshing ? "Actualizando..." : "Actualizar análisis"}
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
 
               {isIntelligenceLoading ? <p className="soft-text">Cargando asistente...</p> : null}
               {!isIntelligenceLoading && intelligenceError ? <p className="soft-text">{intelligenceError}</p> : null}
+              {!isIntelligenceLoading && intelligenceRefreshError ? <p className="soft-text">{intelligenceRefreshError}</p> : null}
               {!isIntelligenceLoading && !intelligenceError && intelligenceSummary ? (
-                <>
+                <div className="assistant-card-body">
                   <p className="assistant-card-message">{intelligenceSummary.assistantMessage}</p>
                   <div className="assistant-card-grid">
                     <div className="risk-stat">
@@ -642,7 +723,7 @@ export default function DashboardPage() {
                       <p className="assistant-stat-value">{assistantAgreementLabel}</p>
                     </div>
                   </div>
-                </>
+                </div>
               ) : null}
               {!isIntelligenceLoading && !intelligenceError && !intelligenceSummary ? (
                 <p className="soft-text">Aún no hay análisis inteligente disponible.</p>
