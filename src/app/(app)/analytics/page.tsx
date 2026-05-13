@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Section } from "@/components/ui/section";
 import { GlucoseVisualization } from "@/components/charts/glucose-visualization";
@@ -20,14 +20,28 @@ import { IntelligenceHistoryItem, IntelligenceSummary } from "@/features/intelli
 import {
   formatIntelligenceConfidence,
   formatIntelligenceGeneratedAt,
+  getAgreementExplanation,
+  getRiskBadgeLabel,
+  getRiskThemeClass,
   translateAgreementStatus,
   translateAssistantMood,
   translateIntelligenceRiskLevel,
   translateIntelligenceTrend
 } from "@/features/intelligence/display";
+import { requestIntelligenceRefresh, subscribeToIntelligenceRefresh } from "@/lib/intelligence/refresh";
+import { useAuthStore } from "@/stores/auth-store";
 
 type InsightKey = "trend" | "predominance" | "stability";
 type HistoryLimit = 5 | 10 | "ALL";
+const INTELLIGENCE_SUMMARY_RETRY_DELAY_MS = 600;
+const ANALYTICS_INTELLIGENCE_POLLING_INTERVAL_MS = 10_000;
+const INTELLIGENCE_REFRESH_DEBOUNCE_MS = 250;
+
+function sleep(delayMs: number): Promise<void> {
+  return new Promise((resolve) => {
+    window.setTimeout(resolve, delayMs);
+  });
+}
 
 function formatMetric(value: number): string {
   return value.toLocaleString("es-CO", { maximumFractionDigits: 1 });
@@ -184,6 +198,8 @@ function InsightIcon({ name }: { name: InsightKey | "risk" | "status" | "latest"
 }
 
 export default function AnalyticsPage() {
+  const isHydrated = useAuthStore((state) => state.isHydrated);
+  const accessToken = useAuthStore((state) => state.accessToken);
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
   const [risk, setRisk] = useState<RiskAnalysis | null>(null);
   const [chartData, setChartData] = useState<ChartPoint[]>([]);
@@ -196,13 +212,130 @@ export default function AnalyticsPage() {
   const [isChartRefreshing, setIsChartRefreshing] = useState(false);
   const [isIntelligenceLoading, setIsIntelligenceLoading] = useState(true);
   const [isIntelligenceHistoryLoading, setIsIntelligenceHistoryLoading] = useState(true);
+  const [isIntelligenceRefreshing, setIsIntelligenceRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [intelligenceError, setIntelligenceError] = useState<string | null>(null);
   const [intelligenceHistoryError, setIntelligenceHistoryError] = useState<string | null>(null);
+  const [intelligenceRefreshError, setIntelligenceRefreshError] = useState<string | null>(null);
   const hasMountedChartRangeEffectRef = useRef(false);
+  const isMountedRef = useRef(false);
+  const intelligenceRefreshInFlightRef = useRef(false);
+  const intelligenceRefreshTimeoutRef = useRef<number | null>(null);
+  const intelligenceSummaryRef = useRef<IntelligenceSummary | null>(null);
+  const intelligenceHistoryRef = useRef<IntelligenceHistoryItem[]>([]);
 
   useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+      if (intelligenceRefreshTimeoutRef.current !== null) {
+        window.clearTimeout(intelligenceRefreshTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    intelligenceSummaryRef.current = intelligenceSummary;
+  }, [intelligenceSummary]);
+
+  useEffect(() => {
+    intelligenceHistoryRef.current = intelligenceHistory;
+  }, [intelligenceHistory]);
+
+  const loadIntelligenceSummaryWithRetry = useCallback(async (): Promise<IntelligenceSummary> => {
+    try {
+      return await getIntelligenceSummary();
+    } catch (error) {
+      console.error("Analytics intelligence summary request failed on first attempt.", error);
+      await sleep(INTELLIGENCE_SUMMARY_RETRY_DELAY_MS);
+      return getIntelligenceSummary();
+    }
+  }, []);
+
+  const loadIntelligenceData = useCallback(
+    async (options?: { background?: boolean }) => {
+      const background = options?.background ?? false;
+      let summarySuccess = false;
+      let historySuccess = false;
+
+      if (!background) {
+        setIsIntelligenceLoading(true);
+        setIsIntelligenceHistoryLoading(true);
+      }
+
+      try {
+        const [summaryResult, historyResult] = await Promise.allSettled([
+          loadIntelligenceSummaryWithRetry(),
+          getIntelligenceHistory()
+        ]);
+
+        if (!isMountedRef.current) return;
+
+        if (summaryResult.status === "fulfilled") {
+          setIntelligenceSummary(summaryResult.value);
+          setIntelligenceError(null);
+          summarySuccess = true;
+        } else {
+          console.error("Analytics intelligence summary request failed after retry.", summaryResult.reason);
+          if (!background || !intelligenceSummaryRef.current) {
+            setIntelligenceError("No se pudo cargar el análisis inteligente.");
+          }
+        }
+
+        if (historyResult.status === "fulfilled") {
+          setIntelligenceHistory(historyResult.value.slice(0, 20));
+          setIntelligenceHistoryError(null);
+          historySuccess = true;
+        } else {
+          console.error("Analytics intelligence history request failed.", historyResult.reason);
+          if (!background || intelligenceHistoryRef.current.length === 0) {
+            setIntelligenceHistoryError("No se pudo cargar el historial de análisis.");
+          }
+        }
+      } finally {
+        if (isMountedRef.current) {
+          setIsIntelligenceLoading(false);
+          setIsIntelligenceHistoryLoading(false);
+        }
+      }
+
+      return { summarySuccess, historySuccess };
+    },
+    [loadIntelligenceSummaryWithRetry]
+  );
+
+  const scheduleIntelligenceRefresh = useCallback(
+    (reason: string) => {
+      if (!isHydrated || !accessToken) return;
+
+      if (intelligenceRefreshTimeoutRef.current !== null) {
+        window.clearTimeout(intelligenceRefreshTimeoutRef.current);
+      }
+
+      intelligenceRefreshTimeoutRef.current = window.setTimeout(() => {
+        intelligenceRefreshTimeoutRef.current = null;
+        if (intelligenceRefreshInFlightRef.current) return;
+
+        intelligenceRefreshInFlightRef.current = true;
+        void loadIntelligenceData({ background: true })
+          .catch((error) => {
+            console.error(`Analytics intelligence refresh failed after ${reason}.`, error);
+          })
+          .finally(() => {
+            intelligenceRefreshInFlightRef.current = false;
+          });
+      }, INTELLIGENCE_REFRESH_DEBOUNCE_MS);
+    },
+    [accessToken, isHydrated, loadIntelligenceData]
+  );
+
+  useEffect(() => {
+    if (!isHydrated || !accessToken) {
+      return;
+    }
+
     const mounted = { current: true };
+
     async function load() {
       setIsLoading(true);
       setError(null);
@@ -211,12 +344,10 @@ export default function AnalyticsPage() {
       setIntelligenceError(null);
       setIntelligenceHistoryError(null);
       try {
-        const [metricsResult, riskResult, chartResult, intelligenceResult, intelligenceHistoryResult] = await Promise.allSettled([
+        const [metricsResult, riskResult, chartResult] = await Promise.allSettled([
           fetchDashboardMetrics(),
           fetchRiskAnalysis(),
-          fetchChartData(buildChartRangeParams(chartRange).from, buildChartRangeParams(chartRange).to),
-          getIntelligenceSummary(),
-          getIntelligenceHistory()
+          fetchChartData(buildChartRangeParams(chartRange).from, buildChartRangeParams(chartRange).to)
         ]);
 
         if (metricsResult.status === "rejected" || riskResult.status === "rejected" || chartResult.status === "rejected") {
@@ -235,20 +366,7 @@ export default function AnalyticsPage() {
         setMetrics(metricsResult.value);
         setRisk(riskResult.value);
         setChartData(chartResult.value);
-
-        if (intelligenceResult.status === "fulfilled") {
-          setIntelligenceSummary(intelligenceResult.value);
-        } else {
-          setIntelligenceSummary(null);
-          setIntelligenceError("No se pudo cargar el analisis inteligente.");
-        }
-
-        if (intelligenceHistoryResult.status === "fulfilled") {
-          setIntelligenceHistory(intelligenceHistoryResult.value.slice(0, 20));
-        } else {
-          setIntelligenceHistory([]);
-          setIntelligenceHistoryError("No se pudo cargar el historial de analisis.");
-        }
+        await loadIntelligenceData();
       } catch (err) {
         const message = err instanceof Error ? err.message : "No se pudo cargar el analisis.";
         if (!mounted.current) return;
@@ -266,7 +384,23 @@ export default function AnalyticsPage() {
     return () => {
       mounted.current = false;
     };
-  }, []);
+  }, [isHydrated, accessToken]);
+
+  useEffect(() => {
+    if (!isHydrated || !accessToken) return;
+
+    const unsubscribe = subscribeToIntelligenceRefresh((reason) => {
+      scheduleIntelligenceRefresh(reason);
+    });
+    const intervalId = window.setInterval(() => {
+      scheduleIntelligenceRefresh("polling");
+    }, ANALYTICS_INTELLIGENCE_POLLING_INTERVAL_MS);
+
+    return () => {
+      unsubscribe();
+      window.clearInterval(intervalId);
+    };
+  }, [accessToken, isHydrated, scheduleIntelligenceRefresh]);
 
   useEffect(() => {
     if (!hasMountedChartRangeEffectRef.current) {
@@ -294,6 +428,7 @@ export default function AnalyticsPage() {
     }
 
     void refreshChartForRange();
+    requestIntelligenceRefresh("analytics-range-changed");
     return () => {
       mounted = false;
     };
@@ -358,6 +493,31 @@ export default function AnalyticsPage() {
     if (historyLimit === "ALL") return intelligenceHistory;
     return intelligenceHistory.slice(0, historyLimit);
   }, [historyLimit, intelligenceHistory]);
+  const intelligenceThemeClass = getRiskThemeClass(
+    intelligenceSummary?.finalRiskLevel,
+    intelligenceSummary?.assistantMood
+  );
+
+  const handleManualIntelligenceRefresh = useCallback(async () => {
+    if (isIntelligenceRefreshing || isIntelligenceLoading || isIntelligenceHistoryLoading) return;
+
+    setIsIntelligenceRefreshing(true);
+    setIntelligenceRefreshError(null);
+
+    try {
+      const result = await loadIntelligenceData({ background: true });
+      if (!result || !result.summarySuccess || !result.historySuccess) {
+        setIntelligenceRefreshError("No se pudo actualizar el análisis.");
+      }
+    } catch (error) {
+      console.error("Analytics manual intelligence refresh failed.", error);
+      setIntelligenceRefreshError("No se pudo actualizar el análisis.");
+    } finally {
+      if (isMountedRef.current) {
+        setIsIntelligenceRefreshing(false);
+      }
+    }
+  }, [isIntelligenceRefreshing, isIntelligenceLoading, isIntelligenceHistoryLoading, loadIntelligenceData]);
 
   return (
     <div className="dashboard-grid analytics-page">
@@ -534,6 +694,16 @@ export default function AnalyticsPage() {
       <Section
         title="Analisis inteligente"
         subtitle="Resumen interpretativo generado con el sistema de inteligencia clinica disponible"
+        action={
+          <button
+            type="button"
+            className="ghost-button intelligence-refresh-button"
+            onClick={handleManualIntelligenceRefresh}
+            disabled={isIntelligenceRefreshing || isIntelligenceLoading || isIntelligenceHistoryLoading}
+          >
+            {isIntelligenceRefreshing ? "Actualizando..." : "Actualizar análisis"}
+          </button>
+        }
       >
         {isIntelligenceLoading ? (
           <Card className="analytics-intelligence-card">
@@ -558,7 +728,7 @@ export default function AnalyticsPage() {
         {!isIntelligenceLoading && !intelligenceError && intelligenceSummary ? (
           <div className="analytics-intelligence-stack">
             <div className="analytics-intelligence-grid">
-              <Card className="analytics-intelligence-card analytics-intelligence-primary">
+              <Card className={`analytics-intelligence-card analytics-intelligence-primary risk-theme-card ${intelligenceThemeClass}`}>
                 <div className="analytics-intelligence-hero">
                   <IntelligenceAssistantRobot
                     assistantMood={intelligenceSummary.assistantMood}
@@ -571,39 +741,52 @@ export default function AnalyticsPage() {
                       <p className="metric-label">Analisis inteligente</p>
                       <p className="metric-card-caption">Lectura sintetica del estado actual y su interpretacion</p>
                     </div>
-                    <span className="metric-card-badge">Asistente</span>
+                    <span className={`metric-card-badge risk-theme-badge ${intelligenceThemeClass}`}>
+                      {getRiskBadgeLabel(intelligenceSummary.finalRiskLevel)}
+                    </span>
                   </div>
                 </div>
                 <p className="analytics-intelligence-message">{intelligenceSummary.assistantMessage}</p>
                 <p className="analytics-spotlight-copy">{intelligenceSummary.aiExplanation}</p>
               </Card>
 
-              <Card className="analytics-intelligence-card">
+              <Card className={`analytics-intelligence-card risk-theme-card ${intelligenceThemeClass}`}>
                 <div className="analytics-intelligence-header">
                   <div>
                     <p className="metric-label">Comparacion de riesgo</p>
                     <p className="metric-card-caption">Contraste entre reglas, IA externa y resultado final</p>
                   </div>
-                  <span className="metric-card-badge">Riesgo</span>
+                  <span className={`metric-card-badge risk-theme-badge ${intelligenceThemeClass}`}>Riesgo</span>
                 </div>
+                <p className="analytics-comparison-copy">
+                  GlycoWatch compara el análisis interno basado en reglas con la interpretación de la IA externa. Si hay
+                  diferencias, el sistema prioriza el resultado más conservador.
+                </p>
                 <div className="analytics-intelligence-metadata-grid">
-                  <div className="analytics-intelligence-meta-item">
+                  <div className={`analytics-intelligence-meta-item risk-theme-panel ${getRiskThemeClass(intelligenceSummary.ruleBasedRiskLevel)}`}>
                     <span className="metric-label">Motor basado en reglas</span>
-                    <strong>{translateIntelligenceRiskLevel(intelligenceSummary.ruleBasedRiskLevel)}</strong>
+                    <span className={`metric-card-badge risk-theme-badge ${getRiskThemeClass(intelligenceSummary.ruleBasedRiskLevel)}`}>
+                      {translateIntelligenceRiskLevel(intelligenceSummary.ruleBasedRiskLevel)}
+                    </span>
                   </div>
-                  <div className="analytics-intelligence-meta-item">
+                  <div className={`analytics-intelligence-meta-item risk-theme-panel ${getRiskThemeClass(intelligenceSummary.geminiRiskLevel)}`}>
                     <span className="metric-label">IA externa</span>
-                    <strong>{translateIntelligenceRiskLevel(intelligenceSummary.geminiRiskLevel)}</strong>
+                    <span className={`metric-card-badge risk-theme-badge ${getRiskThemeClass(intelligenceSummary.geminiRiskLevel)}`}>
+                      {translateIntelligenceRiskLevel(intelligenceSummary.geminiRiskLevel)}
+                    </span>
                   </div>
-                  <div className="analytics-intelligence-meta-item">
+                  <div className={`analytics-intelligence-meta-item risk-theme-panel ${intelligenceThemeClass}`}>
                     <span className="metric-label">Riesgo final</span>
-                    <strong>{translateIntelligenceRiskLevel(intelligenceSummary.finalRiskLevel)}</strong>
+                    <span className={`metric-card-badge risk-theme-badge ${intelligenceThemeClass}`}>
+                      {translateIntelligenceRiskLevel(intelligenceSummary.finalRiskLevel)}
+                    </span>
                   </div>
-                  <div className="analytics-intelligence-meta-item">
-                    <span className="metric-label">Estado de acuerdo</span>
+                  <div className={`analytics-intelligence-meta-item risk-theme-panel ${intelligenceThemeClass}`}>
+                    <span className="metric-label">Nivel de acuerdo</span>
                     <strong>{translateAgreementStatus(intelligenceSummary.agreementStatus)}</strong>
                   </div>
                 </div>
+                <p className="analytics-comparison-note">{getAgreementExplanation(intelligenceSummary.agreementStatus)}</p>
               </Card>
             </div>
 
@@ -673,6 +856,10 @@ export default function AnalyticsPage() {
             </div>
           </div>
         ) : null}
+
+        {!isIntelligenceLoading && !isIntelligenceHistoryLoading && intelligenceRefreshError ? (
+          <p className="soft-text">{intelligenceRefreshError}</p>
+        ) : null}
       </Section>
 
       <Section
@@ -719,27 +906,27 @@ export default function AnalyticsPage() {
         {!isIntelligenceHistoryLoading && !intelligenceHistoryError && intelligenceHistory.length > 0 ? (
           <div className="analytics-history-list">
             {visibleHistory.map((item) => (
-              <Card key={item.id} className="analytics-history-card">
+              <Card key={item.id} className={`analytics-history-card risk-theme-card ${getRiskThemeClass(item.finalRiskLevel, item.assistantMood)}`}>
                 <div className="analytics-history-header">
-                  <div>
-                    <p className="metric-label">{translateIntelligenceRiskLevel(item.finalRiskLevel)}</p>
+                  <div className="analytics-history-title">
+                    <span className={`metric-card-badge risk-theme-badge ${getRiskThemeClass(item.finalRiskLevel, item.assistantMood)}`}>
+                      {translateIntelligenceRiskLevel(item.finalRiskLevel)}
+                    </span>
                     <p className="metric-card-caption">{formatIntelligenceGeneratedAt(item.createdAt)}</p>
                   </div>
-                  <span className="metric-card-badge">{translateIntelligenceTrend(item.trend)}</span>
+                  <div className="analytics-history-tags">
+                    <span className="analytics-history-tag">{translateIntelligenceTrend(item.trend)}</span>
+                    <span className="analytics-history-tag">{translateAssistantMood(item.assistantMood)}</span>
+                  </div>
                 </div>
 
-                <p className="analytics-history-summary">{item.summary}</p>
+                <p className="analytics-history-summary" title={item.summary}>
+                  {item.summary}
+                </p>
 
-                <div className="analytics-history-meta">
-                  <span>
-                    <strong>Estado:</strong> {translateIntelligenceRiskLevel(item.finalRiskLevel)}
-                  </span>
-                  <span>
-                    <strong>Tendencia:</strong> {translateIntelligenceTrend(item.trend)}
-                  </span>
-                  <span>
-                    <strong>Asistente:</strong> {translateAssistantMood(item.assistantMood)}
-                  </span>
+                <div className="analytics-history-footer">
+                  <p className="analytics-history-caption">Resumen generado por el asistente para esta lectura.</p>
+                  <span className="analytics-history-trend">{translateIntelligenceTrend(item.trend)}</span>
                 </div>
               </Card>
             ))}
