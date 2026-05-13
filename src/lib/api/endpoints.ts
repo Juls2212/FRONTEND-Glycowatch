@@ -21,6 +21,9 @@ export const API_ENDPOINTS = {
     dashboard: "/analytics/dashboard",
     chart: "/analytics/chart",
     risk: "/analytics/risk"
+  },
+  intelligence: {
+    summary: "/intelligence/summary",
+    history: "/intelligence/history"
   }
 } as const;
-
