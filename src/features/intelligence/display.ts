@@ -31,6 +31,8 @@ const assistantMoodLabels: Record<string, string> = {
   INSUFFICIENT_DATA: "Datos insuficientes"
 };
 
+export type IntelligenceRiskTheme = "low" | "moderate" | "high" | "critical" | "neutral";
+
 export function translateIntelligenceRiskLevel(value: string | null | undefined): string {
   if (!value) return "No disponible";
   return riskLabels[value] ?? value;
@@ -46,9 +48,53 @@ export function translateAgreementStatus(value: string | null | undefined): stri
   return agreementLabels[value] ?? value;
 }
 
+export function getAgreementExplanation(value: string | null | undefined): string {
+  if (value === "FULL_AGREEMENT") {
+    return "Ambos análisis coinciden en el nivel de riesgo.";
+  }
+  if (value === "PARTIAL_AGREEMENT") {
+    return "Los análisis son similares, aunque no idénticos.";
+  }
+  if (value === "DISAGREEMENT") {
+    return "Los análisis difieren. GlycoWatch usa el resultado más conservador.";
+  }
+  if (value === "GEMINI_UNAVAILABLE") {
+    return "La IA externa no está disponible. Se utiliza el motor interno basado en reglas.";
+  }
+  return "No hay suficiente información para comparar ambos análisis.";
+}
+
 export function translateAssistantMood(value: string | null | undefined): string {
   if (!value) return "Sin datos";
   return assistantMoodLabels[value] ?? value;
+}
+
+export function getRiskTheme(
+  finalRiskLevel: string | null | undefined,
+  assistantMood?: string | null | undefined
+): IntelligenceRiskTheme {
+  if (finalRiskLevel === "LOW") return "low";
+  if (finalRiskLevel === "MODERATE") return "moderate";
+  if (finalRiskLevel === "HIGH") return "high";
+  if (finalRiskLevel === "CRITICAL") return "critical";
+  if (finalRiskLevel === "INSUFFICIENT_DATA") return "neutral";
+
+  if (assistantMood === "HAPPY" || assistantMood === "CALM") return "low";
+  if (assistantMood === "ATTENTIVE") return "moderate";
+  if (assistantMood === "CONCERNED") return "high";
+  if (assistantMood === "ALERT") return "critical";
+  return "neutral";
+}
+
+export function getRiskBadgeLabel(finalRiskLevel: string | null | undefined): string {
+  return translateIntelligenceRiskLevel(finalRiskLevel);
+}
+
+export function getRiskThemeClass(
+  finalRiskLevel: string | null | undefined,
+  assistantMood?: string | null | undefined
+): string {
+  return `risk-theme-${getRiskTheme(finalRiskLevel, assistantMood)}`;
 }
 
 export function formatIntelligenceConfidence(value: number | null | undefined): string {
