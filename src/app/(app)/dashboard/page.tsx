@@ -14,6 +14,7 @@ import { Card } from "@/components/ui/card";
 import { Section } from "@/components/ui/section";
 import { GlucoseChart } from "@/components/charts/glucose-chart";
 import { GlucoseVisualization } from "@/components/charts/glucose-visualization";
+import { IntelligenceAssistantRobot } from "@/components/intelligence/IntelligenceAssistantRobot";
 import { ChartRangeFilter } from "@/features/dashboard/components/chart-range-filter";
 import { buildChartRangeParams, ChartRange, filterChartByRange } from "@/features/dashboard/chart-range";
 import { normalizeRestrictedDecimalInput } from "@/lib/forms/input-normalizers";
@@ -601,16 +602,25 @@ export default function DashboardPage() {
             </Card>
 
             <Card className="risk-card assistant-card">
-              <div className="chart-card-header assistant-card-header">
-                <div>
-                  <p className="chart-card-kicker">Asistente GlycoWatch</p>
-                  <p className="chart-card-summary">Resumen asistido del riesgo y consistencia entre motores de análisis.</p>
+              <div className="assistant-card-hero">
+                <IntelligenceAssistantRobot
+                  assistantMood={intelligenceSummary?.assistantMood}
+                  finalRiskLevel={intelligenceSummary?.finalRiskLevel}
+                  trend={intelligenceSummary?.trend}
+                  isLoading={isIntelligenceLoading}
+                  className="assistant-card-robot"
+                />
+                <div className="chart-card-header assistant-card-header">
+                  <div>
+                    <p className="chart-card-kicker">Asistente GlycoWatch</p>
+                    <p className="chart-card-summary">Resumen asistido del riesgo y consistencia entre motores de análisis.</p>
+                  </div>
+                  {intelligenceSummary ? (
+                    <span className={`metric-chip ${intelligenceSummary.geminiAvailable ? "ready" : ""}`}>
+                      {intelligenceSummary.geminiAvailable ? "Disponible" : "No disponible"}
+                    </span>
+                  ) : null}
                 </div>
-                {intelligenceSummary ? (
-                  <span className={`metric-chip ${intelligenceSummary.geminiAvailable ? "ready" : ""}`}>
-                    {intelligenceSummary.geminiAvailable ? "Disponible" : "No disponible"}
-                  </span>
-                ) : null}
               </div>
 
               {isIntelligenceLoading ? <p className="soft-text">Cargando asistente...</p> : null}
@@ -633,6 +643,9 @@ export default function DashboardPage() {
                     </div>
                   </div>
                 </>
+              ) : null}
+              {!isIntelligenceLoading && !intelligenceError && !intelligenceSummary ? (
+                <p className="soft-text">Aún no hay análisis inteligente disponible.</p>
               ) : null}
             </Card>
           </div>
