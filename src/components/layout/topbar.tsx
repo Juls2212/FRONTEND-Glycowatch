@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { AppearanceMenu } from "@/components/layout/appearance-menu";
 import { NotificationMenu } from "@/components/layout/notification-menu";
 import { UserMenu } from "@/components/layout/user-menu";
@@ -10,6 +11,8 @@ type TopbarProps = {
 };
 
 export function Topbar({ sidebarCollapsed, onToggleSidebar }: TopbarProps) {
+  const [activeMenu, setActiveMenu] = useState<"appearance" | "user" | null>(null);
+
   return (
     <header className="topbar">
       <div className="topbar-main">
@@ -33,8 +36,16 @@ export function Topbar({ sidebarCollapsed, onToggleSidebar }: TopbarProps) {
 
       <div className="topbar-actions">
         <NotificationMenu />
-        <AppearanceMenu />
-        <UserMenu />
+        <AppearanceMenu
+          open={activeMenu === "appearance"}
+          onOpenChange={(open) =>
+            setActiveMenu((current) => (open ? "appearance" : current === "appearance" ? null : current))
+          }
+        />
+        <UserMenu
+          open={activeMenu === "user"}
+          onOpenChange={(open) => setActiveMenu((current) => (open ? "user" : current === "user" ? null : current))}
+        />
       </div>
     </header>
   );
