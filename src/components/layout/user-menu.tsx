@@ -4,16 +4,28 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores/auth-store";
 
-// Componente de menú de usuario con opciones para administrar el perfil y cerrar sesión
-export function UserMenu() {
+type UserMenuProps = {
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+};
+
+export function UserMenu({ open: controlledOpen, onOpenChange }: UserMenuProps) {
   const router = useRouter();
   const logout = useAuthStore((state) => state.logout);
-  const [open, setOpen] = useState(false);
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const open = controlledOpen ?? uncontrolledOpen;
 
-  // Cerrar el menú al hacer clic fuera de él
+  const setOpen = (nextOpen: boolean) => {
+    if (controlledOpen === undefined) {
+      setUncontrolledOpen(nextOpen);
+    }
+    onOpenChange?.(nextOpen);
+  };
 
   useEffect(() => {
+    if (!open) return;
+
     const handleClickOutside = (event: MouseEvent) => {
       if (!containerRef.current) return;
       if (!containerRef.current.contains(event.target as Node)) {
@@ -25,7 +37,7 @@ export function UserMenu() {
     return () => {
       window.removeEventListener("mousedown", handleClickOutside);
     };
-  }, []);
+  }, [open]);
 
   const goToProfile = () => {
     setOpen(false);
@@ -43,7 +55,7 @@ export function UserMenu() {
       <button
         type="button"
         className="avatar-button"
-        onClick={() => setOpen((current) => !current)}
+        onClick={() => setOpen(!open)}
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label="Abrir menú de usuario"
@@ -64,4 +76,3 @@ export function UserMenu() {
     </div>
   );
 }
-
