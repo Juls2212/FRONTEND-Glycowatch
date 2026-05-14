@@ -97,10 +97,17 @@ export function getRiskThemeClass(
   return `risk-theme-${getRiskTheme(finalRiskLevel, assistantMood)}`;
 }
 
-export function formatIntelligenceConfidence(value: number | null | undefined): string {
-  if (typeof value !== "number" || !Number.isFinite(value)) return "Sin datos";
-  const normalized = value <= 1 ? value * 100 : value;
-  return `${normalized.toFixed(normalized >= 10 ? 0 : 1)}%`;
+export function formatIntelligenceConfidence(value: string | number | null | undefined): string {
+  if (value === "HIGH") return "Alta";
+  if (value === "MEDIUM") return "Media";
+  if (value === "LOW") return "Baja";
+
+  if (typeof value === "number" && Number.isFinite(value)) {
+    const normalized = value <= 1 ? value * 100 : value;
+    return `${normalized.toFixed(normalized >= 10 ? 0 : 1)}%`;
+  }
+
+  return "Sin datos";
 }
 
 export function formatIntelligenceGeneratedAt(value: string | null | undefined): string {
