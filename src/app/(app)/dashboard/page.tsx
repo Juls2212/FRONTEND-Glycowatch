@@ -8,8 +8,7 @@ import {
   fetchRiskAnalysis
 } from "@/features/dashboard/api";
 import { AlertItem, ChartPoint, DashboardMetrics, RiskAnalysis } from "@/features/dashboard/types";
-import { getIntelligenceSummary } from "@/features/intelligence/api";
-import { IntelligenceSummary } from "@/features/intelligence/types";
+import { useIntelligenceSummary } from "@/features/intelligence/hooks";
 import { getRiskBadgeLabel, getRiskThemeClass } from "@/features/intelligence/display";
 import { Card } from "@/components/ui/card";
 import { Section } from "@/components/ui/section";
@@ -185,14 +184,11 @@ export default function DashboardPage() {
   const [chartData, setChartData] = useState<ChartPoint[]>([]);
   const [risk, setRisk] = useState<RiskAnalysis | null>(null);
   const [alerts, setAlerts] = useState<AlertItem[]>([]);
-  const [intelligenceSummary, setIntelligenceSummary] = useState<IntelligenceSummary | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isChartRefreshing, setIsChartRefreshing] = useState(false);
-  const [isIntelligenceLoading, setIsIntelligenceLoading] = useState(true);
-  const [isIntelligenceRefreshing, setIsIntelligenceRefreshing] = useState(false);
+  const [isManualAssistantRefreshing, setIsManualAssistantRefreshing] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [intelligenceError, setIntelligenceError] = useState<string | null>(null);
   const [intelligenceRefreshError, setIntelligenceRefreshError] = useState<string | null>(null);
   const [formFieldErrors, setFormFieldErrors] = useState<Partial<Record<"glucoseValue" | "measuredAt", string>>>({});
   const [formError, setFormError] = useState<string | null>(null);
@@ -205,35 +201,15 @@ export default function DashboardPage() {
   const chartRangeRef = useRef<ChartRange>("WEEK");
   const hasMountedChartRangeEffectRef = useRef(false);
   const latestMeasurementFingerprintRef = useRef<string | null>(null);
-
-  const refreshAssistantSummary = async (options?: { silent?: boolean; keepLoadingState?: boolean }): Promise<boolean> => {
-    const silent = options?.silent ?? false;
-    const keepLoadingState = options?.keepLoadingState ?? false;
-
-    if (!silent) {
-      setIntelligenceRefreshError(null);
-    }
-
-    try {
-      const nextIntelligenceSummary = await getIntelligenceSummary();
-      setIntelligenceSummary(nextIntelligenceSummary);
-      setIntelligenceError(null);
-      return true;
-    } catch (intelligenceErr) {
-      if (!silent) {
-        const message =
-          intelligenceErr instanceof Error ? intelligenceErr.message : "No se pudo cargar el asistente.";
-        if (!keepLoadingState || intelligenceSummary) {
-          setIntelligenceError(message);
-        }
-      }
-      return false;
-    } finally {
-      if (!keepLoadingState) {
-        setIsIntelligenceLoading(false);
-      }
-    }
-  };
+  const {
+    data: intelligenceSummary,
+    isLoading: isIntelligenceLoading,
+    isRefreshing: isAssistantBackgroundRefreshing,
+    error: intelligenceError,
+    refresh: refreshAssistantSummary
+  } = useIntelligenceSummary({ enabled: false });
+  const isAssistantRefreshBusy =
+    isManualAssistantRefreshing || isAssistantBackgroundRefreshing || isIntelligenceLoading;
 
   const loadDashboardData = async (options?: { mountedRef?: { current: boolean }; silent?: boolean }) => {
     const mountedRef = options?.mountedRef;
@@ -264,7 +240,7 @@ export default function DashboardPage() {
       setError(null);
       latestMeasurementFingerprintRef.current = nextMeasurementFingerprint;
 
-      const intelligenceLoaded = await refreshAssistantSummary({ silent, keepLoadingState: true });
+      const intelligenceLoaded = (await refreshAssistantSummary({ background: silent })).success;
       if (mountedRef && !mountedRef.current) return;
 
       if (
@@ -277,27 +253,26 @@ export default function DashboardPage() {
       }
 
       if (!silent) {
-        setIsIntelligenceLoading(false);
+        setIntelligenceRefreshError(null);
       }
     } catch (err) {
       if (silent) return;
       const message = err instanceof Error ? err.message : "No se pudieron cargar los datos.";
       if (mountedRef && !mountedRef.current) return;
       setError(message);
-      setIsIntelligenceLoading(false);
     }
   };
 
   const handleManualAssistantRefresh = async () => {
-    if (isIntelligenceRefreshing || isIntelligenceLoading) return;
+    if (isAssistantRefreshBusy) return;
 
-    setIsIntelligenceRefreshing(true);
+    setIsManualAssistantRefreshing(true);
     setIntelligenceRefreshError(null);
-    const refreshed = await refreshAssistantSummary({ keepLoadingState: true });
-    if (!refreshed) {
+    const refreshed = await refreshAssistantSummary({ background: true });
+    if (!refreshed.success) {
       setIntelligenceRefreshError("No se pudo actualizar el análisis.");
     }
-    setIsIntelligenceRefreshing(false);
+    setIsManualAssistantRefreshing(false);
   };
 
   useEffect(() => {
@@ -682,9 +657,9 @@ export default function DashboardPage() {
                         type="button"
                         className="ghost-button intelligence-refresh-button"
                         onClick={handleManualAssistantRefresh}
-                        disabled={isIntelligenceRefreshing || isIntelligenceLoading}
+                        disabled={isAssistantRefreshBusy}
                       >
-                        {isIntelligenceRefreshing ? "Actualizando..." : "Actualizar análisis"}
+                        {isManualAssistantRefreshing ? "Actualizando..." : "Actualizar análisis"}
                       </button>
                     </div>
                   ) : (
@@ -694,9 +669,9 @@ export default function DashboardPage() {
                         type="button"
                         className="ghost-button intelligence-refresh-button"
                         onClick={handleManualAssistantRefresh}
-                        disabled={isIntelligenceRefreshing || isIntelligenceLoading}
+                        disabled={isAssistantRefreshBusy}
                       >
-                        {isIntelligenceRefreshing ? "Actualizando..." : "Actualizar análisis"}
+                        {isManualAssistantRefreshing ? "Actualizando..." : "Actualizar análisis"}
                       </button>
                     </div>
                   )}
