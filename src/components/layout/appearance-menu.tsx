@@ -22,19 +22,48 @@ type PanelPosition = {
   right: number;
 };
 
-export function AppearanceMenu() {
+type AppearanceMenuProps = {
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+};
+
+export function AppearanceMenu({ open: controlledOpen, onOpenChange }: AppearanceMenuProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const buttonRef = useRef<HTMLButtonElement | null>(null);
-  const [open, setOpen] = useState(false);
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
   const [colorMode, setColorModeState] = useState<ColorMode>("dark");
   const [accentTheme, setAccentThemeState] = useState<AccentTheme>("blue");
   const [panelPosition, setPanelPosition] = useState<PanelPosition>({ top: 72, right: 16 });
+  const open = controlledOpen ?? uncontrolledOpen;
+
+  const setOpen = (nextOpen: boolean) => {
+    if (controlledOpen === undefined) {
+      setUncontrolledOpen(nextOpen);
+    }
+    onOpenChange?.(nextOpen);
+  };
 
   useEffect(() => {
     const state = getThemeState();
     setColorModeState(state.colorMode);
     setAccentThemeState(state.accentTheme);
   }, []);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (!containerRef.current) return;
+      if (!containerRef.current.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    };
+
+    window.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      window.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -79,11 +108,13 @@ export function AppearanceMenu() {
   const handleModeChange = (nextColorMode: ColorMode) => {
     setColorMode(nextColorMode);
     setColorModeState(nextColorMode);
+    setOpen(false);
   };
 
   const handleAccentChange = (nextAccentTheme: AccentTheme) => {
     setAccentTheme(nextAccentTheme);
     setAccentThemeState(nextAccentTheme);
+    setOpen(false);
   };
 
   return (
@@ -92,7 +123,7 @@ export function AppearanceMenu() {
         ref={buttonRef}
         type="button"
         className={`icon-button ${open ? "active" : ""}`}
-        onClick={() => setOpen((current) => !current)}
+        onClick={() => setOpen(!open)}
         aria-haspopup="dialog"
         aria-expanded={open}
         aria-label="Abrir ajustes de apariencia"
@@ -116,61 +147,52 @@ export function AppearanceMenu() {
       </button>
 
       {open ? (
-        <>
-          <button
-            type="button"
-            className="appearance-backdrop"
-            aria-label="Cerrar ajustes de apariencia"
-            onClick={() => setOpen(false)}
-          />
+        <div
+          className="appearance-dropdown"
+          role="dialog"
+          aria-label="Ajustes de apariencia"
+          style={{ top: `${panelPosition.top}px`, right: `${panelPosition.right}px` }}
+        >
+          <div className="appearance-section">
+            <p className="appearance-title">Apariencia</p>
+            <p className="appearance-subtitle">Elige modo y color del panel.</p>
+          </div>
 
-          <div
-            className="appearance-dropdown"
-            role="dialog"
-            aria-label="Ajustes de apariencia"
-            style={{ top: `${panelPosition.top}px`, right: `${panelPosition.right}px` }}
-          >
-            <div className="appearance-section">
-              <p className="appearance-title">Apariencia</p>
-              <p className="appearance-subtitle">Elige modo y color del panel.</p>
-            </div>
-
-            <div className="appearance-section">
-              <p className="appearance-label">Modo</p>
-              <div className="appearance-segmented" role="group" aria-label="Modo de color">
-                {COLOR_MODES.map((mode) => (
-                  <button
-                    key={mode}
-                    type="button"
-                    className={`appearance-option ${colorMode === mode ? "active" : ""}`}
-                    onClick={() => handleModeChange(mode)}
-                    aria-pressed={colorMode === mode}
-                  >
-                    {COLOR_MODE_LABELS[mode]}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="appearance-section">
-              <p className="appearance-label">Color de acento</p>
-              <div className="accent-grid" role="group" aria-label="Temas de color">
-                {ACCENT_THEMES.map((theme) => (
-                  <button
-                    key={theme}
-                    type="button"
-                    className={`accent-swatch accent-${theme} ${accentTheme === theme ? "active" : ""}`}
-                    onClick={() => handleAccentChange(theme)}
-                    aria-pressed={accentTheme === theme}
-                  >
-                    <span className="accent-swatch-dot" aria-hidden="true" />
-                    <span>{ACCENT_LABELS[theme]}</span>
-                  </button>
-                ))}
-              </div>
+          <div className="appearance-section">
+            <p className="appearance-label">Modo</p>
+            <div className="appearance-segmented" role="group" aria-label="Modo de color">
+              {COLOR_MODES.map((mode) => (
+                <button
+                  key={mode}
+                  type="button"
+                  className={`appearance-option ${colorMode === mode ? "active" : ""}`}
+                  onClick={() => handleModeChange(mode)}
+                  aria-pressed={colorMode === mode}
+                >
+                  {COLOR_MODE_LABELS[mode]}
+                </button>
+              ))}
             </div>
           </div>
-        </>
+
+          <div className="appearance-section">
+            <p className="appearance-label">Color de acento</p>
+            <div className="accent-grid" role="group" aria-label="Temas de color">
+              {ACCENT_THEMES.map((theme) => (
+                <button
+                  key={theme}
+                  type="button"
+                  className={`accent-swatch accent-${theme} ${accentTheme === theme ? "active" : ""}`}
+                  onClick={() => handleAccentChange(theme)}
+                  aria-pressed={accentTheme === theme}
+                >
+                  <span className="accent-swatch-dot" aria-hidden="true" />
+                  <span>{ACCENT_LABELS[theme]}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
       ) : null}
     </div>
   );
