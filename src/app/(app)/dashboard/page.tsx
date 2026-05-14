@@ -640,6 +640,7 @@ export default function DashboardPage() {
                   isLoading={isIntelligenceLoading}
                   className="assistant-card-robot"
                 />
+                <div className="assistant-card-content">
                 <div className="chart-card-header assistant-card-header">
                   <div>
                     <p className="chart-card-kicker">Asistente GlycoWatch</p>
@@ -675,6 +676,7 @@ export default function DashboardPage() {
                       </button>
                     </div>
                   )}
+                </div>
                 </div>
               </div>
 
