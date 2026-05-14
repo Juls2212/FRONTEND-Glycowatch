@@ -2516,7 +2516,7 @@ a {
 }
 
 .section {
-  gap: 16px;
+  gap: 14px;
 }
 
 .section-header {
@@ -2535,14 +2535,14 @@ a {
 }
 
 .dashboard-page {
-  gap: 24px;
-  padding-bottom: 10px;
+  gap: 20px;
+  padding-bottom: 8px;
 }
 
 .dashboard-hero {
   display: grid;
   grid-template-columns: minmax(0, 1.7fr) minmax(280px, 0.72fr);
-  gap: 18px;
+  gap: 16px;
   min-width: 0;
 }
 
@@ -2580,8 +2580,8 @@ a {
 
 .dashboard-hero-primary {
   display: grid;
-  gap: 20px;
-  min-height: 220px;
+  gap: 16px;
+  min-height: 204px;
 }
 
 .dashboard-hero-copy,
@@ -2594,46 +2594,57 @@ a {
 
 .assistant-card {
   display: grid;
-  gap: 16px;
+  gap: 12px;
   align-content: start;
   min-height: 100%;
+  padding-top: 16px;
 }
 
 .assistant-card-header {
   align-items: flex-start;
+  margin: 0;
+}
+
+.assistant-card-content {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+  min-width: 0;
 }
 
 .assistant-card-message {
   margin: 0;
-  font-size: 15px;
-  line-height: 1.6;
+  font-size: 16px;
+  line-height: 1.58;
+  font-weight: 600;
   color: var(--text-primary);
 }
 
 .assistant-card-body {
   display: grid;
-  gap: 14px;
+  gap: 10px;
   align-content: start;
   min-height: 0;
 }
 
 .assistant-card-chip-group {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 8px;
   flex-wrap: wrap;
-  justify-content: flex-end;
+  justify-content: flex-start;
 }
 
 .intelligence-refresh-button {
   padding-inline: 12px;
   white-space: nowrap;
+  margin-top: 2px;
 }
 
 .assistant-card-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
+  gap: 10px;
 }
 
 .assistant-card-hero,
@@ -2645,7 +2656,8 @@ a {
 }
 
 .assistant-card-hero {
-  grid-template-columns: minmax(104px, 116px) minmax(0, 1fr);
+  grid-template-columns: minmax(112px, 124px) minmax(0, 1fr);
+  gap: 14px;
 }
 
 .assistant-robot {
@@ -2687,6 +2699,7 @@ a {
 
 .assistant-card-robot {
   width: 100%;
+  align-self: start;
 }
 
 .analytics-intelligence-robot {
@@ -2698,8 +2711,8 @@ a {
 }
 
 .assistant-stat-value {
-  margin: 8px 0 0;
-  font-size: 18px;
+  margin: 6px 0 0;
+  font-size: 17px;
   font-weight: 700;
 }
 
@@ -2748,7 +2761,7 @@ a {
 .hero-metrics {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
+  gap: 12px;
 }
 
 .hero-metric-card,
@@ -2803,7 +2816,7 @@ a {
 
 .dashboard-hero-aside {
   display: grid;
-  gap: 14px;
+  gap: 12px;
   align-content: start;
 }
 
@@ -2811,16 +2824,16 @@ a {
   min-height: 100%;
   display: grid;
   align-content: start;
-  gap: 14px;
+  gap: 12px;
 }
 
 .dashboard-context-card {
-  min-height: 220px;
+  min-height: 204px;
 }
 
 .dashboard-context-row {
   display: grid;
-  gap: 14px;
+  gap: 12px;
 }
 
 .dashboard-context-meta {
@@ -2830,18 +2843,18 @@ a {
 }
 
 .dashboard-stat-grid {
-  gap: 16px;
+  gap: 14px;
 }
 
 .dashboard-stat-grid .metric-card {
-  min-height: 146px;
+  min-height: 138px;
 }
 
 .metric-card {
   position: relative;
   overflow: hidden;
   display: grid;
-  gap: 14px;
+  gap: 12px;
 }
 
 .metric-card-header,
@@ -2949,7 +2962,7 @@ a {
 .dashboard-main-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.7fr) minmax(280px, 0.82fr);
-  gap: 18px;
+  gap: 16px;
   align-items: start;
 }
 
@@ -2959,12 +2972,12 @@ a {
 
 .dashboard-side-stack {
   display: grid;
-  gap: 16px;
+  gap: 14px;
   grid-auto-rows: minmax(0, auto);
 }
 
 .chart-card {
-  padding-top: 16px;
+  padding-top: 14px;
   min-height: 100%;
 }
 
@@ -2972,7 +2985,7 @@ a {
   display: flex;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .chart-card-summary {
@@ -2980,18 +2993,18 @@ a {
 }
 
 .dashboard-main-grid .chart-wrap {
-  min-height: 324px;
+  min-height: 308px;
 }
 
 .risk-grid {
     display: grid;
     grid-template-columns: 1fr;
-    margin-bottom: 14px;
+    margin-bottom: 12px;
 }
 
 .risk-stat {
   border-radius: var(--radius-lg);
-  padding: 14px;
+  padding: 12px;
   border: 1px solid rgba(var(--accent-rgb), 0.12);
   background: var(--surface-muted);
   transition:
@@ -3014,7 +3027,7 @@ a {
 .dashboard-secondary-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
-  gap: 18px;
+  gap: 16px;
   align-items: start;
 }
 
