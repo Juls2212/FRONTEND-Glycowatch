@@ -210,6 +210,7 @@ export default function DashboardPage() {
   } = useIntelligenceSummary({ enabled: false });
   const isAssistantRefreshBusy =
     isManualAssistantRefreshing || isAssistantBackgroundRefreshing || isIntelligenceLoading;
+  const isAssistantInitialLoading = isIntelligenceLoading && !intelligenceSummary;
 
   const loadDashboardData = async (options?: { mountedRef?: { current: boolean }; silent?: boolean }) => {
     const mountedRef = options?.mountedRef;
@@ -451,8 +452,20 @@ export default function DashboardPage() {
               </p>
             </div>
 
+            <div className="dashboard-hero-focus">
+              <p className="dashboard-hero-focus-label">Glucosa actual</p>
+              <div className="dashboard-hero-focus-row">
+                <p className="dashboard-hero-focus-value">{latestMeasurementLabel}</p>
+                <div className="dashboard-hero-focus-chips">
+                  <span className="metric-chip">Estado {risk ? translateStatus(risk.currentStatus) : "EN RANGO"}</span>
+                  <span className="metric-chip">Tendencia {risk ? translateTrend(risk.trend) : "ESTABLE"}</span>
+                </div>
+              </div>
+              <p className="dashboard-hero-focus-meta">{formattedLatest}</p>
+            </div>
+
             <div className="hero-pill-row">
-              <span className="hero-pill">Ultima medicion: {latestMeasurementLabel}</span>
+              <span className="hero-pill">Rango reciente: {rangeSummary}</span>
               <span className="hero-pill">Alertas nuevas: {formatWholeMetric(unreadAlertsCount)}</span>
             </div>
           </div>
@@ -489,6 +502,54 @@ export default function DashboardPage() {
         </Card>
 
         <div className="dashboard-hero-aside">
+          <Card className={`dashboard-hero-card dashboard-hero-side dashboard-hero-assistant dashboard-hero-assistant-compact risk-theme-card ${assistantThemeClass}`}>
+            <div className="dashboard-hero-assistant-head">
+              <IntelligenceAssistantRobot
+                assistantMood={intelligenceSummary?.assistantMood}
+                finalRiskLevel={intelligenceSummary?.finalRiskLevel}
+                trend={intelligenceSummary?.trend}
+                isLoading={isAssistantInitialLoading}
+                className="dashboard-hero-assistant-robot"
+              />
+              <div className="dashboard-hero-assistant-copy">
+                <p className="hero-eyebrow">Copiloto inteligente</p>
+                <h3 className="dashboard-hero-assistant-title">Asistente GlycoWatch</h3>
+                <p className="dashboard-hero-assistant-message">
+                  {isAssistantInitialLoading
+                    ? "Cargando asistente..."
+                    : intelligenceError
+                      ? intelligenceError
+                      : intelligenceSummary?.assistantMessage ?? "Aún no hay análisis inteligente disponible."}
+                </p>
+              </div>
+            </div>
+
+            <div className="dashboard-hero-assistant-actions">
+              <span className={`metric-chip risk-theme-badge ${assistantThemeClass}`}>
+                {intelligenceSummary ? getRiskBadgeLabel(intelligenceSummary.finalRiskLevel) : "Sin datos"}
+              </span>
+              <span className={`metric-chip ${intelligenceSummary?.geminiAvailable ? "ready" : ""}`}>
+                {intelligenceSummary?.geminiAvailable ? "Disponible" : "No disponible"}
+              </span>
+              <button
+                type="button"
+                className="ghost-button intelligence-refresh-button"
+                onClick={handleManualAssistantRefresh}
+                disabled={isAssistantRefreshBusy}
+              >
+                {isManualAssistantRefreshing ? "Actualizando..." : "Actualizar análisis"}
+              </button>
+            </div>
+
+            {!isAssistantInitialLoading && intelligenceRefreshError ? (
+              <p className="soft-text">{intelligenceRefreshError}</p>
+            ) : null}
+            {isManualAssistantRefreshing ? (
+              <p className="soft-text intelligence-refresh-status">Actualizando solo el análisis...</p>
+            ) : null}
+
+          </Card>
+
           <Card className="dashboard-hero-card dashboard-hero-side dashboard-context-card">
             <div className="dashboard-context-row">
               <div>
@@ -631,19 +692,19 @@ export default function DashboardPage() {
               <p className="risk-message">{riskMessage}</p>
             </Card>
 
-            <Card className={`risk-card assistant-card risk-theme-card ${assistantThemeClass}`}>
+            <Card className={`risk-card assistant-card assistant-card-detailed risk-theme-card ${assistantThemeClass}`}>
               <div className="assistant-card-hero">
                 <IntelligenceAssistantRobot
                   assistantMood={intelligenceSummary?.assistantMood}
                   finalRiskLevel={intelligenceSummary?.finalRiskLevel}
                   trend={intelligenceSummary?.trend}
-                  isLoading={isIntelligenceLoading}
+                  isLoading={isAssistantInitialLoading}
                   className="assistant-card-robot"
                 />
                 <div className="assistant-card-content">
                 <div className="chart-card-header assistant-card-header">
                   <div>
-                    <p className="chart-card-kicker">Asistente GlycoWatch</p>
+                    <p className="chart-card-kicker">Centro inteligente</p>
                     <p className="chart-card-summary">Resumen asistido del riesgo y consistencia entre motores de análisis.</p>
                   </div>
                   {intelligenceSummary ? (
@@ -680,12 +741,19 @@ export default function DashboardPage() {
                 </div>
               </div>
 
-              {isIntelligenceLoading ? <p className="soft-text">Cargando asistente...</p> : null}
-              {!isIntelligenceLoading && intelligenceError ? <p className="soft-text">{intelligenceError}</p> : null}
-              {!isIntelligenceLoading && intelligenceRefreshError ? <p className="soft-text">{intelligenceRefreshError}</p> : null}
-              {!isIntelligenceLoading && !intelligenceError && intelligenceSummary ? (
+              {isAssistantInitialLoading ? <p className="soft-text">Cargando asistente...</p> : null}
+              {!isAssistantInitialLoading && intelligenceError ? <p className="soft-text">{intelligenceError}</p> : null}
+              {!isAssistantInitialLoading && intelligenceRefreshError ? <p className="soft-text">{intelligenceRefreshError}</p> : null}
+              {isManualAssistantRefreshing ? (
+                <p className="soft-text intelligence-refresh-status">Actualizando solo el análisis...</p>
+              ) : null}
+              {!isAssistantInitialLoading && !intelligenceError && intelligenceSummary ? (
                 <div className="assistant-card-body">
-                  <p className="assistant-card-message">{intelligenceSummary.assistantMessage}</p>
+                  <div className="assistant-card-detail-copy">
+                    <p className="assistant-card-detail-label">Resumen del asistente</p>
+                    <p className="assistant-card-message">{intelligenceSummary.assistantMessage}</p>
+                    <p className="assistant-card-explanation">{intelligenceSummary.aiExplanation}</p>
+                  </div>
                   <div className="assistant-card-grid">
                     <div className="risk-stat">
                       <p className="metric-label">Riesgo final</p>
@@ -702,7 +770,7 @@ export default function DashboardPage() {
                   </div>
                 </div>
               ) : null}
-              {!isIntelligenceLoading && !intelligenceError && !intelligenceSummary ? (
+              {!isAssistantInitialLoading && !intelligenceError && !intelligenceSummary ? (
                 <p className="soft-text">Aún no hay análisis inteligente disponible.</p>
               ) : null}
             </Card>
