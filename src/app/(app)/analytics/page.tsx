@@ -224,6 +224,9 @@ export default function AnalyticsPage() {
   const intelligenceHistory = intelligenceHistoryData ?? [];
   const isIntelligenceRefreshBusy =
     isManualIntelligenceRefreshing || isIntelligenceSummaryRefreshing || isIntelligenceHistoryRefreshing;
+  const isIntelligenceInitialLoading = isIntelligenceLoading && !intelligenceSummary;
+  const isIntelligenceHistoryInitialLoading =
+    isIntelligenceHistoryLoading && intelligenceHistory.length === 0;
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -441,7 +444,7 @@ export default function AnalyticsPage() {
   );
 
   const handleManualIntelligenceRefresh = useCallback(async () => {
-    if (isIntelligenceRefreshBusy || isIntelligenceLoading || isIntelligenceHistoryLoading) return;
+    if (isIntelligenceRefreshBusy || isIntelligenceInitialLoading || isIntelligenceHistoryInitialLoading) return;
 
     setIsManualIntelligenceRefreshing(true);
     setIntelligenceRefreshError(null);
@@ -459,7 +462,12 @@ export default function AnalyticsPage() {
         setIsManualIntelligenceRefreshing(false);
       }
     }
-  }, [isIntelligenceRefreshBusy, isIntelligenceLoading, isIntelligenceHistoryLoading, refreshIntelligenceData]);
+  }, [
+    isIntelligenceHistoryInitialLoading,
+    isIntelligenceInitialLoading,
+    isIntelligenceRefreshBusy,
+    refreshIntelligenceData
+  ]);
 
   return (
     <div className="dashboard-grid analytics-page">
@@ -641,33 +649,35 @@ export default function AnalyticsPage() {
             type="button"
             className="ghost-button intelligence-refresh-button"
             onClick={handleManualIntelligenceRefresh}
-            disabled={isIntelligenceRefreshBusy || isIntelligenceLoading || isIntelligenceHistoryLoading}
+            disabled={
+              isIntelligenceRefreshBusy || isIntelligenceInitialLoading || isIntelligenceHistoryInitialLoading
+            }
           >
             {isManualIntelligenceRefreshing ? "Actualizando..." : "Actualizar análisis"}
           </button>
         }
       >
-        {isIntelligenceLoading ? (
+        {isIntelligenceInitialLoading ? (
           <Card className="analytics-intelligence-card">
             <IntelligenceAssistantRobot isLoading className="analytics-intelligence-robot" />
             <p className="soft-text">Cargando analisis inteligente...</p>
           </Card>
         ) : null}
 
-        {!isIntelligenceLoading && intelligenceError ? (
+        {!isIntelligenceInitialLoading && intelligenceError ? (
           <Card className="analytics-intelligence-card">
             <p className="error-text">{intelligenceError}</p>
           </Card>
         ) : null}
 
-        {!isIntelligenceLoading && !intelligenceError && !intelligenceSummary ? (
+        {!isIntelligenceInitialLoading && !intelligenceError && !intelligenceSummary ? (
           <Card className="analytics-intelligence-card">
             <IntelligenceAssistantRobot className="analytics-intelligence-robot" />
             <p className="soft-text">Aún no hay análisis inteligente disponible.</p>
           </Card>
         ) : null}
 
-        {!isIntelligenceLoading && !intelligenceError && intelligenceSummary ? (
+        {!isIntelligenceInitialLoading && !intelligenceError && intelligenceSummary ? (
           <div className="analytics-intelligence-stack">
             <div className="analytics-intelligence-grid">
               <Card className={`analytics-intelligence-card analytics-intelligence-primary risk-theme-card ${intelligenceThemeClass}`}>
@@ -690,19 +700,23 @@ export default function AnalyticsPage() {
                 </div>
                 <p className="analytics-intelligence-message">{intelligenceSummary.assistantMessage}</p>
                 <p className="analytics-intelligence-explanation">{intelligenceSummary.aiExplanation}</p>
+                {isManualIntelligenceRefreshing ? (
+                  <p className="soft-text intelligence-refresh-status">Actualizando solo el análisis...</p>
+                ) : null}
               </Card>
 
               <Card className="analytics-intelligence-card analytics-intelligence-comparison">
                 <div className="analytics-intelligence-header">
                   <div>
-                    <p className="metric-label">Comparacion de riesgo</p>
-                    <p className="metric-card-caption">Referencia compacta del resultado comparado.</p>
+                    <p className="metric-label">Detalles del análisis</p>
+                    <p className="metric-card-caption">Referencia técnica secundaria del resultado generado.</p>
                   </div>
-                  <span className="metric-card-badge">Comparacion</span>
+                  <span className="metric-card-badge">Detalle</span>
                 </div>
                 <p className="analytics-comparison-copy">
                   Análisis inteligente generado a partir de tus mediciones recientes.
                 </p>
+                <p className="analytics-intelligence-details-label">Comparación de riesgo</p>
                 <div className="analytics-intelligence-metadata-grid">
                   <div className={`analytics-intelligence-meta-item risk-theme-panel ${getRiskThemeClass(intelligenceSummary.ruleBasedRiskLevel)}`}>
                     <span className="metric-label">Motor basado en reglas</span>
@@ -798,7 +812,7 @@ export default function AnalyticsPage() {
           </div>
         ) : null}
 
-        {!isIntelligenceLoading && !isIntelligenceHistoryLoading && intelligenceRefreshError ? (
+        {!isIntelligenceInitialLoading && !isIntelligenceHistoryInitialLoading && intelligenceRefreshError ? (
           <p className="soft-text">{intelligenceRefreshError}</p>
         ) : null}
       </Section>
@@ -826,25 +840,25 @@ export default function AnalyticsPage() {
           </div>
         }
       >
-        {isIntelligenceHistoryLoading ? (
+        {isIntelligenceHistoryInitialLoading ? (
           <Card className="analytics-intelligence-card">
             <p className="soft-text">Cargando historial de análisis...</p>
           </Card>
         ) : null}
 
-        {!isIntelligenceHistoryLoading && intelligenceHistoryError ? (
+        {!isIntelligenceHistoryInitialLoading && intelligenceHistoryError ? (
           <Card className="analytics-intelligence-card">
             <p className="error-text">{intelligenceHistoryError}</p>
           </Card>
         ) : null}
 
-        {!isIntelligenceHistoryLoading && !intelligenceHistoryError && intelligenceHistory.length === 0 ? (
+        {!isIntelligenceHistoryInitialLoading && !intelligenceHistoryError && intelligenceHistory.length === 0 ? (
           <Card className="analytics-intelligence-card">
             <p className="soft-text">Aún no hay análisis guardados.</p>
           </Card>
         ) : null}
 
-        {!isIntelligenceHistoryLoading && !intelligenceHistoryError && intelligenceHistory.length > 0 ? (
+        {!isIntelligenceHistoryInitialLoading && !intelligenceHistoryError && intelligenceHistory.length > 0 ? (
           <div className="analytics-history-list">
             {visibleHistory.map((item) => (
               <Card key={item.id} className={`analytics-history-card risk-theme-card ${getRiskThemeClass(item.finalRiskLevel, item.assistantMood)}`}>
