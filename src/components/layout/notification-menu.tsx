@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { fetchAlerts, markAlertAsRead } from "@/features/alerts/api";
 import { AlertItem } from "@/features/alerts/types";
+import { useAuthStore } from "@/stores/auth-store";
 
 function sortAlerts(items: AlertItem[]): AlertItem[] {
   return [...items].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
@@ -19,30 +20,80 @@ function resolveAlertTone(type: AlertItem["type"]): "danger" | "info" {
 
 export function NotificationMenu() {
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const loadPromiseRef = useRef<Promise<void> | null>(null);
   const [open, setOpen] = useState(false);
   const [alerts, setAlerts] = useState<AlertItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [updatingId, setUpdatingId] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const isHydrated = useAuthStore((state) => state.isHydrated);
+  const accessToken = useAuthStore((state) => state.accessToken);
 
-  const loadAlerts = async () => {
-    setError(null);
-    setIsLoading(true);
-    try {
-      const data = await fetchAlerts();
-      setAlerts(sortAlerts(data));
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "No se pudieron cargar las alertas.";
-      setError(message);
-    } finally {
-      setIsLoading(false);
+  const loadAlerts = useCallback(
+    async (options?: { background?: boolean }) => {
+      if (!isHydrated || !accessToken) return;
+
+      const background = options?.background ?? false;
+
+      if (!background) {
+        setError(null);
+        setIsLoading(true);
+      }
+
+      if (loadPromiseRef.current) {
+        try {
+          await loadPromiseRef.current;
+        } finally {
+          if (!background) {
+            setIsLoading(false);
+          }
+        }
+        return;
+      }
+
+      const request = (async () => {
+        try {
+          const data = await fetchAlerts();
+          setAlerts(sortAlerts(data));
+        } catch (err) {
+          if (!background) {
+            const message = err instanceof Error ? err.message : "No se pudieron cargar las alertas.";
+            setError(message);
+          }
+        } finally {
+          loadPromiseRef.current = null;
+        }
+      })();
+
+      loadPromiseRef.current = request;
+
+      try {
+        await request;
+      } finally {
+        if (!background) {
+          setIsLoading(false);
+        }
+      }
+    },
+    [accessToken, isHydrated]
+  );
+
+  useEffect(() => {
+    if (!isHydrated) return;
+    if (!accessToken) {
+      setAlerts([]);
+      setError(null);
+      setOpen(false);
+      return;
     }
-  };
+
+    void loadAlerts({ background: true });
+  }, [accessToken, isHydrated, loadAlerts]);
 
   useEffect(() => {
     if (!open) return;
     void loadAlerts();
-  }, [open]);
+  }, [loadAlerts, open]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
