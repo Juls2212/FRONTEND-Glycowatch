@@ -5,25 +5,25 @@ export const API_ENDPOINTS = {
     refresh: "/api/v1/auth/refresh"
   },
   profile: {
-    me: "/profile"
+    me: "/api/v1/profile"
   },
   devices: {
-    base: "/devices"
+    base: "/api/v1/devices"
   },
   measurements: {
-    base: "/measurements",
-    latest: "/measurements/latest"
+    base: "/api/v1/measurements",
+    latest: "/api/v1/measurements/latest"
   },
   alerts: {
-    base: "/alerts"
+    base: "/api/v1/alerts"
   },
   analytics: {
-    dashboard: "/analytics/dashboard",
-    chart: "/analytics/chart",
-    risk: "/analytics/risk"
+    dashboard: "/api/v1/analytics/dashboard",
+    chart: "/api/v1/analytics/chart",
+    risk: "/api/v1/analytics/risk"
   },
   intelligence: {
-    summary: "/intelligence/summary",
-    history: "/intelligence/history"
+    summary: "/api/v1/intelligence/summary",
+    history: "/api/v1/intelligence/history"
   }
 } as const;
