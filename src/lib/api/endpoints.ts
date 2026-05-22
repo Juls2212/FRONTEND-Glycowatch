@@ -1,8 +1,8 @@
 export const API_ENDPOINTS = {
   auth: {
-    login: "/auth/login",
-    register: "/auth/register",
-    refresh: "/auth/refresh"
+    login: "/api/v1/auth/login",
+    register: "/api/v1/auth/register",
+    refresh: "/api/v1/auth/refresh"
   },
   profile: {
     me: "/profile"
