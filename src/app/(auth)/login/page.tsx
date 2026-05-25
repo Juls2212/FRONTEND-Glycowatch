@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { CSSProperties, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { normalizeEmailInput, trimInputValue } from "@/lib/forms/input-normalizers";
@@ -14,6 +14,7 @@ function resolvePostLoginPath(): string {
 
 export default function LoginPage() {
   const router = useRouter();
+  const [showPassword, setShowPassword] = useState(false);
   const login = useAuthStore((state) => state.login);
   const isLoading = useAuthStore((state) => state.isLoading);
   const error = useAuthStore((state) => state.error);
@@ -39,6 +40,24 @@ export default function LoginPage() {
     await login(values);
     router.replace(resolvePostLoginPath());
   });
+
+  const passwordFieldStyle: CSSProperties = {
+    position: "relative"
+  };
+
+  const passwordToggleStyle: CSSProperties = {
+    position: "absolute",
+    top: "50%",
+    right: "12px",
+    transform: "translateY(-50%)",
+    border: "none",
+    background: "transparent",
+    color: "var(--text-secondary)",
+    cursor: isLoading ? "default" : "pointer",
+    padding: 0,
+    fontSize: "12px",
+    fontWeight: 600
+  };
 
   return (
     <div className="auth-page">
@@ -71,19 +90,31 @@ export default function LoginPage() {
 
           <label className={`field ${errors.password ? "has-error" : ""}`}>
             <span>Contrasena</span>
-            <input
-              type="password"
-              maxLength={72}
-              placeholder="••••••••"
-              aria-invalid={errors.password ? "true" : "false"}
-              aria-describedby={errors.password ? "login-password-error" : undefined}
-              disabled={isLoading}
-              {...passwordRegistration}
-              onBlur={(event) => {
-                event.currentTarget.value = trimInputValue(event.currentTarget.value);
-                passwordRegistration.onBlur(event);
-              }}
-            />
+            <div style={passwordFieldStyle}>
+              <input
+                type={showPassword ? "text" : "password"}
+                maxLength={72}
+                placeholder="••••••••"
+                aria-invalid={errors.password ? "true" : "false"}
+                aria-describedby={errors.password ? "login-password-error" : undefined}
+                disabled={isLoading}
+                style={{ paddingRight: "72px" }}
+                {...passwordRegistration}
+                onBlur={(event) => {
+                  event.currentTarget.value = trimInputValue(event.currentTarget.value);
+                  passwordRegistration.onBlur(event);
+                }}
+              />
+              <button
+                type="button"
+                aria-label={showPassword ? "Ocultar contrasena" : "Mostrar contrasena"}
+                onClick={() => setShowPassword((current) => !current)}
+                disabled={isLoading}
+                style={passwordToggleStyle}
+              >
+                {showPassword ? "Ocultar" : "Mostrar"}
+              </button>
+            </div>
             {errors.password ? <small id="login-password-error">{errors.password.message}</small> : null}
           </label>
 
