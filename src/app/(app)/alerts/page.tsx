@@ -88,7 +88,7 @@ export default function AlertsPage() {
   const filteredAlerts = useMemo(() => applyFilter(alerts, activeFilter), [alerts, activeFilter]);
 
   return (
-    <div className="dashboard-grid">
+    <div className="dashboard-grid app-page alerts-page">
       <Section title="Alertas" subtitle="Historial completo de eventos de glucosa">
         {success ? <FeedbackBanner type="success" message={success} /> : null}
         {error ? <FeedbackBanner type="error" message={error} /> : null}
@@ -158,4 +158,3 @@ export default function AlertsPage() {
     </div>
   );
 }
-
