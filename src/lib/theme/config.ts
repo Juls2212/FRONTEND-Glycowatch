@@ -9,7 +9,7 @@ export const ACCENT_THEMES = ["blue", "red", "green", "cyan", "amber"] as const;
 export type ColorMode = (typeof COLOR_MODES)[number];
 export type AccentTheme = (typeof ACCENT_THEMES)[number];
 
-export const DEFAULT_COLOR_MODE: ColorMode = "dark";
+export const DEFAULT_COLOR_MODE: ColorMode = "light";
 export const DEFAULT_ACCENT_THEME: AccentTheme = "blue";
 
 export function isColorMode(value: string | null | undefined): value is ColorMode {
