@@ -25,4 +25,4 @@ export default function HomePage() {
     </div>
   );
 }
-
+// This page is a temporary landing page that redirects users based on their authentication status and onboarding progress.
