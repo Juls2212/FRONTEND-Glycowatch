@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { StatePanel } from "@/components/ui/state-panel";
 import { fetchAlerts, markAlertAsRead } from "@/features/alerts/api";
 import { AlertItem } from "@/features/alerts/types";
 import { useAuthStore } from "@/stores/auth-store";
@@ -161,11 +162,30 @@ export function NotificationMenu() {
             </Link>
           </div>
 
-          {error ? <p className="error-text">{error}</p> : null}
-          {isLoading ? <p className="soft-text">Cargando alertas...</p> : null}
+          {error ? (
+            <StatePanel
+              variant="error"
+              compact
+              title="No pudimos cargar las alertas"
+              message={error}
+            />
+          ) : null}
+          {isLoading ? (
+            <StatePanel
+              variant="loading"
+              compact
+              title="Cargando alertas"
+              message="Buscando eventos recientes para mostrártelos aquí."
+            />
+          ) : null}
 
           {!isLoading && !error && recentAlerts.length === 0 ? (
-            <p className="soft-text">No hay alertas recientes.</p>
+            <StatePanel
+              variant="empty"
+              compact
+              title="No hay alertas recientes"
+              message="Si aparece algo importante, lo verás aquí primero."
+            />
           ) : null}
 
           {!isLoading && !error && recentAlerts.length > 0 ? (
