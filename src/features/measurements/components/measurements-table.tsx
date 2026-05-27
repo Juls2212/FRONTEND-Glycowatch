@@ -10,6 +10,7 @@ type Props = {
   isLoading: boolean;
   error: string | null;
   deletingId: number | null;
+  totalElements: number;
   onDelete: (measurementId: number) => Promise<void>;
 };
 
@@ -18,9 +19,23 @@ function resolveOrigin(item: MeasurementItem): string {
   return item.deviceId ? "IOT" : "MANUAL";
 }
 
-export function MeasurementsTable({ measurements, isLoading, error, deletingId, onDelete }: Props) {
+function resolveOriginLabel(item: MeasurementItem): string {
+  return resolveOrigin(item) === "IOT" ? "Dispositivo" : "Manual";
+}
+
+export function MeasurementsTable({ measurements, isLoading, error, deletingId, totalElements, onDelete }: Props) {
   return (
-    <Card>
+    <Card className="measurements-history-card">
+      <div className="measurements-table-header">
+        <div>
+          <p className="measurements-card-eyebrow">Lecturas registradas</p>
+          <h3 className="measurements-table-title">Últimos resultados disponibles</h3>
+        </div>
+        <span className="status-pill status-registered">
+          {totalElements > 0 ? `${totalElements} totales` : "Sin registros"}
+        </span>
+      </div>
+
       {isLoading ? (
         <StatePanel
           variant="loading"
@@ -50,21 +65,40 @@ export function MeasurementsTable({ measurements, isLoading, error, deletingId, 
           <table className="measurements-table">
             <thead>
               <tr>
-                <th>Glucosa</th>
-                <th>Unidad</th>
+                <th>Lectura</th>
                 <th>Fecha</th>
                 <th>Origen</th>
-                <th>Accion</th>
+                <th>Estado</th>
+                <th>Acción</th>
               </tr>
             </thead>
             <tbody>
               {measurements.map((item) => (
                 <tr key={item.id}>
-                  <td data-label="Glucosa">{item.glucoseValue}</td>
-                  <td data-label="Unidad">{item.unit}</td>
-                  <td data-label="Fecha">{new Date(item.measuredAt).toLocaleString("es-CO")}</td>
-                  <td data-label="Origen">{resolveOrigin(item)}</td>
-                  <td data-label="Accion">
+                  <td data-label="Lectura">
+                    <div className="measurements-cell-reading">
+                      <strong>{item.glucoseValue}</strong>
+                      <span>{item.unit}</span>
+                    </div>
+                  </td>
+                  <td data-label="Fecha">
+                    <div className="measurements-cell-meta">
+                      <strong>{new Date(item.measuredAt).toLocaleDateString("es-CO", { dateStyle: "medium" })}</strong>
+                      <span>{new Date(item.measuredAt).toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" })}</span>
+                    </div>
+                  </td>
+                  <td data-label="Origen">
+                    <span className={`status-pill ${resolveOrigin(item) === "IOT" ? "status-active" : "status-registered"}`}>
+                      {resolveOriginLabel(item)}
+                    </span>
+                  </td>
+                  <td data-label="Estado">
+                    <div className="measurements-cell-meta">
+                      <strong>{item.isValid ? "Válida" : "Revisar"}</strong>
+                      <span>{item.invalidReason ?? "Lectura disponible para seguimiento."}</span>
+                    </div>
+                  </td>
+                  <td data-label="Acción">
                     <MeasurementRowActions
                       measurementId={item.id}
                       isDeleting={deletingId === item.id}
