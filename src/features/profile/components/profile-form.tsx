@@ -1,5 +1,6 @@
 import { FormEvent, ReactNode, useEffect, useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
+import { StatePanel } from "@/components/ui/state-panel";
 import { ProfileData, UpdateProfilePayload } from "@/features/profile/types";
 import { DiabetesType } from "@/lib/auth/onboarding";
 import { normalizeRestrictedDecimalInput, trimInputValue } from "@/lib/forms/input-normalizers";
@@ -169,11 +170,27 @@ export function ProfileForm({
       updateField(field)(normalizeRestrictedDecimalInput(value, { maxIntegerDigits: 3, maxFractionDigits: 1 }));
 
   if (isLoading) {
-    return <Card className="profile-state-card"><p className="soft-text">Cargando perfil...</p></Card>;
+    return (
+      <Card className="profile-state-card">
+        <StatePanel
+          variant="loading"
+          title="Cargando perfil"
+          message="Estamos preparando tu información personal para que puedas revisarla con calma."
+        />
+      </Card>
+    );
   }
 
   if (!profile) {
-    return <Card className="profile-state-card"><p className="soft-text">No se encontro informacion del perfil.</p></Card>;
+    return (
+      <Card className="profile-state-card">
+        <StatePanel
+          variant="empty"
+          title="No encontramos información del perfil"
+          message="Cuando tu perfil esté disponible, aparecerá aquí con tus datos y parámetros de seguimiento."
+        />
+      </Card>
+    );
   }
 
   const initials = buildInitials(form.fullName, form.email);
