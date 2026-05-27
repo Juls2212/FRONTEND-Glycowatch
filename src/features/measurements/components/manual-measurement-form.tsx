@@ -82,7 +82,16 @@ export function ManualMeasurementForm({ onCreated }: Props) {
   };
 
   return (
-    <Card>
+    <Card className="measurements-manual-card">
+      <div className="measurements-card-head">
+        <div>
+          <p className="measurements-card-eyebrow">Nuevo registro</p>
+          <h2 className="measurements-card-title">Agregar medición manual</h2>
+        </div>
+        <p className="measurements-card-copy">
+          Registra una lectura puntual para mantener tu seguimiento actualizado.
+        </p>
+      </div>
       <form className="manual-form" onSubmit={onSubmit}>
         <label className={`field ${fieldErrors.glucoseValue ? "has-error" : ""}`}>
           <span>Valor de glucosa (mg/dL)</span>
