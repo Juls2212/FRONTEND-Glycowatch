@@ -183,36 +183,38 @@ export function GlucoseVisualization({ data, defaultView = "LINE" }: Props) {
       {enhancedData.length > 0 && view === "BAR" ? (
         <div className="chart-wrap chart-wrap-enhanced">
           <ResponsiveContainer width="100%" height={320}>
-            <BarChart data={enhancedData} margin={{ top: 12, right: 8, bottom: 6, left: -8 }} barCategoryGap={10}>
-              <CartesianGrid stroke={chartTheme.grid} strokeDasharray="4 6" vertical={false} />
+            <BarChart data={enhancedData} margin={{ top: 18, right: 12, bottom: 10, left: -4 }} barCategoryGap={16}>
+              <CartesianGrid stroke={chartTheme.grid} strokeDasharray="3 7" vertical={false} />
               <XAxis
                 dataKey="measuredAt"
                 tickFormatter={formatAxisLabel}
                 interval="preserveStartEnd"
-                minTickGap={30}
-                tick={{ fill: chartTheme.tick, fontSize: 12 }}
-                axisLine={{ stroke: chartTheme.gridStrong, strokeOpacity: 0.55 }}
+                minTickGap={38}
+                tick={{ fill: chartTheme.tick, fontSize: 11 }}
+                axisLine={{ stroke: chartTheme.gridStrong, strokeOpacity: 0.4 }}
                 tickLine={false}
+                dy={8}
               />
               <YAxis
                 domain={yDomain}
-                tick={{ fill: chartTheme.tick, fontSize: 12 }}
+                tick={{ fill: chartTheme.tick, fontSize: 11 }}
                 axisLine={false}
                 tickLine={false}
-                width={42}
+                width={40}
               />
               <Tooltip
                 content={<VisualizationTooltip theme={chartTheme} metricLabel="Glucosa" />}
-                cursor={{ fill: "rgba(255,255,255,0.02)" }}
+                cursor={{ fill: "rgba(255,255,255,0.015)" }}
               />
               <Bar
                 dataKey="glucoseValue"
-                radius={[10, 10, 4, 4]}
+                radius={[12, 12, 5, 5]}
                 animationDuration={520}
-                activeBar={{ fillOpacity: 0.9, stroke: chartTheme.gridStrong, strokeOpacity: 0.45, strokeWidth: 1 }}
+                maxBarSize={26}
+                activeBar={{ fillOpacity: 0.88, stroke: chartTheme.gridStrong, strokeOpacity: 0.32, strokeWidth: 1 }}
               >
                 {enhancedData.map((point) => (
-                <Cell key={`${point.measuredAt}-${point.glucoseValue}`} fill={resolveColorByStatus(chartTheme, point.status)} fillOpacity={0.85} />
+                <Cell key={`${point.measuredAt}-${point.glucoseValue}`} fill={resolveColorByStatus(chartTheme, point.status)} fillOpacity={0.74} />
               ))}
             </Bar>
             </BarChart>
@@ -223,33 +225,34 @@ export function GlucoseVisualization({ data, defaultView = "LINE" }: Props) {
       {enhancedData.length > 0 && view === "TREND" ? (
         <div className="chart-wrap chart-wrap-enhanced">
           <ResponsiveContainer width="100%" height={320}>
-            <ComposedChart data={enhancedData} margin={{ top: 12, right: 8, bottom: 6, left: -8 }}>
+            <ComposedChart data={enhancedData} margin={{ top: 18, right: 12, bottom: 10, left: -4 }}>
               <defs>
                 <linearGradient id="trendAreaGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor={chartTheme.accent} stopOpacity={0.22} />
-                  <stop offset="100%" stopColor={chartTheme.accent} stopOpacity={0.03} />
+                  <stop offset="0%" stopColor={chartTheme.accent} stopOpacity={0.14} />
+                  <stop offset="100%" stopColor={chartTheme.accent} stopOpacity={0.015} />
                 </linearGradient>
               </defs>
-              <CartesianGrid stroke={chartTheme.grid} strokeDasharray="4 6" vertical={false} />
+              <CartesianGrid stroke={chartTheme.grid} strokeDasharray="3 7" vertical={false} />
               <XAxis
                 dataKey="measuredAt"
                 tickFormatter={formatAxisLabel}
                 interval="preserveStartEnd"
-                minTickGap={34}
-                tick={{ fill: chartTheme.tick, fontSize: 12 }}
-                axisLine={{ stroke: chartTheme.gridStrong, strokeOpacity: 0.55 }}
+                minTickGap={40}
+                tick={{ fill: chartTheme.tick, fontSize: 11 }}
+                axisLine={{ stroke: chartTheme.gridStrong, strokeOpacity: 0.4 }}
                 tickLine={false}
+                dy={8}
               />
               <YAxis
                 domain={yDomain}
-                tick={{ fill: chartTheme.tick, fontSize: 12 }}
+                tick={{ fill: chartTheme.tick, fontSize: 11 }}
                 axisLine={false}
                 tickLine={false}
-                width={42}
+                width={40}
               />
               <Tooltip
                 content={<VisualizationTooltip theme={chartTheme} metricLabel="Promedio movil" />}
-                cursor={{ stroke: chartTheme.gridStrong, strokeDasharray: "3 4" }}
+                cursor={{ stroke: chartTheme.gridStrong, strokeDasharray: "2 6", strokeOpacity: 0.55 }}
               />
               <Area
                 type="monotone"
@@ -263,8 +266,8 @@ export function GlucoseVisualization({ data, defaultView = "LINE" }: Props) {
                 type="monotone"
                 dataKey="glucoseValue"
                 stroke={chartTheme.gridStrong}
-                strokeOpacity={0.35}
-                strokeWidth={1.6}
+                strokeOpacity={0.24}
+                strokeWidth={1.4}
                 dot={false}
                 isAnimationActive
                 animationDuration={420}
@@ -273,9 +276,9 @@ export function GlucoseVisualization({ data, defaultView = "LINE" }: Props) {
                 type="monotone"
                 dataKey="trendValue"
                 stroke={chartTheme.accent}
-                strokeWidth={3}
+                strokeWidth={2.6}
                 dot={false}
-                activeDot={{ r: 5, fill: chartTheme.accent, stroke: chartTheme.tooltipBackground, strokeWidth: 2 }}
+                activeDot={{ r: 4.5, fill: chartTheme.accent, stroke: chartTheme.tooltipBackground, strokeWidth: 2 }}
                 isAnimationActive
                 animationDuration={620}
               />
