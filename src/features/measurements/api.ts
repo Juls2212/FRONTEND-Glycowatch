@@ -4,6 +4,7 @@ import { ApiSuccess } from "@/types/api";
 import {
   LatestMeasurement,
   ManualMeasurementPayload,
+  MeasurementItem,
   MeasurementsFilters,
   MeasurementsPageData
 } from "./types";
@@ -31,6 +32,11 @@ export async function fetchMeasurements(
 
   const response = await apiClient.get<ApiSuccess<MeasurementsPageData>>(API_ENDPOINTS.measurements.base, { params });
   return response.data.data;
+}
+
+export async function fetchLatestMeasurementContext(): Promise<MeasurementItem | null> {
+  const pageData = await fetchMeasurements(0, 1, {});
+  return pageData.content[0] ?? null;
 }
 
 export async function createManualMeasurement(payload: ManualMeasurementPayload): Promise<void> {
