@@ -135,7 +135,7 @@
 }
 
 :root[data-accent-theme="blue"] {
-  --accent: #7ab8f5;
+  --accent: #83b9f0;
   --accent-rgb: 122, 184, 245;
   --accent-strong: #4f92d4;
   --accent-soft: #dcecff;
