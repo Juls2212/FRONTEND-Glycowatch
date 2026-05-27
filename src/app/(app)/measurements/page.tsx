@@ -129,7 +129,7 @@ export default function MeasurementsPage() {
   };
 
   return (
-    <div className="dashboard-grid">
+    <div className="dashboard-grid app-page measurements-page">
       <Section title="Mediciones" subtitle="Seguimiento detallado de tus registros glucémicos">
         <LatestMeasurementCard latestMeasurement={latestMeasurement} />
       </Section>
