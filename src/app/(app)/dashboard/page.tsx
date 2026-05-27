@@ -10,7 +10,15 @@ import {
 } from "@/features/dashboard/api";
 import { AlertItem, ChartPoint, DashboardMetrics, RiskAnalysis } from "@/features/dashboard/types";
 import { useIntelligenceSummary } from "@/features/intelligence/hooks";
-import { getRiskBadgeLabel, getRiskThemeClass } from "@/features/intelligence/display";
+import {
+  getIntelligenceAnalysisLabel,
+  getIntelligenceAnalysisState,
+  getIntelligenceAnalysisStatusLabel,
+  getIntelligenceAnalysisStatusMessage,
+  getRiskBadgeLabel,
+  getRiskThemeClass,
+  translateMeasurementOrigin
+} from "@/features/intelligence/display";
 import { Card } from "@/components/ui/card";
 import { Section } from "@/components/ui/section";
 import { GlucoseVisualization } from "@/components/charts/glucose-visualization";
@@ -23,7 +31,7 @@ import {
   toDashboardMeasuredAtISOString
 } from "@/lib/validation/measurements";
 import { mapZodIssuesToFieldErrors } from "@/lib/validation/errors";
-import { requestIntelligenceRefresh } from "@/lib/intelligence/refresh";
+import { fetchLatestMeasurementContext } from "@/features/measurements/api";
 import {
   buildSpanishRiskMessage,
   translateRiskLevel,
@@ -206,10 +214,10 @@ export default function DashboardPage() {
   const [measuredAtInput, setMeasuredAtInput] = useState("");
   const [chartRange, setChartRange] = useState<ChartRange>("WEEK");
   const [dismissedBannerKey, setDismissedBannerKey] = useState<string | null>(null);
+  const [latestMeasurementOrigin, setLatestMeasurementOrigin] = useState<string | null>(null);
   const isRefreshInFlightRef = useRef(false);
   const chartRangeRef = useRef<ChartRange>("WEEK");
   const hasMountedChartRangeEffectRef = useRef(false);
-  const latestMeasurementFingerprintRef = useRef<string | null>(null);
   const {
     data: intelligenceSummary,
     isLoading: isIntelligenceLoading,
@@ -231,40 +239,21 @@ export default function DashboardPage() {
     }
 
     try {
-      const [metricsData, chartPoints, riskData, alertsData] = await Promise.all([
+      const [metricsData, chartPoints, riskData, alertsData, latestMeasurementContext] = await Promise.all([
         fetchDashboardMetrics(),
         fetchChartData(from, to),
         fetchRiskAnalysis(),
-        fetchAlerts()
+        fetchAlerts(),
+        fetchLatestMeasurementContext()
       ]);
-      const nextMeasurementFingerprint = metricsData.latestMeasurement
-        ? `${metricsData.latestMeasurement.measuredAt}|${metricsData.latestMeasurement.glucoseValue}`
-        : null;
-      const previousMeasurementFingerprint = latestMeasurementFingerprintRef.current;
 
       if (mountedRef && !mountedRef.current) return;
       setMetrics(metricsData);
       setChartData(chartPoints);
       setRisk(riskData);
       setAlerts(alertsData);
+      setLatestMeasurementOrigin(latestMeasurementContext?.origin ?? null);
       setError(null);
-      latestMeasurementFingerprintRef.current = nextMeasurementFingerprint;
-
-      const intelligenceLoaded = (await refreshAssistantSummary({ background: silent })).success;
-      if (mountedRef && !mountedRef.current) return;
-
-      if (
-        silent &&
-        intelligenceLoaded &&
-        previousMeasurementFingerprint &&
-        previousMeasurementFingerprint !== nextMeasurementFingerprint
-      ) {
-        requestIntelligenceRefresh("glucose-data-changed");
-      }
-
-      if (!silent) {
-        setIntelligenceRefreshError(null);
-      }
     } catch (err) {
       if (silent) return;
       const message = err instanceof Error ? err.message : "No se pudieron cargar los datos.";
@@ -318,6 +307,10 @@ export default function DashboardPage() {
       window.clearInterval(intervalId);
     };
   }, []);
+
+  useEffect(() => {
+    void refreshAssistantSummary();
+  }, [refreshAssistantSummary]);
 
   useEffect(() => {
     chartRangeRef.current = chartRange;
@@ -383,7 +376,6 @@ export default function DashboardPage() {
 
       isRefreshInFlightRef.current = true;
       await loadDashboardData();
-      requestIntelligenceRefresh("manual-measurement-created");
     } catch (err) {
       const message = err instanceof Error ? err.message : "No se pudo guardar la medicion.";
       setFormError(message);
@@ -432,6 +424,14 @@ export default function DashboardPage() {
     intelligenceSummary?.finalRiskLevel,
     intelligenceSummary?.assistantMood
   );
+  const assistantAnalysisState = getIntelligenceAnalysisState(
+    intelligenceSummary?.generatedAt,
+    metrics?.latestMeasurement?.measuredAt
+  );
+  const assistantActionLabel = getIntelligenceAnalysisLabel(assistantAnalysisState);
+  const assistantStatusLabel = getIntelligenceAnalysisStatusLabel(assistantAnalysisState);
+  const assistantStatusMessage = getIntelligenceAnalysisStatusMessage(assistantAnalysisState);
+  const latestMeasurementOriginLabel = translateMeasurementOrigin(latestMeasurementOrigin);
   const primaryInsight = intelligenceSummary?.assistantMessage ?? riskMessage;
 
   useEffect(() => {
@@ -536,12 +536,15 @@ export default function DashboardPage() {
                   ? "Cargando analisis inteligente..."
                   : intelligenceError
                     ? intelligenceError
-                    : intelligenceSummary?.assistantMessage ?? "Aun no hay analisis disponible."}
+                    : intelligenceSummary?.assistantMessage ?? "Todavia no hay un analisis generado para tus mediciones."}
               </p>
             </div>
           </div>
 
           <div className="dashboard-assistant-preview-badges">
+            <span className={`metric-chip intelligence-state-badge intelligence-state-${assistantAnalysisState}`}>
+              {assistantStatusLabel}
+            </span>
             <span className={`metric-chip risk-theme-badge ${assistantThemeClass}`}>
               {intelligenceSummary ? getRiskBadgeLabel(intelligenceSummary.finalRiskLevel) : "Sin datos"}
             </span>
@@ -549,10 +552,16 @@ export default function DashboardPage() {
           </div>
 
           <div className="dashboard-assistant-preview-panel">
-            <p className="dashboard-assistant-preview-panel-title">Zona de acciones inteligentes</p>
+            <p className="dashboard-assistant-preview-panel-title">Contexto del analisis</p>
             <p className="dashboard-assistant-preview-panel-copy">
-              Proximamente este espacio podra priorizar acciones sugeridas a partir del analisis actual.
+              {assistantStatusMessage}
             </p>
+            <div className="assistant-context-list">
+              <span className="assistant-context-item">Origen reciente: {latestMeasurementOriginLabel}</span>
+              <span className="assistant-context-item">
+                {intelligenceSummary ? `Generado: ${new Date(intelligenceSummary.generatedAt).toLocaleString("es-CO")}` : "Sin analisis previo"}
+              </span>
+            </div>
           </div>
 
           <button
@@ -561,7 +570,11 @@ export default function DashboardPage() {
             onClick={handleManualAssistantRefresh}
             disabled={isAssistantRefreshBusy}
           >
-            {isManualAssistantRefreshing ? "Actualizando..." : "Actualizar analisis"}
+            {isManualAssistantRefreshing
+              ? assistantAnalysisState === "missing"
+                ? "Generando..."
+                : "Actualizando..."
+              : assistantActionLabel}
           </button>
 
           {!isAssistantInitialLoading && intelligenceRefreshError ? <p className="soft-text">{intelligenceRefreshError}</p> : null}
