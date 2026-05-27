@@ -72,7 +72,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
             {!collapsed ? (
               <div className="brand-copy">
                 <p className="brand-title">GlycoWatch</p>
-                <p className="brand-subtitle">Centro analítico</p>
+                <p className="brand-subtitle">Plataforma clinica</p>
               </div>
             ) : null}
           </div>
@@ -92,14 +92,14 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
 
         {!collapsed ? (
           <div className="sidebar-highlight">
-            <p className="sidebar-highlight-label">Seguimiento clínico</p>
-            <p className="sidebar-highlight-title">Navegación más ligera, acciones globales en la parte superior y foco en lectura.</p>
+            <p className="sidebar-highlight-label">Entorno clinico</p>
+            <p className="sidebar-highlight-title">Navegacion ligera y mejor foco en el seguimiento diario.</p>
           </div>
         ) : null}
       </div>
 
       <div className="sidebar-group">
-        {!collapsed ? <p className="sidebar-group-label">Módulos</p> : null}
+        {!collapsed ? <p className="sidebar-group-label">Modulos</p> : null}
         <nav className="sidebar-nav">
           {NAV_ITEMS.map((item) => {
             const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
