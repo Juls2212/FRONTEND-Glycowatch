@@ -164,7 +164,7 @@ export function GlucoseChart({ data }: Props) {
   return (
     <div className="chart-wrap chart-wrap-enhanced">
       <ResponsiveContainer width="100%" height={320}>
-        <ComposedChart data={enhancedData} margin={{ top: 12, right: 10, bottom: 6, left: -10 }}>
+        <ComposedChart data={enhancedData} margin={{ top: 18, right: 14, bottom: 10, left: -4 }}>
           <defs>
             <linearGradient id="glucoseAreaGradient" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor={chartTheme.fillStart} />
@@ -180,31 +180,32 @@ export function GlucoseChart({ data }: Props) {
             y1={LOW_THRESHOLD}
             y2={HIGH_THRESHOLD}
             fill={chartTheme.success}
-            fillOpacity={0.045}
+            fillOpacity={0.03}
             ifOverflow="extendDomain"
           />
-          <ReferenceArea y1={yDomain[0]} y2={LOW_THRESHOLD} fill={chartTheme.warning} fillOpacity={0.035} ifOverflow="extendDomain" />
-          <ReferenceArea y1={HIGH_THRESHOLD} y2={yDomain[1]} fill={chartTheme.danger} fillOpacity={0.035} ifOverflow="extendDomain" />
+          <ReferenceArea y1={yDomain[0]} y2={LOW_THRESHOLD} fill={chartTheme.warning} fillOpacity={0.025} ifOverflow="extendDomain" />
+          <ReferenceArea y1={HIGH_THRESHOLD} y2={yDomain[1]} fill={chartTheme.danger} fillOpacity={0.025} ifOverflow="extendDomain" />
 
-          <CartesianGrid stroke={chartTheme.grid} strokeDasharray="4 6" vertical={false} />
+          <CartesianGrid stroke={chartTheme.grid} strokeDasharray="3 7" vertical={false} />
           <XAxis
             dataKey="measuredAt"
             tickFormatter={formatAxisLabel}
             interval="preserveStartEnd"
-            minTickGap={34}
-            tick={{ fill: chartTheme.tick, fontSize: 12 }}
-            axisLine={{ stroke: chartTheme.gridStrong, strokeOpacity: 0.55 }}
+            minTickGap={40}
+            tick={{ fill: chartTheme.tick, fontSize: 11 }}
+            axisLine={{ stroke: chartTheme.gridStrong, strokeOpacity: 0.4 }}
             tickLine={false}
+            dy={8}
           />
           <YAxis
             domain={yDomain}
-            tick={{ fill: chartTheme.tick, fontSize: 12 }}
+            tick={{ fill: chartTheme.tick, fontSize: 11 }}
             axisLine={false}
             tickLine={false}
-            width={42}
+            width={40}
             tickFormatter={(value: number) => `${value}`}
           />
-          <Tooltip content={<ChartTooltip theme={chartTheme} />} cursor={{ stroke: chartTheme.gridStrong, strokeDasharray: "3 4" }} />
+          <Tooltip content={<ChartTooltip theme={chartTheme} />} cursor={{ stroke: chartTheme.gridStrong, strokeDasharray: "2 6", strokeOpacity: 0.55 }} />
 
           <Area
             type="monotone"
@@ -219,7 +220,7 @@ export function GlucoseChart({ data }: Props) {
             type="monotone"
             dataKey="glucoseValue"
             stroke="url(#glucoseLineGradient)"
-            strokeWidth={3}
+            strokeWidth={2.6}
             dot={pointRenderer}
             activeDot={activePointRenderer}
             isAnimationActive
