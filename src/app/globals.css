@@ -157,7 +157,7 @@
 :root[data-accent-theme="green"] {
   --accent: #44c98a;
   --accent-rgb: 68, 201, 138;
-  --accent-strong: #2fa66f;
+  --accent-strong: #21e41a;
   --accent-soft: #1f5a3d;
   --gradient-app-secondary: rgba(22, 105, 108, 0.12);
   --gradient-header-secondary: rgba(22, 105, 108, 0.08);
