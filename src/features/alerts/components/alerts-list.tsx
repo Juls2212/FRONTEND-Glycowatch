@@ -1,11 +1,8 @@
 import { Card } from "@/components/ui/card";
 import { FeedbackBanner } from "@/components/ui/feedback-banner";
 import { SkeletonBlock } from "@/components/ui/skeleton-block";
+import { StatePanel } from "@/components/ui/state-panel";
 import { AlertItem } from "@/features/alerts/types";
-
-// Componente para mostrar la lista de alertas
-// Se agrupan por tipo (alta o baja) y se muestra un mensaje descriptivo para cada una
-// También se incluye un botón para marcar cada alerta como leída, que se deshabilita mientras se actualiza su estado
 
 type Props = {
   alerts: AlertItem[];
@@ -21,7 +18,6 @@ type AlertGroup = {
   items: AlertItem[];
 };
 
-// Funciones auxiliares para formatear el tipo de alerta, resolver la clase de severidad y construir la descripción del mensaje
 function formatAlertType(type: AlertItem["type"]): string {
   return type === "HIGH_GLUCOSE" ? "Glucosa alta" : "Glucosa baja";
 }
@@ -29,7 +25,7 @@ function formatAlertType(type: AlertItem["type"]): string {
 function resolveSeverityClass(type: AlertItem["type"]): string {
   return type === "HIGH_GLUCOSE" ? "high" : "low";
 }
-// Construye una descripción del mensaje basada en el tipo de alerta
+
 function buildDescription(alert: AlertItem): string {
   if (alert.type === "HIGH_GLUCOSE") {
     return "Se detectó una lectura por encima del umbral configurado.";
@@ -57,20 +53,27 @@ export function AlertsList({ alerts, isLoading, error, isUpdatingId, onMarkAsRea
   return (
     <Card>
       {isLoading ? (
-        <div className="skeleton-stack">
-          <SkeletonBlock className="skeleton-line w-50" />
-          <SkeletonBlock className="skeleton-line w-100" />
-          <SkeletonBlock className="skeleton-line w-90" />
-          <SkeletonBlock className="skeleton-line w-80" />
-        </div>
+        <StatePanel
+          variant="loading"
+          title="Cargando alertas"
+          message="Estamos revisando tus eventos recientes para mostrarlos de forma clara."
+        >
+          <div className="skeleton-stack">
+            <SkeletonBlock className="skeleton-line w-50" />
+            <SkeletonBlock className="skeleton-line w-100" />
+            <SkeletonBlock className="skeleton-line w-90" />
+            <SkeletonBlock className="skeleton-line w-80" />
+          </div>
+        </StatePanel>
       ) : null}
       {error ? <FeedbackBanner type="error" message={error} /> : null}
 
       {!isLoading && !error && alerts.length === 0 ? (
-        <div className="empty-state">
-          <p className="empty-title">Sin alertas para este filtro</p>
-          <p className="soft-text">Cuando existan eventos de riesgo relevantes, aparecerán aquí.</p>
-        </div>
+        <StatePanel
+          variant="empty"
+          title="No hay alertas para este filtro"
+          message="Todo luce tranquilo por ahora. Si aparece un evento relevante, lo verás aquí."
+        />
       ) : null}
 
       {!isLoading && !error && alerts.length > 0 ? (
@@ -114,4 +117,3 @@ export function AlertsList({ alerts, isLoading, error, isUpdatingId, onMarkAsRea
     </Card>
   );
 }
-
