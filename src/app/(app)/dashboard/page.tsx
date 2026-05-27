@@ -426,7 +426,7 @@ export default function DashboardPage() {
   );
 
   return (
-    <div className="dashboard-grid dashboard-page">
+    <div className="dashboard-grid app-page dashboard-page">
       {isBannerVisible && bannerData ? (
         <div className={`dashboard-alert-banner ${bannerData.variant}`} role="status" aria-live="polite">
           <p className="dashboard-alert-text">{bannerData.message}</p>
