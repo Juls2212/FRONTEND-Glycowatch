@@ -121,7 +121,7 @@ export default function DevicesPage() {
   };
 
   return (
-    <div className="dashboard-grid">
+    <div className="dashboard-grid app-page devices-page">
       <Section title="Dispositivos" subtitle="Registro, vínculo y control de tus dispositivos IoT">
         {success ? <FeedbackBanner type="success" message={success} /> : null}
         {error ? <FeedbackBanner type="error" message={error} /> : null}
