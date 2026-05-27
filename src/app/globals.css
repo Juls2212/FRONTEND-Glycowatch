@@ -930,11 +930,17 @@ a {
 }
 
 .card {
-  background: linear-gradient(165deg, var(--surface-panel) 0%, var(--surface-panel-strong) 100%);
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at top right, rgba(var(--accent-rgb), 0.07) 0%, transparent 32%),
+    linear-gradient(180deg, rgba(var(--surface-panel-rgb), 0.98) 0%, rgba(var(--surface-panel-rgb), 0.94) 100%);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-xl);
-  padding: 20px;
-  box-shadow: var(--shadow-soft);
+  padding: 22px;
+  box-shadow:
+    0 14px 34px rgba(31, 74, 121, 0.08),
+    0 2px 6px rgba(31, 74, 121, 0.04);
   transition:
     border-color var(--transition-base),
     box-shadow var(--transition-base),
@@ -943,8 +949,10 @@ a {
 }
 
 .card:hover {
-  border-color: color-mix(in srgb, var(--border-subtle) 65%, rgba(var(--accent-rgb), 0.24));
-  box-shadow: var(--shadow-card-hover);
+  border-color: color-mix(in srgb, var(--border-subtle) 74%, rgba(var(--accent-rgb), 0.2));
+  box-shadow:
+    0 18px 40px rgba(31, 74, 121, 0.1),
+    0 4px 10px rgba(31, 74, 121, 0.05);
   transform: translateY(-2px);
 }
 
@@ -976,16 +984,16 @@ a {
 
 .skeleton-stack {
   display: grid;
-  gap: 10px;
+  gap: 12px;
 }
 
 .skeleton-block {
-  border-radius: 10px;
+  border-radius: 14px;
   background: linear-gradient(
     90deg,
-    rgba(var(--accent-rgb), 0.08) 0%,
-    rgba(var(--accent-rgb), 0.18) 50%,
-    rgba(var(--accent-rgb), 0.08) 100%
+    rgba(var(--accent-rgb), 0.06) 0%,
+    rgba(var(--accent-rgb), 0.14) 50%,
+    rgba(var(--accent-rgb), 0.06) 100%
   );
   background-size: 200% 100%;
   animation: skeleton-shimmer 1.4s ease-in-out infinite;
@@ -1017,13 +1025,18 @@ a {
 
 .empty-state {
   display: grid;
-  gap: 6px;
-  padding: 8px 2px;
+  gap: 10px;
+  padding: 14px 4px;
+  border-radius: var(--radius-lg);
+  border: 1px dashed rgba(var(--accent-rgb), 0.18);
+  background:
+    linear-gradient(180deg, rgba(var(--accent-rgb), 0.04) 0%, transparent 100%),
+    var(--surface-muted);
 }
 
 .empty-title {
   margin: 0;
-  font-size: 15px;
+  font-size: 1rem;
   color: var(--text-primary);
 }
 
@@ -1311,7 +1324,11 @@ a {
 }
 
 .profile-state-card {
-  padding: 22px;
+  padding: 24px;
+  border: 1px solid rgba(var(--accent-rgb), 0.12);
+  background:
+    radial-gradient(circle at top right, rgba(var(--accent-rgb), 0.08) 0%, transparent 34%),
+    linear-gradient(180deg, rgba(var(--surface-panel-rgb), 0.98), rgba(var(--surface-panel-rgb), 0.94));
 }
 
 .profile-hero-card {
@@ -1403,15 +1420,17 @@ a {
 
 .profile-overview-panel {
   display: grid;
-  gap: 14px;
-  padding: 18px;
+  gap: 16px;
+  padding: 20px;
   min-height: 100%;
   border-radius: calc(var(--radius-xl) - 4px);
-  border: 1px solid rgba(var(--accent-rgb), 0.16);
+  border: 1px solid rgba(var(--accent-rgb), 0.14);
   background:
-    linear-gradient(180deg, rgba(var(--surface-panel-rgb), 0.82), rgba(var(--surface-panel-rgb), 0.68)),
+    linear-gradient(180deg, rgba(var(--surface-panel-rgb), 0.88), rgba(var(--surface-panel-rgb), 0.76)),
     rgba(var(--accent-rgb), 0.04);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.28),
+    0 8px 20px rgba(31, 74, 121, 0.05);
 }
 
 .profile-avatar {
@@ -1450,11 +1469,13 @@ a {
 
 .profile-stat {
   display: grid;
-  gap: 4px;
-  padding: 12px 14px;
+  gap: 6px;
+  padding: 14px 16px;
   border-radius: var(--radius-lg);
-  background: var(--surface-muted);
-  border: 1px solid var(--border-subtle);
+  background:
+    linear-gradient(180deg, rgba(var(--surface-panel-rgb), 0.82), rgba(var(--surface-panel-rgb), 0.7)),
+    var(--surface-muted);
+  border: 1px solid rgba(var(--accent-rgb), 0.1);
 }
 
 .profile-stat span {
@@ -1474,8 +1495,9 @@ a {
 
 .profile-section-card {
   display: grid;
-  gap: 18px;
+  gap: 20px;
   min-height: 100%;
+  border-color: rgba(var(--accent-rgb), 0.1);
 }
 
 .profile-section-card-health {
@@ -1540,10 +1562,12 @@ a {
 .profile-threshold-pill {
   display: grid;
   gap: 6px;
-  padding: 14px 16px;
+  padding: 16px 18px;
   border-radius: var(--radius-lg);
-  border: 1px solid var(--border-subtle);
-  background: var(--surface-muted);
+  border: 1px solid rgba(var(--accent-rgb), 0.1);
+  background:
+    linear-gradient(180deg, rgba(var(--surface-panel-rgb), 0.76), rgba(var(--surface-panel-rgb), 0.66)),
+    var(--surface-muted);
 }
 
 .profile-threshold-pill span {
@@ -1579,7 +1603,7 @@ a {
 
 .devices-form {
   display: grid;
-  gap: 12px;
+  gap: 14px;
 }
 
 .devices-actions {
@@ -1620,12 +1644,15 @@ a {
 
 .device-created-card {
   margin-top: 12px;
-  border: 1px solid var(--border-subtle);
-  border-radius: 12px;
-  padding: 12px;
-  background: var(--surface-muted-strong);
+  border: 1px solid rgba(var(--accent-rgb), 0.14);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  background:
+    radial-gradient(circle at top right, rgba(var(--accent-rgb), 0.08) 0%, transparent 36%),
+    linear-gradient(180deg, rgba(var(--surface-panel-rgb), 0.9) 0%, rgba(var(--surface-panel-rgb), 0.78) 100%);
   display: grid;
-  gap: 6px;
+  gap: 8px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22);
 }
 
 .status-pill {
@@ -2724,8 +2751,8 @@ a {
 }
 
 .card {
-  border-radius: 20px;
-  padding: 22px;
+  border-radius: 22px;
+  padding: 24px;
   backdrop-filter: blur(12px);
 }
 
@@ -2746,22 +2773,42 @@ a {
 .chart-card,
 .risk-card,
 .alerts-card,
-.manual-entry-card {
+.manual-entry-card,
+.analytics-hero-card,
+.analytics-chart-card,
+.analytics-intelligence-card,
+.analytics-spotlight-card,
+.metric-card,
+.hero-metric-card {
   position: relative;
   overflow: hidden;
+  border: 1px solid rgba(var(--accent-rgb), 0.1);
+  background:
+    radial-gradient(circle at top right, rgba(var(--accent-rgb), 0.08) 0%, transparent 34%),
+    linear-gradient(180deg, rgba(var(--surface-panel-rgb), 0.98), rgba(var(--surface-panel-rgb), 0.92));
+  box-shadow:
+    0 14px 34px rgba(31, 74, 121, 0.08),
+    0 2px 6px rgba(31, 74, 121, 0.04);
 }
 
 .dashboard-hero-card::before,
 .chart-card::before,
 .risk-card::before,
 .alerts-card::before,
-.manual-entry-card::before {
+.manual-entry-card::before,
+.analytics-hero-card::before,
+.analytics-chart-card::before,
+.analytics-intelligence-card::before,
+.analytics-spotlight-card::before,
+.metric-card::before,
+.hero-metric-card::before {
   content: "";
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(circle at top right, var(--gradient-highlight-secondary) 0%, transparent 32%),
-    linear-gradient(135deg, var(--gradient-highlight-primary) 0%, transparent 45%);
+    radial-gradient(circle at top right, var(--gradient-highlight-secondary) 0%, transparent 36%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.28) 0%, transparent 42%),
+    linear-gradient(135deg, var(--gradient-highlight-primary) 0%, transparent 48%);
   pointer-events: none;
 }
 
@@ -2769,7 +2816,13 @@ a {
 .chart-card > *,
 .risk-card > *,
 .alerts-card > *,
-.manual-entry-card > * {
+.manual-entry-card > *,
+.analytics-hero-card > *,
+.analytics-chart-card > *,
+.analytics-intelligence-card > *,
+.analytics-spotlight-card > *,
+.metric-card > *,
+.hero-metric-card > * {
   position: relative;
   z-index: 1;
 }
@@ -3048,10 +3101,12 @@ a {
 
 .hero-metric-card,
 .dashboard-hero-side {
-  border-radius: 16px;
-  border: 1px solid rgba(var(--accent-rgb), 0.14);
-  background: linear-gradient(180deg, rgba(var(--accent-rgb), 0.08) 0%, transparent 100%), var(--surface-muted);
-  padding: 16px;
+  border-radius: 18px;
+  border: 1px solid rgba(var(--accent-rgb), 0.12);
+  background:
+    linear-gradient(180deg, rgba(var(--accent-rgb), 0.08) 0%, transparent 100%),
+    linear-gradient(180deg, rgba(var(--surface-panel-rgb), 0.92) 0%, rgba(var(--surface-panel-rgb), 0.82) 100%);
+  padding: 18px;
 }
 
 .hero-metric-card {
@@ -3172,10 +3227,12 @@ a {
 .dashboard-hero-assistant-stat {
   display: grid;
   gap: 4px;
-  padding: 12px;
+  padding: 14px;
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(var(--accent-rgb), 0.12);
-  background: var(--surface-muted);
+  border: 1px solid rgba(var(--accent-rgb), 0.1);
+  background:
+    linear-gradient(180deg, rgba(var(--surface-panel-rgb), 0.78), rgba(var(--surface-panel-rgb), 0.68)),
+    var(--surface-muted);
 }
 
 .dashboard-hero-assistant-stat strong {
@@ -3210,7 +3267,8 @@ a {
   position: relative;
   overflow: hidden;
   display: grid;
-  gap: 12px;
+  gap: 14px;
+  padding: 18px;
 }
 
 .metric-card-header,
@@ -3334,7 +3392,7 @@ a {
 }
 
 .chart-card {
-  padding-top: 14px;
+  padding-top: 18px;
   min-height: 100%;
 }
 
@@ -3361,9 +3419,11 @@ a {
 
 .risk-stat {
   border-radius: var(--radius-lg);
-  padding: 12px;
-  border: 1px solid rgba(var(--accent-rgb), 0.12);
-  background: var(--surface-muted);
+  padding: 14px;
+  border: 1px solid rgba(var(--accent-rgb), 0.1);
+  background:
+    linear-gradient(180deg, rgba(var(--surface-panel-rgb), 0.76), rgba(var(--surface-panel-rgb), 0.66)),
+    var(--surface-muted);
   transition:
     background var(--transition-fast),
     border-color var(--transition-fast),
@@ -3410,7 +3470,7 @@ a {
 
 .manual-entry-card {
   display: grid;
-  gap: 12px;
+  gap: 14px;
   align-content: start;
 }
 
@@ -3503,12 +3563,15 @@ a {
 .analytics-recommendation-card,
 .analytics-conclusion-card {
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(var(--accent-rgb), 0.12);
+  border: 1px solid rgba(var(--accent-rgb), 0.1);
   background:
-    radial-gradient(circle at top right, var(--gradient-highlight-secondary) 0%, transparent 34%),
+    radial-gradient(circle at top right, var(--gradient-highlight-secondary) 0%, transparent 38%),
     linear-gradient(180deg, var(--gradient-highlight-primary) 0%, transparent 100%),
-    var(--surface-muted);
-  padding: 20px;
+    linear-gradient(180deg, rgba(var(--surface-panel-rgb), 0.96), rgba(var(--surface-panel-rgb), 0.9));
+  padding: 22px;
+  box-shadow:
+    0 12px 28px rgba(31, 74, 121, 0.06),
+    0 2px 6px rgba(31, 74, 121, 0.04);
 }
 
 .analytics-overview-header,
@@ -3554,7 +3617,7 @@ a {
 
 .analytics-spotlight-card {
   display: grid;
-  gap: 16px;
+  gap: 18px;
 }
 
 .analytics-spotlight-title {
@@ -3649,7 +3712,10 @@ a {
 .analytics-recommendation-card:hover,
 .analytics-conclusion-card:hover {
   transform: translateY(-2px);
-  border-color: rgba(var(--accent-rgb), 0.2);
+  border-color: rgba(var(--accent-rgb), 0.18);
+  box-shadow:
+    0 16px 34px rgba(31, 74, 121, 0.09),
+    0 4px 10px rgba(31, 74, 121, 0.05);
 }
 
 .analytics-conclusion-card.active {
@@ -3676,7 +3742,7 @@ a {
 }
 
 .analytics-chart-card {
-  padding-top: 16px;
+  padding-top: 18px;
 }
 
 .analytics-intelligence-stack {
@@ -3696,7 +3762,7 @@ a {
 
 .analytics-intelligence-card {
   display: grid;
-  gap: 14px;
+  gap: 16px;
 }
 
 .analytics-intelligence-primary {
@@ -3764,10 +3830,12 @@ a {
 .analytics-intelligence-meta-item {
   display: grid;
   gap: 4px;
-  padding: 9px 11px;
+  padding: 12px 14px;
   border-radius: var(--radius-md);
-  border: 1px solid var(--border-subtle);
-  background: var(--surface-input);
+  border: 1px solid rgba(var(--accent-rgb), 0.1);
+  background:
+    linear-gradient(180deg, rgba(var(--surface-panel-rgb), 0.8), rgba(var(--surface-panel-rgb), 0.7)),
+    var(--surface-input);
 }
 
 .analytics-intelligence-meta-item strong {
@@ -3845,9 +3913,16 @@ a {
 
 .analytics-history-card {
   display: grid;
-  gap: 9px;
+  gap: 10px;
   border-left: 3px solid rgba(var(--risk-tone-rgb, var(--accent-rgb)), 0.42);
-  padding-block: 12px;
+  padding: 14px 16px;
+  border-radius: var(--radius-lg);
+  border-top: 1px solid rgba(var(--accent-rgb), 0.08);
+  border-right: 1px solid rgba(var(--accent-rgb), 0.08);
+  border-bottom: 1px solid rgba(var(--accent-rgb), 0.08);
+  background:
+    linear-gradient(180deg, rgba(var(--surface-panel-rgb), 0.78), rgba(var(--surface-panel-rgb), 0.66)),
+    var(--surface-muted);
 }
 
 .analytics-history-header {
