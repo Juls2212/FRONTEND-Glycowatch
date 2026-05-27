@@ -1,23 +1,57 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Section } from "@/components/ui/section";
-import { deleteMeasurement, fetchLatestMeasurement, fetchMeasurements } from "@/features/measurements/api";
-import { LatestMeasurement, MeasurementItem, MeasurementsFilters } from "@/features/measurements/types";
-import { LatestMeasurementCard } from "@/features/measurements/components/latest-measurement-card";
-import { MeasurementsTable } from "@/features/measurements/components/measurements-table";
-import { ManualMeasurementForm } from "@/features/measurements/components/manual-measurement-form";
-import { HttpError } from "@/types/api";
+import { useEffect, useMemo, useState } from "react";
+import { Card } from "@/components/ui/card";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { FeedbackBanner } from "@/components/ui/feedback-banner";
+import { LatestMeasurementCard } from "@/features/measurements/components/latest-measurement-card";
+import { ManualMeasurementForm } from "@/features/measurements/components/manual-measurement-form";
+import { MeasurementsTable } from "@/features/measurements/components/measurements-table";
+import { deleteMeasurement, fetchLatestMeasurement, fetchMeasurements } from "@/features/measurements/api";
+import { LatestMeasurement, MeasurementItem, MeasurementsFilters } from "@/features/measurements/types";
+import { HttpError } from "@/types/api";
 
 const PAGE_SIZE = 10;
+
+function formatFilterRange(filters: MeasurementsFilters): string {
+  if (!filters.from && !filters.to) {
+    return "Mostrando las lecturas más recientes.";
+  }
+
+  if (filters.from && filters.to) {
+    return `Periodo filtrado: ${filters.from} a ${filters.to}.`;
+  }
+
+  if (filters.from) {
+    return `Periodo filtrado desde ${filters.from}.`;
+  }
+
+  return `Periodo filtrado hasta ${filters.to}.`;
+}
+
+function buildPageSummary(latestMeasurement: LatestMeasurement | null, measurements: MeasurementItem[], totalElements: number): string {
+  if (!latestMeasurement) {
+    return "Todavía no hay mediciones registradas. Puedes empezar agregando una lectura manual.";
+  }
+
+  const previous = measurements[1];
+  if (!previous) {
+    return `Última lectura registrada: ${latestMeasurement.glucoseValue} ${latestMeasurement.unit}.`;
+  }
+
+  const delta = latestMeasurement.glucoseValue - previous.glucoseValue;
+  const direction =
+    Math.abs(delta) < 5 ? "se mantiene estable" : delta > 0 ? `subió ${Math.abs(delta).toFixed(1)} mg/dL` : `bajó ${Math.abs(delta).toFixed(1)} mg/dL`;
+
+  return `Tu lectura más reciente ${direction} frente al registro anterior. Historial visible: ${totalElements} mediciones.`;
+}
 
 export default function MeasurementsPage() {
   const [latestMeasurement, setLatestMeasurement] = useState<LatestMeasurement | null>(null);
   const [measurements, setMeasurements] = useState<MeasurementItem[]>([]);
   const [currentPage, setCurrentPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
   const [filters, setFilters] = useState<MeasurementsFilters>({});
   const [draftFrom, setDraftFrom] = useState("");
   const [draftTo, setDraftTo] = useState("");
@@ -31,20 +65,17 @@ export default function MeasurementsPage() {
     setError(null);
     setSuccess(null);
     try {
-      const [latest, pageData] = await Promise.all([
-        fetchLatestMeasurement(),
-        fetchMeasurements(page, PAGE_SIZE, activeFilters)
-      ]);
+      const [latest, pageData] = await Promise.all([fetchLatestMeasurement(), fetchMeasurements(page, PAGE_SIZE, activeFilters)]);
       setLatestMeasurement(latest);
       setMeasurements(pageData.content);
       setTotalPages(pageData.totalPages);
+      setTotalElements(pageData.totalElements);
       setCurrentPage(pageData.currentPage);
     } catch (err) {
       const message = err instanceof Error ? err.message : "No se pudieron cargar las mediciones.";
       setError(message);
     }
   };
-
 
   useEffect(() => {
     let mounted = true;
@@ -55,13 +86,11 @@ export default function MeasurementsPage() {
       if (mounted) setIsLoading(false);
     }
 
-
     void initialize();
     return () => {
       mounted = false;
     };
   }, []);
-
 
   const onApplyFilters = async () => {
     setSuccess(null);
@@ -75,7 +104,6 @@ export default function MeasurementsPage() {
     setIsLoading(false);
   };
 
-
   const onClearFilters = async () => {
     setSuccess(null);
     setDraftFrom("");
@@ -86,7 +114,6 @@ export default function MeasurementsPage() {
     await loadData(0, clean);
     setIsLoading(false);
   };
-
 
   const onPageChange = async (targetPage: number) => {
     if (targetPage < 0 || targetPage >= totalPages || targetPage === currentPage) return;
@@ -128,15 +155,44 @@ export default function MeasurementsPage() {
     }
   };
 
-  return (
-    <div className="dashboard-grid app-page measurements-page">
-      <Section title="Mediciones" subtitle="Seguimiento detallado de tus registros glucémicos">
-        <LatestMeasurementCard latestMeasurement={latestMeasurement} />
-      </Section>
+  const historySummary = useMemo(() => formatFilterRange(filters), [filters]);
+  const pageSummary = useMemo(
+    () => buildPageSummary(latestMeasurement, measurements, totalElements),
+    [latestMeasurement, measurements, totalElements]
+  );
 
-      <Section title="Filtros y registro manual" subtitle="Filtra por fechas y añade nuevas mediciones">
-        <div className="measurements-top-grid">
-          <div className="card filters-card">
+  return (
+    <div className="app-page measurements-page measurements-phase-three">
+      <header className="measurements-shell-header">
+        <div className="measurements-shell-copy">
+          <p className="measurements-shell-eyebrow">Registro glucémico</p>
+          <h1 className="measurements-shell-title">Mediciones</h1>
+          <p className="measurements-shell-subtitle">{pageSummary}</p>
+        </div>
+        <div className="measurements-shell-meta">
+          <span className="status-pill status-registered">Historial clínico</span>
+          <span className="status-pill status-active">
+            {totalElements > 0 ? `${totalElements} registros` : "Sin registros"}
+          </span>
+        </div>
+      </header>
+
+      {success ? <FeedbackBanner type="success" message={success} /> : null}
+      {error ? <FeedbackBanner type="error" message={error} /> : null}
+
+      <div className="measurements-hero-layout">
+        <LatestMeasurementCard latestMeasurement={latestMeasurement} recentMeasurements={measurements} />
+
+        <div className="measurements-side-stack">
+          <Card className="measurements-filter-card">
+            <div className="measurements-card-head">
+              <div>
+                <p className="measurements-card-eyebrow">Evolución visible</p>
+                <h2 className="measurements-card-title">Filtrar periodo</h2>
+              </div>
+              <p className="measurements-card-copy">{historySummary}</p>
+            </div>
+
             <div className="filters-grid">
               <label className="field">
                 <span>Desde</span>
@@ -155,46 +211,55 @@ export default function MeasurementsPage() {
                 Aplicar filtros
               </button>
             </div>
-          </div>
+          </Card>
 
           <ManualMeasurementForm onCreated={onManualCreated} />
         </div>
-      </Section>
+      </div>
 
-      <Section title="Historial de mediciones" subtitle="Resultados paginados y ordenados por fecha">
-        {success ? <FeedbackBanner type="success" message={success} /> : null}
-        {error ? <FeedbackBanner type="error" message={error} /> : null}
+      <section className="measurements-history-section">
+        <div className="measurements-history-header">
+          <div>
+            <p className="measurements-card-eyebrow">Seguimiento reciente</p>
+            <h2 className="measurements-card-title">Historial de mediciones</h2>
+            <p className="measurements-card-copy">
+              Revisa tus lecturas ordenadas por fecha y elimina solo las que ya no necesites conservar.
+            </p>
+          </div>
+          <div className="measurements-history-meta">
+            <span className="soft-text">
+              Página {totalPages === 0 ? 0 : currentPage + 1} de {totalPages}
+            </span>
+            <div className="pagination-wrap">
+              <button
+                type="button"
+                className="ghost-button"
+                disabled={currentPage <= 0 || isLoading}
+                onClick={() => onPageChange(currentPage - 1)}
+              >
+                Anterior
+              </button>
+              <button
+                type="button"
+                className="ghost-button"
+                disabled={totalPages === 0 || currentPage >= totalPages - 1 || isLoading}
+                onClick={() => onPageChange(currentPage + 1)}
+              >
+                Siguiente
+              </button>
+            </div>
+          </div>
+        </div>
+
         <MeasurementsTable
           measurements={measurements}
           isLoading={isLoading}
           error={null}
           deletingId={deletingId}
+          totalElements={totalElements}
           onDelete={onDeleteMeasurement}
         />
-
-        <div className="pagination-wrap">
-          <button
-            type="button"
-            className="ghost-button"
-            disabled={currentPage <= 0 || isLoading}
-            onClick={() => onPageChange(currentPage - 1)}
-          >
-            Anterior
-          </button>
-          <span className="soft-text">
-            Página {totalPages === 0 ? 0 : currentPage + 1} de {totalPages}
-          </span>
-          <button
-            type="button"
-            className="ghost-button"
-            disabled={totalPages === 0 || currentPage >= totalPages - 1 || isLoading}
-            onClick={() => onPageChange(currentPage + 1)}
-          >
-            Siguiente
-          </button>
-        </div>
-      </Section>
-
+      </section>
 
       <ConfirmDialog
         open={pendingDeleteId != null}
@@ -208,5 +273,4 @@ export default function MeasurementsPage() {
       />
     </div>
   );
-} 
-
+}
