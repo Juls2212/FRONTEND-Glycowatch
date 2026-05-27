@@ -177,7 +177,7 @@
 :root[data-accent-theme="amber"] {
   --accent: #f2ad4b;
   --accent-rgb: 242, 173, 75;
-  --accent-strong: #cd8b2a;
+  --accent-strong: #e69c2d;
   --accent-soft: #69471a;
   --gradient-app-secondary: rgba(92, 69, 24, 0.12);
   --gradient-header-secondary: rgba(92, 69, 24, 0.08);
