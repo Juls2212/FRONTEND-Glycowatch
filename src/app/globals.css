@@ -428,7 +428,7 @@ a {
 
 .icon-button {
   border: 1px solid var(--border-subtle);
-  background: var(--surface-panel);
+  background: linear-gradient(180deg, rgba(var(--surface-panel-rgb), 0.96) 0%, var(--surface-panel-strong) 100%);
   color: var(--text-primary);
   border-radius: 999px;
   width: 40px;
@@ -437,7 +437,7 @@ a {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: 0 1px 0 rgba(var(--surface-app-rgb), 0.08);
+  box-shadow: 0 6px 18px rgba(31, 74, 121, 0.08);
   transition:
     background var(--transition-fast),
     border-color var(--transition-fast),
@@ -448,13 +448,14 @@ a {
 
 .icon-button.active {
   border-color: rgba(var(--accent-rgb), 0.48);
-  background: var(--surface-highlight-strong);
-  box-shadow: 0 0 0 4px rgba(var(--accent-rgb), 0.12);
+  background: linear-gradient(180deg, rgba(var(--accent-rgb), 0.18) 0%, rgba(var(--accent-rgb), 0.1) 100%);
+  box-shadow: 0 0 0 4px rgba(var(--accent-rgb), 0.1), 0 10px 20px rgba(31, 74, 121, 0.12);
 }
 
 .icon-button:hover {
   border-color: var(--accent-outline-strong);
-  box-shadow: 0 10px 24px rgba(var(--surface-app-rgb), 0.14), 0 0 0 4px rgba(var(--accent-rgb), 0.12);
+  background: color-mix(in srgb, var(--surface-panel) 82%, rgba(var(--accent-rgb), 0.08));
+  box-shadow: 0 12px 24px rgba(31, 74, 121, 0.12), 0 0 0 4px rgba(var(--accent-rgb), 0.1);
   transform: translateY(-1px);
 }
 
@@ -616,7 +617,7 @@ a {
 
 .notification-action {
   justify-self: flex-end;
-  padding: 8px 10px;
+  padding: 9px 12px;
   font-size: 12px;
 }
 
@@ -753,7 +754,7 @@ a {
 
 .avatar-button {
   border: 1px solid var(--border-subtle);
-  background: var(--surface-panel);
+  background: linear-gradient(180deg, rgba(var(--surface-panel-rgb), 0.96) 0%, var(--surface-panel-strong) 100%);
   border-radius: 999px;
   width: 40px;
   height: 40px;
@@ -761,7 +762,7 @@ a {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  box-shadow: 0 1px 0 rgba(var(--surface-app-rgb), 0.08);
+  box-shadow: 0 6px 18px rgba(31, 74, 121, 0.08);
   transition:
     background var(--transition-fast),
     border-color var(--transition-fast),
@@ -771,7 +772,8 @@ a {
 
 .avatar-button:hover {
   border-color: var(--accent-outline-strong);
-  box-shadow: 0 10px 24px rgba(var(--surface-app-rgb), 0.14), 0 0 0 4px rgba(var(--accent-rgb), 0.12);
+  background: color-mix(in srgb, var(--surface-panel) 82%, rgba(var(--accent-rgb), 0.08));
+  box-shadow: 0 12px 24px rgba(31, 74, 121, 0.12), 0 0 0 4px rgba(var(--accent-rgb), 0.1);
   transform: translateY(-1px);
 }
 
@@ -1679,24 +1681,29 @@ a {
 
 .range-pill {
   border: 1px solid var(--border-subtle);
-  background: var(--surface-panel);
+  background: color-mix(in srgb, var(--surface-panel) 88%, var(--surface-panel-strong));
   color: var(--text-secondary);
-  padding: 6px 10px;
+  padding: 8px 12px;
   border-radius: 999px;
   font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
   cursor: pointer;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45);
   transition: all 0.18s ease;
 }
 
 .range-pill:hover {
   color: var(--text-primary);
   border-color: rgba(var(--accent-rgb), 0.35);
+  background: color-mix(in srgb, var(--surface-panel) 72%, rgba(var(--accent-rgb), 0.08));
 }
 
 .range-pill.active {
   color: var(--text-primary);
-  background: var(--surface-highlight-strong);
+  background: linear-gradient(180deg, rgba(var(--accent-rgb), 0.16) 0%, rgba(var(--accent-rgb), 0.1) 100%);
   border-color: rgba(var(--accent-rgb), 0.45);
+  box-shadow: 0 8px 18px rgba(31, 74, 121, 0.1);
 }
 
 .table-wrap {
@@ -2020,40 +2027,50 @@ a {
 }
 
 .primary-button,
-.ghost-button {
-  border: 0;
-  border-radius: 10px;
-  padding: 10px 14px;
+.ghost-button,
+.danger-button,
+.notification-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 42px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  padding: 11px 16px;
+  font-size: var(--font-size-sm);
   font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
   cursor: pointer;
+  user-select: none;
+  box-shadow: 0 8px 20px rgba(31, 74, 121, 0.08);
 }
 
 .primary-button {
-  background: linear-gradient(135deg, var(--accent-strong) 0%, var(--accent) 100%);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--accent-strong) 92%, white) 0%, var(--accent) 100%);
   color: var(--text-on-accent);
-}
-
-.primary-button:disabled {
-  opacity: 0.7;
-  cursor: default;
-  transform: none;
-  box-shadow: none;
+  border-color: rgba(var(--accent-rgb), 0.35);
+  box-shadow: 0 12px 24px rgba(var(--accent-rgb), 0.22);
 }
 
 .ghost-button {
-  background: var(--surface-panel);
+  background: linear-gradient(180deg, rgba(var(--surface-panel-rgb), 0.96) 0%, var(--surface-panel-strong) 100%);
   color: var(--text-primary);
   border: 1px solid var(--border-subtle);
+  box-shadow: 0 8px 18px rgba(31, 74, 121, 0.06);
 }
 
 .danger-button {
-  color: rgba(var(--danger-rgb), 0.95);
-  border-color: rgba(var(--danger-rgb), 0.35);
-  background: rgba(var(--danger-rgb), 0.08);
+  color: rgba(var(--danger-rgb), 0.96);
+  border-color: rgba(var(--danger-rgb), 0.3);
+  background: linear-gradient(180deg, rgba(var(--danger-rgb), 0.14) 0%, rgba(var(--danger-rgb), 0.08) 100%);
+  box-shadow: 0 8px 18px rgba(var(--danger-rgb), 0.14);
 }
 
 .danger-button:hover {
-  background: rgba(var(--danger-rgb), 0.16);
+  background: linear-gradient(180deg, rgba(var(--danger-rgb), 0.2) 0%, rgba(var(--danger-rgb), 0.12) 100%);
+  border-color: rgba(var(--danger-rgb), 0.42);
 }
 
 .confirm-overlay {
@@ -3919,6 +3936,22 @@ a {
   transform: translateY(-1px);
 }
 
+.primary-button:hover {
+  background: linear-gradient(135deg, color-mix(in srgb, var(--accent-strong) 88%, white) 0%, color-mix(in srgb, var(--accent) 92%, white) 100%);
+  border-color: rgba(var(--accent-rgb), 0.42);
+}
+
+.ghost-button:hover,
+.notification-action:hover {
+  background: color-mix(in srgb, var(--surface-panel) 78%, rgba(var(--accent-rgb), 0.08));
+  border-color: rgba(var(--accent-rgb), 0.26);
+}
+
+.danger-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 24px rgba(var(--danger-rgb), 0.18);
+}
+
 .mobile-nav-link:hover {
   background: var(--surface-highlight);
 }
@@ -3978,11 +4011,61 @@ a {
 .ghost-button:hover,
 .range-pill:hover,
 .notification-action:hover {
-  box-shadow: 0 10px 20px rgba(var(--surface-app-rgb), 0.12);
+  box-shadow: 0 12px 22px rgba(31, 74, 121, 0.12);
+}
+
+.primary-button:disabled,
+.ghost-button:disabled,
+.danger-button:disabled,
+.notification-action:disabled,
+.primary-button[aria-busy="true"],
+.ghost-button[aria-busy="true"],
+.danger-button[aria-busy="true"],
+.notification-action[aria-busy="true"],
+.icon-button:disabled,
+.avatar-button:disabled {
+  opacity: 0.62;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+  pointer-events: none;
+}
+
+.primary-button:disabled,
+.ghost-button:disabled,
+.danger-button:disabled,
+.notification-action:disabled,
+.primary-button[aria-busy="true"],
+.ghost-button[aria-busy="true"],
+.danger-button[aria-busy="true"],
+.notification-action[aria-busy="true"] {
+  filter: saturate(0.82);
+}
+
+.primary-button[aria-busy="true"],
+.ghost-button[aria-busy="true"],
+.danger-button[aria-busy="true"],
+.notification-action[aria-busy="true"] {
+  position: relative;
+}
+
+.primary-button[aria-busy="true"]::after,
+.ghost-button[aria-busy="true"]::after,
+.danger-button[aria-busy="true"]::after,
+.notification-action[aria-busy="true"]::after {
+  content: "";
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  display: inline-block;
+  animation: button-loading-spin 0.8s linear infinite;
 }
 
 .primary-button:focus-visible,
 .ghost-button:focus-visible,
+.danger-button:focus-visible,
 .range-pill:focus-visible,
 .notification-action:focus-visible,
 .notification-link:focus-visible,
@@ -4596,8 +4679,15 @@ a {
 
   .notification-action,
   .primary-button,
-  .ghost-button {
+  .ghost-button,
+  .danger-button {
     width: 100%;
+  }
+}
+
+@keyframes button-loading-spin {
+  to {
+    transform: rotate(360deg);
   }
 }
 
