@@ -470,7 +470,7 @@ export default function AnalyticsPage() {
   ]);
 
   return (
-    <div className="dashboard-grid analytics-page">
+    <div className="dashboard-grid app-page analytics-page">
       <div className="analytics-hero">
         <Card className="analytics-hero-card analytics-hero-primary">
           <div className="analytics-hero-copy">
