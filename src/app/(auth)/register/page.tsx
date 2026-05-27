@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { CSSProperties, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { normalizeEmailInput, trimInputValue } from "@/lib/forms/input-normalizers";
 import { registerRequest } from "@/features/auth/api";
@@ -41,24 +41,6 @@ export default function RegisterPage() {
       setIsLoading(false);
     }
   });
-
-  const passwordFieldStyle: CSSProperties = {
-    position: "relative"
-  };
-
-  const passwordToggleStyle: CSSProperties = {
-    position: "absolute",
-    top: "50%",
-    right: "12px",
-    transform: "translateY(-50%)",
-    border: "none",
-    background: "transparent",
-    color: "var(--text-secondary)",
-    cursor: isLoading ? "default" : "pointer",
-    padding: 0,
-    fontSize: "12px",
-    fontWeight: 600
-  };
 
   return (
     <div className="auth-page">
@@ -109,7 +91,7 @@ export default function RegisterPage() {
 
           <label className={`field ${errors.password ? "has-error" : ""}`}>
             <span>Contrasena</span>
-            <div style={passwordFieldStyle}>
+            <div className="password-field">
               <input
                 type={showPassword ? "text" : "password"}
                 maxLength={72}
@@ -117,7 +99,6 @@ export default function RegisterPage() {
                 aria-invalid={errors.password ? "true" : "false"}
                 aria-describedby={errors.password ? "register-password-error" : undefined}
                 disabled={isLoading}
-                style={{ paddingRight: "72px" }}
                 {...passwordRegistration}
                 onBlur={(event) => {
                   event.currentTarget.value = trimInputValue(event.currentTarget.value);
@@ -129,7 +110,7 @@ export default function RegisterPage() {
                 aria-label={showPassword ? "Ocultar contrasena" : "Mostrar contrasena"}
                 onClick={() => setShowPassword((current) => !current)}
                 disabled={isLoading}
-                style={passwordToggleStyle}
+                className="password-toggle"
               >
                 {showPassword ? "Ocultar" : "Mostrar"}
               </button>
