@@ -33,9 +33,15 @@ export function AppShell({ children }: PropsWithChildren) {
     <div className={`app-shell ${sidebarCollapsed ? "sidebar-collapsed" : ""}`}>
       <Sidebar collapsed={sidebarCollapsed} onToggle={toggleSidebar} />
       <div className="app-main">
-        <Topbar sidebarCollapsed={sidebarCollapsed} onToggleSidebar={toggleSidebar} />
-        <MobileNav />
-        <main className="content">{children}</main>
+        <div className="app-main-shell">
+          <Topbar sidebarCollapsed={sidebarCollapsed} onToggleSidebar={toggleSidebar} />
+          <div className="app-content-shell">
+            <MobileNav />
+            <main className="content">
+              <div className="page-container">{children}</div>
+            </main>
+          </div>
+        </div>
       </div>
     </div>
   );
