@@ -854,11 +854,13 @@ a {
   display: flex;
   flex-direction: column;
   gap: 24px;
+  min-width: 0;
 }
 
 .dashboard-grid {
   display: grid;
   gap: 20px;
+  min-width: 0;
 }
 
 .dashboard-alert-banner {
@@ -888,6 +890,8 @@ a {
   margin: 0;
   font-weight: 600;
   letter-spacing: 0.01em;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .dashboard-alert-close {
@@ -915,6 +919,7 @@ a {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  min-width: 0;
 }
 
 .section-header {
@@ -947,6 +952,7 @@ a {
 .section-action-slot {
   display: inline-flex;
   align-items: center;
+  min-width: 0;
 }
 
 .card {
@@ -966,6 +972,7 @@ a {
     box-shadow var(--transition-base),
     transform var(--transition-base),
     background var(--transition-base);
+  min-width: 0;
 }
 
 .card:hover {
@@ -1624,14 +1631,16 @@ a {
 
 .measurements-top-grid {
   display: grid;
-  grid-template-columns: 1fr 1.4fr;
-  gap: 14px;
+  grid-template-columns: minmax(280px, 0.92fr) minmax(0, 1.08fr);
+  gap: 16px;
+  align-items: start;
 }
 
 .devices-grid {
   display: grid;
-  grid-template-columns: 1fr 1.5fr;
-  gap: 14px;
+  grid-template-columns: minmax(280px, 0.94fr) minmax(0, 1.06fr);
+  gap: 16px;
+  align-items: start;
 }
 
 .devices-form {
@@ -1642,6 +1651,8 @@ a {
 .devices-actions {
   display: flex;
   justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
 }
 
 .device-row-actions {
@@ -1727,14 +1738,15 @@ a {
 
 .filters-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
 }
 
 .filters-actions {
   display: flex;
   justify-content: flex-end;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
 .range-filter {
@@ -1773,6 +1785,7 @@ a {
 .table-wrap {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+  width: 100%;
 }
 
 .measurements-table {
@@ -2004,6 +2017,7 @@ a {
   flex-direction: column;
   gap: 9px;
   font-size: var(--font-size-sm);
+  min-width: 0;
 }
 
 .field span {
@@ -2777,6 +2791,7 @@ a {
 .app-main {
   padding: 26px 30px 32px;
   transition: padding var(--transition-base);
+  min-width: 0;
 }
 
 .topbar {
@@ -2810,6 +2825,7 @@ a {
 .topbar-actions {
   position: relative;
   z-index: 41;
+  flex-wrap: wrap;
 }
 
 .notification-menu,
@@ -2863,6 +2879,7 @@ a {
 
 .section-header {
   padding: 0 6px;
+  min-width: 0;
 }
 
 .section-title {
@@ -2890,7 +2907,7 @@ a {
 .dashboard-hero {
   display: grid;
   grid-template-columns: minmax(0, 1.58fr) minmax(300px, 0.88fr);
-  gap: 14px;
+  gap: 16px;
   min-width: 0;
   align-items: stretch;
 }
@@ -2956,7 +2973,7 @@ a {
 .dashboard-hero-primary {
   display: grid;
   grid-template-columns: minmax(0, 1.12fr) minmax(280px, 0.88fr);
-  gap: 16px;
+  gap: 18px;
   min-height: 0;
   align-items: start;
 }
@@ -3196,6 +3213,7 @@ a {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
+  align-items: flex-start;
 }
 
 .hero-pill,
@@ -3224,7 +3242,7 @@ a {
 .hero-metrics {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
+  gap: 14px;
   align-content: start;
 }
 
@@ -3282,7 +3300,7 @@ a {
 
 .dashboard-hero-aside {
   display: grid;
-  gap: 12px;
+  gap: 14px;
   align-content: start;
 }
 
@@ -3508,7 +3526,7 @@ a {
 .dashboard-main-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.56fr) minmax(320px, 0.92fr);
-  gap: 14px;
+  gap: 16px;
   align-items: start;
 }
 
@@ -3518,7 +3536,7 @@ a {
 
 .dashboard-side-stack {
   display: grid;
-  gap: 14px;
+  gap: 16px;
   grid-auto-rows: minmax(0, auto);
   align-content: start;
 }
@@ -3576,7 +3594,7 @@ a {
 .dashboard-secondary-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.56fr) minmax(320px, 0.92fr);
-  gap: 14px;
+  gap: 16px;
   align-items: start;
 }
 
@@ -3608,7 +3626,7 @@ a {
 
 .manual-form {
   display: grid;
-  gap: 14px;
+  gap: 16px;
 }
 
 .manual-actions {
@@ -3819,7 +3837,7 @@ a {
 .analytics-recommendations-grid,
 .analytics-conclusion-grid {
   display: grid;
-  gap: 12px;
+  gap: 14px;
 }
 
 .analytics-recommendations-grid {
@@ -3879,13 +3897,13 @@ a {
 
 .analytics-intelligence-stack {
   display: grid;
-  gap: 14px;
+  gap: 16px;
 }
 
 .analytics-intelligence-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.34fr) minmax(260px, 0.66fr);
-  gap: 14px;
+  gap: 16px;
 }
 
 .analytics-intelligence-secondary {
@@ -4014,6 +4032,7 @@ a {
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
+  max-width: 100%;
 }
 
 .analytics-history-filter-button {
@@ -4493,7 +4512,7 @@ a {
 
 @media (max-width: 1100px) {
   .app-main {
-    padding: 18px 18px 26px;
+    padding: 20px 20px 28px;
   }
 
   .topbar {
@@ -4531,6 +4550,10 @@ a {
   .devices-grid {
     grid-template-columns: minmax(0, 1fr);
   }
+
+  .measurements-top-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 @media (max-width: 900px) {
@@ -4545,7 +4568,7 @@ a {
 
   .app-main {
     min-width: 0;
-    padding: 16px 16px 28px;
+    padding: 18px 18px 26px;
   }
 
   .topbar {
@@ -4553,8 +4576,8 @@ a {
     grid-template-columns: 1fr;
     align-items: stretch;
     gap: 14px;
-    margin-bottom: 16px;
-    padding: 14px;
+    margin-bottom: 18px;
+    padding: 16px;
   }
 
   .topbar-main {
@@ -4572,7 +4595,7 @@ a {
 
   .topbar-actions {
     width: 100%;
-    justify-content: flex-end;
+    justify-content: space-between;
     flex-wrap: wrap;
     gap: 8px;
   }
@@ -4580,10 +4603,10 @@ a {
   .mobile-nav {
     display: flex;
     gap: 8px;
-    margin: 0 0 14px;
+    margin: 0 0 18px;
     overflow-x: auto;
     overscroll-behavior-x: contain;
-    padding: 2px 2px 8px;
+    padding: 2px 2px 10px;
     scrollbar-width: none;
     -webkit-overflow-scrolling: touch;
   }
@@ -4612,7 +4635,7 @@ a {
   .dashboard-page,
   .analytics-page,
   .content {
-    gap: 18px;
+    gap: 20px;
   }
 
   .dashboard-hero,
@@ -4641,7 +4664,7 @@ a {
   }
 
   .dashboard-hero-focus {
-    padding: 14px 15px;
+    padding: 16px;
   }
 
   .dashboard-hero-focus-value {
@@ -4656,7 +4679,7 @@ a {
   .dashboard-hero-aside,
   .analytics-side-grid,
   .analytics-intelligence-stack {
-    gap: 12px;
+    gap: 14px;
   }
 
   .assistant-robot,
@@ -4668,6 +4691,12 @@ a {
   .assistant-card-body,
   .assistant-card-grid {
     grid-template-columns: 1fr;
+  }
+
+  .measurements-top-grid,
+  .devices-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
   }
 
   .metric-card,
@@ -4730,6 +4759,10 @@ a {
     align-items: stretch;
   }
 
+  .filters-grid {
+    grid-template-columns: 1fr;
+  }
+
   .manual-helper-text {
     max-width: none;
   }
@@ -4755,6 +4788,7 @@ a {
 
   .topbar-main {
     flex-direction: column;
+    align-items: stretch;
   }
 
   .topbar-title {
@@ -4762,7 +4796,7 @@ a {
   }
 
   .topbar-actions {
-    justify-content: space-between;
+    justify-content: flex-start;
   }
 
   .topbar-actions > * {
@@ -4775,6 +4809,18 @@ a {
   .manual-entry-card,
   .analytics-chart-card {
     padding: 16px;
+  }
+
+  .section {
+    gap: 14px;
+  }
+
+  .section-header {
+    padding: 0;
+  }
+
+  .section-action-slot {
+    width: 100%;
   }
 
   .hero-pill-row,
@@ -4818,13 +4864,14 @@ a {
     border: 1px solid var(--border-subtle);
     border-radius: var(--radius-lg);
     background: var(--surface-muted);
-    padding: 10px 12px;
+    padding: 12px;
   }
 
   .measurements-table td {
     border-bottom: 0;
-    padding: 6px 0;
+    padding: 7px 0;
     font-size: 13px;
+    overflow-wrap: anywhere;
   }
 
   .measurements-table td::before {
@@ -4841,7 +4888,7 @@ a {
 
 @media (max-width: 560px) {
   .app-main {
-    padding: 12px 12px 24px;
+    padding: 12px 12px 22px;
   }
 
   .topbar {
@@ -4850,6 +4897,10 @@ a {
 
   .topbar-actions {
     justify-content: flex-start;
+  }
+
+  .topbar-actions > * {
+    flex: 0 0 auto;
   }
 
   .icon-button,
@@ -4889,6 +4940,17 @@ a {
   .chart-wrap-enhanced,
   .dashboard-main-grid .chart-wrap {
     min-height: 220px;
+  }
+
+  .hero-metrics,
+  .analytics-overview-grid,
+  .analytics-recommendations-grid,
+  .analytics-conclusion-grid,
+  .analytics-intelligence-metadata-grid,
+  .assistant-card-grid,
+  .dashboard-hero-assistant-stats,
+  .profile-threshold-highlight {
+    grid-template-columns: 1fr;
   }
 
   .visualization-selector {
@@ -4938,6 +5000,14 @@ a {
 }
 
 @media (max-width: 420px) {
+  .app-main {
+    padding-inline: 10px;
+  }
+
+  .topbar {
+    padding: 12px;
+  }
+
   .topbar-copy {
     gap: 4px;
   }
@@ -4991,6 +5061,11 @@ a {
   .ghost-button,
   .danger-button {
     width: 100%;
+  }
+
+  .dashboard-alert-banner,
+  .pagination-wrap {
+    align-items: stretch;
   }
 }
 
