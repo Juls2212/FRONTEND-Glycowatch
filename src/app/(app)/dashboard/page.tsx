@@ -1,4 +1,5 @@
 "use client";
+
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import {
   createManualMeasurement,
@@ -12,7 +13,6 @@ import { useIntelligenceSummary } from "@/features/intelligence/hooks";
 import { getRiskBadgeLabel, getRiskThemeClass } from "@/features/intelligence/display";
 import { Card } from "@/components/ui/card";
 import { Section } from "@/components/ui/section";
-import { GlucoseChart } from "@/components/charts/glucose-chart";
 import { GlucoseVisualization } from "@/components/charts/glucose-visualization";
 import { IntelligenceAssistantRobot } from "@/components/intelligence/IntelligenceAssistantRobot";
 import { ChartRangeFilter } from "@/features/dashboard/components/chart-range-filter";
@@ -46,7 +46,7 @@ function translateAssistantRiskLevel(value: string): string {
   if (value === "LOW") return "Bajo";
   if (value === "MODERATE") return "Moderado";
   if (value === "HIGH") return "Alto";
-  if (value === "CRITICAL") return "Crítico";
+  if (value === "CRITICAL") return "Critico";
   if (value === "INSUFFICIENT_DATA") return "Datos insuficientes";
   return "Datos insuficientes";
 }
@@ -117,65 +117,74 @@ function resolveBannerData(risk: RiskAnalysis | null, alerts: AlertItem[]): Bann
   };
 }
 
-type MetricTone = "info" | "success" | "warning" | "danger";
-type MetricIconName = "drop" | "pulse" | "range" | "alert";
+function getGreeting(): string {
+  const hour = new Date().getHours();
+  if (hour < 12) return "Buenos dias";
+  if (hour < 18) return "Buenas tardes";
+  return "Buenas noches";
+}
 
-function MetricIcon({ name }: { name: MetricIconName }) {
-  if (name === "drop") {
-    return (
-      <svg viewBox="0 0 24 24" aria-hidden="true" className="icon-svg">
-        <path
-          d="M12 3.75c-2.95 3.3-5.25 6.34-5.25 9.08A5.25 5.25 0 0 0 12 18.08a5.25 5.25 0 0 0 5.25-5.25C17.25 10.09 14.95 7.05 12 3.75Z"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.7"
-          strokeLinejoin="round"
-        />
-      </svg>
-    );
-  }
+function resolveMonitoringToneClass(risk: RiskAnalysis | null): string {
+  if (!risk) return "dashboard-tone-neutral";
+  if (risk.riskLevel === "HIGH" || risk.currentStatus === "HIGH") return "dashboard-tone-danger";
+  if (risk.currentStatus === "LOW") return "dashboard-tone-warning";
+  return "dashboard-tone-success";
+}
 
-  if (name === "pulse") {
-    return (
-      <svg viewBox="0 0 24 24" aria-hidden="true" className="icon-svg">
-        <path
-          d="M3.75 12h3.2l2.1-4.2 4.05 8.4 2.05-4.2h5.1"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.7"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
-    );
-  }
+function DashboardSparkline({ data }: { data: ChartPoint[] }) {
+  const recentPoints = data.slice(-12);
 
-  if (name === "range") {
+  const chart = useMemo(() => {
+    if (recentPoints.length < 2) return null;
+
+    const width = 240;
+    const height = 92;
+    const padding = 8;
+    const values = recentPoints.map((point) => point.glucoseValue);
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+    const range = Math.max(max - min, 1);
+
+    const coordinates = recentPoints.map((point, index) => {
+      const x = padding + (index / (recentPoints.length - 1)) * (width - padding * 2);
+      const y = height - padding - ((point.glucoseValue - min) / range) * (height - padding * 2);
+      return `${x},${y}`;
+    });
+
+    const linePath = coordinates
+      .map((coordinate, index) => `${index === 0 ? "M" : "L"} ${coordinate}`)
+      .join(" ");
+
+    const areaPath = `${linePath} L ${width - padding},${height - padding} L ${padding},${height - padding} Z`;
+
+    return { width, height, linePath, areaPath };
+  }, [recentPoints]);
+
+  if (!chart) {
     return (
-      <svg viewBox="0 0 24 24" aria-hidden="true" className="icon-svg">
-        <path
-          d="M6 7.25h12M6 16.75h12M8.25 7.25 6 5m2.25 2.25L6 9.5m9.75 7.25L18 14.5m-2.25 2.25L18 19"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.7"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
+      <div className="dashboard-mini-graph dashboard-mini-graph-empty">
+        <p className="soft-text">Sin suficientes puntos para la vista rapida.</p>
+      </div>
     );
   }
 
   return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" className="icon-svg">
-      <path
-        d="M12 4.75A4.25 4.25 0 0 0 7.75 9v2.1c0 .8-.23 1.58-.66 2.25l-1.18 1.8a.8.8 0 0 0 .67 1.23h10.84a.8.8 0 0 0 .67-1.23l-1.18-1.8a4.12 4.12 0 0 1-.66-2.25V9A4.25 4.25 0 0 0 12 4.75Z"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        strokeLinejoin="round"
-      />
-      <path d="M10.25 18.25a1.75 1.75 0 0 0 3.5 0" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-    </svg>
+    <div className="dashboard-mini-graph" aria-hidden="true">
+      <svg viewBox={`0 0 ${chart.width} ${chart.height}`} className="dashboard-mini-graph-svg" preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="dashboardMiniGraphFill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="rgba(122, 184, 245, 0.28)" />
+            <stop offset="100%" stopColor="rgba(122, 184, 245, 0.02)" />
+          </linearGradient>
+          <linearGradient id="dashboardMiniGraphLine" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stopColor="var(--accent)" />
+            <stop offset="100%" stopColor="var(--accent-strong)" />
+          </linearGradient>
+        </defs>
+        <path d={chart.areaPath} fill="url(#dashboardMiniGraphFill)" />
+        <path d={chart.linePath} fill="none" stroke="url(#dashboardMiniGraphLine)" strokeWidth="2.75" strokeLinecap="round" />
+      </svg>
+    </div>
   );
 }
 
@@ -271,7 +280,7 @@ export default function DashboardPage() {
     setIntelligenceRefreshError(null);
     const refreshed = await refreshAssistantSummary({ background: true });
     if (!refreshed.success) {
-      setIntelligenceRefreshError("No se pudo actualizar el análisis.");
+      setIntelligenceRefreshError("No se pudo actualizar el analisis.");
     }
     setIsManualAssistantRefreshing(false);
   };
@@ -397,13 +406,34 @@ export default function DashboardPage() {
   const filteredChartData = useMemo(() => filterChartByRange(chartData, chartRange), [chartData, chartRange]);
   const bannerData = useMemo(() => resolveBannerData(risk, alerts), [risk, alerts]);
   const unreadAlertsCount = useMemo(() => alerts.filter((alert) => !alert.isRead).length, [alerts]);
+  const recentAlerts = useMemo(
+    () =>
+      [...alerts]
+        .filter(isRecentAlert)
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+        .slice(0, 3),
+    [alerts]
+  );
   const latestMeasurementLabel = metrics?.latestMeasurement
     ? `${formatMetric(metrics.latestMeasurement.glucoseValue)} ${metrics.latestMeasurement.unit}`
     : "--";
+  const averageLabel = metrics ? `${formatMetric(metrics.averageGlucose)} mg/dL` : "--";
   const rangeSummary = useMemo(() => {
     if (!metrics) return "--";
     return `${formatMetric(metrics.minGlucose)} - ${formatMetric(metrics.maxGlucose)} mg/dL`;
   }, [metrics]);
+  const monitoringToneClass = resolveMonitoringToneClass(risk);
+  const assistantRiskLabel = intelligenceSummary ? translateAssistantRiskLevel(intelligenceSummary.finalRiskLevel) : "Datos insuficientes";
+  const assistantTrendLabel = intelligenceSummary ? translateAssistantTrend(intelligenceSummary.trend) : "Sin datos suficientes";
+  const assistantAgreementLabel = intelligenceSummary
+    ? translateAgreementStatus(intelligenceSummary.agreementStatus)
+    : "No aplica";
+  const assistantThemeClass = getRiskThemeClass(
+    intelligenceSummary?.finalRiskLevel,
+    intelligenceSummary?.assistantMood
+  );
+  const primaryInsight = intelligenceSummary?.assistantMessage ?? riskMessage;
+
   useEffect(() => {
     if (!bannerData) {
       setDismissedBannerKey(null);
@@ -415,18 +445,9 @@ export default function DashboardPage() {
   }, [bannerData, dismissedBannerKey]);
 
   const isBannerVisible = bannerData != null && dismissedBannerKey !== bannerData.key;
-  const assistantRiskLabel = intelligenceSummary ? translateAssistantRiskLevel(intelligenceSummary.finalRiskLevel) : "Datos insuficientes";
-  const assistantTrendLabel = intelligenceSummary ? translateAssistantTrend(intelligenceSummary.trend) : "Sin datos suficientes";
-  const assistantAgreementLabel = intelligenceSummary
-    ? translateAgreementStatus(intelligenceSummary.agreementStatus)
-    : "No aplica";
-  const assistantThemeClass = getRiskThemeClass(
-    intelligenceSummary?.finalRiskLevel,
-    intelligenceSummary?.assistantMood
-  );
 
   return (
-    <div className="dashboard-grid app-page dashboard-page">
+    <div className="dashboard-grid app-page dashboard-page dashboard-phase-three">
       {isBannerVisible && bannerData ? (
         <div className={`dashboard-alert-banner ${bannerData.variant}`} role="status" aria-live="polite">
           <p className="dashboard-alert-text">{bannerData.message}</p>
@@ -441,352 +462,235 @@ export default function DashboardPage() {
         </div>
       ) : null}
 
-      <div className="dashboard-hero">
-        <Card className="dashboard-hero-card dashboard-hero-primary">
-          <div className="dashboard-hero-copy">
-            <div>
-              <p className="hero-eyebrow">Resumen inmediato</p>
-              <h2 className="hero-title">Lectura clinica rapida para priorizar decisiones y contexto.</h2>
-              <p className="hero-description">
-                Consulta el estado actual, el rango reciente y el volumen de alertas desde una sola cabecera.
-              </p>
-            </div>
+      <div className="dashboard-shell-header">
+        <div className="dashboard-shell-copy">
+          <p className="hero-eyebrow">Monitoreo diario</p>
+          <h2 className="dashboard-shell-title">{getGreeting()}, este es tu control de hoy.</h2>
+          <p className="dashboard-shell-subtitle">
+            Una vista mas calmada para revisar glucosa, tendencia y apoyo inteligente sin fragmentacion innecesaria.
+          </p>
+        </div>
+        <div className="dashboard-shell-actions">
+          <span className={`metric-chip ${monitoringToneClass}`}>{risk ? translateStatus(risk.currentStatus) : "Sin lectura"}</span>
+          <span className="metric-chip">Alertas activas {formatWholeMetric(unreadAlertsCount)}</span>
+          <span className={`metric-chip ${intelligenceSummary?.geminiAvailable ? "ready" : ""}`}>
+            {intelligenceSummary?.geminiAvailable ? "IA disponible" : "IA limitada"}
+          </span>
+        </div>
+      </div>
 
-            <div className="dashboard-hero-focus">
-              <p className="dashboard-hero-focus-label">Glucosa actual</p>
-              <div className="dashboard-hero-focus-row">
-                <p className="dashboard-hero-focus-value">{latestMeasurementLabel}</p>
-                <div className="dashboard-hero-focus-chips">
-                  <span className="metric-chip">Estado {risk ? translateStatus(risk.currentStatus) : "EN RANGO"}</span>
-                  <span className="metric-chip">Tendencia {risk ? translateTrend(risk.trend) : "ESTABLE"}</span>
-                </div>
+      <div className="dashboard-clinical-hero">
+        <Card className={`dashboard-clinical-card risk-theme-card ${assistantThemeClass}`}>
+          <div className="dashboard-clinical-top">
+            <div className="dashboard-clinical-reading">
+              <p className="dashboard-clinical-label">Glucosa actual</p>
+              <p className="dashboard-clinical-value">{latestMeasurementLabel}</p>
+              <div className="dashboard-clinical-badges">
+                <span className={`metric-chip ${monitoringToneClass}`}>Estado {risk ? translateStatus(risk.currentStatus) : "Sin datos"}</span>
+                <span className="metric-chip">Tendencia {risk ? translateTrend(risk.trend) : "Sin datos"}</span>
               </div>
-              <p className="dashboard-hero-focus-meta">{formattedLatest}</p>
+              <p className="dashboard-clinical-meta">{formattedLatest}</p>
             </div>
 
-            <div className="hero-pill-row">
-              <span className="hero-pill">Rango reciente: {rangeSummary}</span>
-              <span className="hero-pill">Alertas nuevas: {formatWholeMetric(unreadAlertsCount)}</span>
+            <div className="dashboard-clinical-graph">
+              <div className="dashboard-clinical-graph-head">
+                <p className="dashboard-clinical-graph-label">Mini tendencia</p>
+                <span className="dashboard-clinical-graph-range">{rangeSummary}</span>
+              </div>
+              <DashboardSparkline data={filteredChartData} />
             </div>
           </div>
 
-          <div className="hero-metrics">
-            <div className="hero-metric-card hero-metric-card-info">
-              <div className="metric-card-header">
-                <div className="metric-card-copy">
-                  <p className="metric-label">Ultimo registro</p>
-                  <p className="metric-card-caption">Dato mas reciente disponible</p>
-                </div>
-                <span className="metric-icon-badge info" aria-hidden="true">
-                  <MetricIcon name="drop" />
-                </span>
-              </div>
-              <p className="hero-metric-value">{latestMeasurementLabel}</p>
-              <p className="metric-meta">{formattedLatest}</p>
+          <div className="dashboard-primary-insight">
+            <div>
+              <p className="dashboard-primary-insight-label">Insight principal</p>
+              <p className="dashboard-primary-insight-copy">{primaryInsight}</p>
             </div>
-
-            <div className="hero-metric-card hero-metric-card-success">
-              <div className="metric-card-header">
-                <div className="metric-card-copy">
-                  <p className="metric-label">Rango reciente</p>
-                  <p className="metric-card-caption">Limites observados en la ventana actual</p>
-                </div>
-                <span className="metric-icon-badge success" aria-hidden="true">
-                  <MetricIcon name="range" />
-                </span>
-              </div>
-              <p className="hero-metric-value">{rangeSummary}</p>
-              <p className="metric-meta">Minimo y maximo observados</p>
+            <div className="dashboard-primary-insight-summary">
+              <span className="dashboard-primary-insight-stat">
+                <strong>{averageLabel}</strong>
+                <span>Promedio reciente</span>
+              </span>
+              <span className="dashboard-primary-insight-stat">
+                <strong>{formatWholeMetric(metrics?.alertsCount ?? 0)}</strong>
+                <span>Eventos totales</span>
+              </span>
             </div>
           </div>
         </Card>
 
-        <div className="dashboard-hero-aside">
-          <Card className={`dashboard-hero-card dashboard-hero-side dashboard-hero-assistant dashboard-hero-assistant-compact risk-theme-card ${assistantThemeClass}`}>
-            <div className="dashboard-hero-assistant-head">
-              <IntelligenceAssistantRobot
-                assistantMood={intelligenceSummary?.assistantMood}
-                finalRiskLevel={intelligenceSummary?.finalRiskLevel}
-                trend={intelligenceSummary?.trend}
-                isLoading={isAssistantInitialLoading}
-                className="dashboard-hero-assistant-robot"
-              />
-              <div className="dashboard-hero-assistant-copy">
-                <p className="hero-eyebrow">Copiloto inteligente</p>
-                <h3 className="dashboard-hero-assistant-title">Asistente GlycoWatch</h3>
-                <p className="dashboard-hero-assistant-message">
-                  {isAssistantInitialLoading
-                    ? "Cargando asistente..."
-                    : intelligenceError
-                      ? intelligenceError
-                      : intelligenceSummary?.assistantMessage ?? "Aún no hay análisis inteligente disponible."}
-                </p>
-              </div>
+        <Card className={`dashboard-assistant-preview risk-theme-card ${assistantThemeClass}`}>
+          <div className="dashboard-assistant-preview-head">
+            <IntelligenceAssistantRobot
+              assistantMood={intelligenceSummary?.assistantMood}
+              finalRiskLevel={intelligenceSummary?.finalRiskLevel}
+              trend={intelligenceSummary?.trend}
+              isLoading={isAssistantInitialLoading}
+              className="dashboard-assistant-preview-robot"
+            />
+            <div className="dashboard-assistant-preview-copy">
+              <p className="hero-eyebrow">Glyco Assistant</p>
+              <h3 className="dashboard-assistant-preview-title">Resumen inteligente</h3>
+              <p className="dashboard-assistant-preview-message">
+                {isAssistantInitialLoading
+                  ? "Cargando analisis inteligente..."
+                  : intelligenceError
+                    ? intelligenceError
+                    : intelligenceSummary?.assistantMessage ?? "Aun no hay analisis disponible."}
+              </p>
             </div>
+          </div>
 
-            <div className="dashboard-hero-assistant-actions">
-              <span className={`metric-chip risk-theme-badge ${assistantThemeClass}`}>
-                {intelligenceSummary ? getRiskBadgeLabel(intelligenceSummary.finalRiskLevel) : "Sin datos"}
-              </span>
-              <span className={`metric-chip ${intelligenceSummary?.geminiAvailable ? "ready" : ""}`}>
-                {intelligenceSummary?.geminiAvailable ? "Disponible" : "No disponible"}
-              </span>
-              <button
-                type="button"
-                className="ghost-button intelligence-refresh-button"
-                onClick={handleManualAssistantRefresh}
-                disabled={isAssistantRefreshBusy}
-              >
-                {isManualAssistantRefreshing ? "Actualizando..." : "Actualizar análisis"}
-              </button>
-            </div>
+          <div className="dashboard-assistant-preview-badges">
+            <span className={`metric-chip risk-theme-badge ${assistantThemeClass}`}>
+              {intelligenceSummary ? getRiskBadgeLabel(intelligenceSummary.finalRiskLevel) : "Sin datos"}
+            </span>
+            <span className="metric-chip">Tendencia {assistantTrendLabel}</span>
+          </div>
 
-            {!isAssistantInitialLoading && intelligenceRefreshError ? (
-              <p className="soft-text">{intelligenceRefreshError}</p>
-            ) : null}
-            {isManualAssistantRefreshing ? (
-              <p className="soft-text intelligence-refresh-status">Actualizando solo el análisis...</p>
-            ) : null}
+          <div className="dashboard-assistant-preview-panel">
+            <p className="dashboard-assistant-preview-panel-title">Zona de acciones inteligentes</p>
+            <p className="dashboard-assistant-preview-panel-copy">
+              Proximamente este espacio podra priorizar acciones sugeridas a partir del analisis actual.
+            </p>
+          </div>
 
-          </Card>
+          <button
+            type="button"
+            className="ghost-button intelligence-refresh-button"
+            onClick={handleManualAssistantRefresh}
+            disabled={isAssistantRefreshBusy}
+          >
+            {isManualAssistantRefreshing ? "Actualizando..." : "Actualizar analisis"}
+          </button>
 
-          <Card className="dashboard-hero-card dashboard-hero-side dashboard-context-card">
-            <div className="dashboard-context-row">
-              <div>
-                <p className="metric-label">Estado actual</p>
-                <p className="hero-side-value">{risk ? translateStatus(risk.currentStatus) : "EN RANGO"}</p>
-              </div>
-              <div className="dashboard-context-meta">
-                <span className="metric-chip">Riesgo {risk ? translateRiskLevel(risk.riskLevel) : "BAJO"}</span>
-                <span className="metric-chip">Tendencia {risk ? translateTrend(risk.trend) : "ESTABLE"}</span>
-              </div>
-            </div>
-            <p className="metric-meta">Referencia compacta para interpretar la lectura principal sin duplicar bloques.</p>
-          </Card>
-        </div>
+          {!isAssistantInitialLoading && intelligenceRefreshError ? <p className="soft-text">{intelligenceRefreshError}</p> : null}
+          {isManualAssistantRefreshing ? <p className="soft-text intelligence-refresh-status">Actualizando solo el analisis...</p> : null}
+        </Card>
       </div>
 
-      <Section title="Resumen clinico" subtitle="Indicadores recientes organizados para escaneo rapido">
-        {error ? <p className="error-text">{error}</p> : null}
-        <div className="stat-grid dashboard-stat-grid">
-          <Card className="metric-card metric-card-info">
-            <div className="metric-card-header">
-              <div className="metric-card-copy">
-                <p className="metric-label">Ultima medicion</p>
-                <p className="metric-card-caption">Registro mas reciente recibido</p>
-              </div>
-              <span className="metric-icon-badge info" aria-hidden="true">
-                <MetricIcon name="drop" />
-              </span>
-            </div>
-            <div className="metric-card-value-row">
-              <p className="metric-value">{latestMeasurementLabel}</p>
-              <span className="metric-card-badge">Ahora</span>
-            </div>
-            <p className="metric-meta">{formattedLatest}</p>
-          </Card>
-
-          <Card className="metric-card metric-card-success">
-            <div className="metric-card-header">
-              <div className="metric-card-copy">
-                <p className="metric-label">Promedio reciente</p>
-                <p className="metric-card-caption">Valor medio dentro del periodo actual</p>
-              </div>
-              <span className="metric-icon-badge success" aria-hidden="true">
-                <MetricIcon name="pulse" />
-              </span>
-            </div>
-            <div className="metric-card-value-row">
-              <p className="metric-value">
-                {formatMetric(metrics?.averageGlucose ?? 0)} <span className="metric-value-unit">mg/dL</span>
-              </p>
-              <span className="metric-card-badge">Promedio</span>
-            </div>
-            <p className="metric-meta">Ventana reciente</p>
-          </Card>
-
-          <Card className="metric-card metric-card-warning">
-            <div className="metric-card-header">
-              <div className="metric-card-copy">
-                <p className="metric-label">Minimo / Maximo</p>
-                <p className="metric-card-caption">Variacion detectada en el seguimiento</p>
-              </div>
-              <span className="metric-icon-badge warning" aria-hidden="true">
-                <MetricIcon name="range" />
-              </span>
-            </div>
-            <div className="metric-card-value-row">
-              <p className="metric-value">
-                {formatMetric(metrics?.minGlucose ?? 0)} / {formatMetric(metrics?.maxGlucose ?? 0)}
-              </p>
-              <span className="metric-card-badge">Rango</span>
-            </div>
-            <p className="metric-meta">Variacion observada</p>
-          </Card>
-
-          <Card className="metric-card metric-card-danger">
-            <div className="metric-card-header">
-              <div className="metric-card-copy">
-                <p className="metric-label">Total de alertas</p>
-                <p className="metric-card-caption">Eventos clinicos acumulados</p>
-              </div>
-              <span className="metric-icon-badge danger" aria-hidden="true">
-                <MetricIcon name="alert" />
-              </span>
-            </div>
-            <div className="metric-card-value-row">
-              <p className="metric-value">{formatWholeMetric(metrics?.alertsCount ?? 0)}</p>
-              <span className="metric-card-badge">Eventos</span>
-            </div>
-            <p className="metric-meta">Pendientes de revision: {formatWholeMetric(unreadAlertsCount)}</p>
-          </Card>
-        </div>
-      </Section>
-
-      <div className="dashboard-main-grid dashboard-main-grid-single-aside">
+      <div className="dashboard-monitoring-layout">
         <Section
-          title="Tendencia glucemica"
-          subtitle="Visualizacion central para seguir el comportamiento reciente"
+          title="Monitoreo de glucosa"
+          subtitle="Una sola vista principal para explorar el rango seleccionado con mejor contexto clinico."
           action={
             <div className="section-actions">
               <ChartRangeFilter value={chartRange} onChange={setChartRange} />
-              {isLoading || isChartRefreshing ? <span className="soft-text">Cargando...</span> : null}
+              {isLoading || isChartRefreshing ? <span className="soft-text">Actualizando...</span> : null}
             </div>
           }
         >
-          <Card className="chart-card">
-            <div className="chart-card-header">
+          <Card className="dashboard-monitoring-card">
+            <div className="dashboard-monitoring-header">
               <div>
-                <p className="chart-card-kicker">Comportamiento del rango seleccionado</p>
+                <p className="chart-card-kicker">Seguimiento principal</p>
                 <p className="chart-card-summary">
-                  {filteredChartData.length > 0 ? `${filteredChartData.length} mediciones visibles` : "Sin datos visibles"}
+                  {filteredChartData.length > 0 ? `${filteredChartData.length} mediciones visibles en el periodo actual.` : "No hay datos visibles en el rango seleccionado."}
                 </p>
+              </div>
+              <div className="dashboard-monitoring-summary">
+                <span>
+                  <strong>{latestMeasurementLabel}</strong>
+                  <span>Lectura actual</span>
+                </span>
+                <span>
+                  <strong>{averageLabel}</strong>
+                  <span>Promedio</span>
+                </span>
+                <span>
+                  <strong>{rangeSummary}</strong>
+                  <span>Rango visible</span>
+                </span>
               </div>
             </div>
 
-            {filteredChartData.length > 0 ? (
-              <GlucoseChart data={filteredChartData} />
+            {error ? <p className="error-text">{error}</p> : null}
+            {!error && filteredChartData.length > 0 ? <GlucoseVisualization data={filteredChartData} defaultView="TREND" /> : null}
+            {!error && filteredChartData.length === 0 ? <p className="soft-text">No hay datos en el rango seleccionado.</p> : null}
+
+            <div className="dashboard-monitoring-footer">
+              <div className="dashboard-monitoring-footer-stat">
+                <strong>{risk ? translateRiskLevel(risk.riskLevel) : "Sin datos"}</strong>
+                <span>Riesgo actual</span>
+              </div>
+              <div className="dashboard-monitoring-footer-stat">
+                <strong>{formatWholeMetric(unreadAlertsCount)}</strong>
+                <span>Alertas sin leer</span>
+              </div>
+              <div className="dashboard-monitoring-footer-stat">
+                <strong>{assistantAgreementLabel}</strong>
+                <span>Estado de IA</span>
+              </div>
+            </div>
+          </Card>
+        </Section>
+
+        <div className="dashboard-support-stack">
+          <Card className="dashboard-support-card">
+            <div className="dashboard-support-card-header">
+              <div>
+                <p className="metric-label">Lectura clinica</p>
+                <p className="metric-card-caption">Sintesis compacta para interpretar el momento actual.</p>
+              </div>
+              <span className={`metric-chip ${monitoringToneClass}`}>{risk ? translateStatus(risk.currentStatus) : "Sin datos"}</span>
+            </div>
+
+            <p className="dashboard-support-card-message">{riskMessage}</p>
+
+            <div className="dashboard-support-stat-list">
+              <div className="dashboard-support-stat-row">
+                <span>Nivel de riesgo</span>
+                <strong>{risk ? translateRiskLevel(risk.riskLevel) : "Sin datos"}</strong>
+              </div>
+              <div className="dashboard-support-stat-row">
+                <span>Tendencia</span>
+                <strong>{risk ? translateTrend(risk.trend) : "Sin datos"}</strong>
+              </div>
+              <div className="dashboard-support-stat-row">
+                <span>Riesgo IA</span>
+                <strong>{assistantRiskLabel}</strong>
+              </div>
+            </div>
+          </Card>
+
+          <Card className="dashboard-support-card">
+            <div className="dashboard-support-card-header">
+              <div>
+                <p className="metric-label">Alertas recientes</p>
+                <p className="metric-card-caption">Eventos mas relevantes para mantener seguimiento inmediato.</p>
+              </div>
+              <span className="metric-chip">Activas {formatWholeMetric(unreadAlertsCount)}</span>
+            </div>
+
+            {recentAlerts.length > 0 ? (
+              <div className="dashboard-alert-preview-list">
+                {recentAlerts.map((alert) => (
+                  <div key={alert.id} className={`dashboard-alert-preview-item ${alert.type === "HIGH_GLUCOSE" ? "high" : "low"}`}>
+                    <div>
+                      <p className="dashboard-alert-preview-title">
+                        {alert.type === "HIGH_GLUCOSE" ? "Glucosa alta" : "Glucosa baja"}
+                      </p>
+                      <p className="dashboard-alert-preview-copy">{alert.message}</p>
+                    </div>
+                    <span className="dashboard-alert-preview-time">
+                      {new Date(alert.createdAt).toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" })}
+                    </span>
+                  </div>
+                ))}
+              </div>
             ) : (
-              <p className="soft-text">No hay datos en el rango seleccionado.</p>
+              <p className="soft-text">No hay alertas recientes visibles en este momento.</p>
             )}
           </Card>
-        </Section>
 
-        <Section title="Insights" subtitle="Senales secundarias para interpretar el comportamiento reciente">
-          <div className="dashboard-side-stack">
-            <Card className="risk-card">
-              <div className="risk-grid">
-                <div className="risk-stat">
-                  <p className="metric-label">Estado actual</p>
-                  <p className="metric-value">{risk ? translateStatus(risk.currentStatus) : "EN RANGO"}</p>
-                </div>
-                <div className="risk-stat">
-                  <p className="metric-label">Nivel de riesgo</p>
-                  <p className="metric-value">{risk ? translateRiskLevel(risk.riskLevel) : "BAJO"}</p>
-                </div>
-                <div className="risk-stat">
-                  <p className="metric-label">Tendencia</p>
-                  <p className="metric-value">{risk ? translateTrend(risk.trend) : "ESTABLE"}</p>
-                </div>
+          <Card className="manual-entry-card dashboard-manual-card">
+            <div className="dashboard-support-card-header">
+              <div>
+                <p className="metric-label">Registro manual</p>
+                <p className="metric-card-caption">Agrega una medicion sin salir del panel.</p>
               </div>
-              <p className="risk-message">{riskMessage}</p>
-            </Card>
+            </div>
 
-            <Card className={`risk-card assistant-card assistant-card-detailed risk-theme-card ${assistantThemeClass}`}>
-              <div className="assistant-card-hero">
-                <IntelligenceAssistantRobot
-                  assistantMood={intelligenceSummary?.assistantMood}
-                  finalRiskLevel={intelligenceSummary?.finalRiskLevel}
-                  trend={intelligenceSummary?.trend}
-                  isLoading={isAssistantInitialLoading}
-                  className="assistant-card-robot"
-                />
-                <div className="assistant-card-content">
-                <div className="chart-card-header assistant-card-header">
-                  <div>
-                    <p className="chart-card-kicker">Centro inteligente</p>
-                    <p className="chart-card-summary">Resumen asistido del riesgo y consistencia entre motores de análisis.</p>
-                  </div>
-                  {intelligenceSummary ? (
-                    <div className="assistant-card-chip-group">
-                      <span className={`metric-chip risk-theme-badge ${assistantThemeClass}`}>
-                        {getRiskBadgeLabel(intelligenceSummary.finalRiskLevel)}
-                      </span>
-                      <span className={`metric-chip ${intelligenceSummary.geminiAvailable ? "ready" : ""}`}>
-                        {intelligenceSummary.geminiAvailable ? "Disponible" : "No disponible"}
-                      </span>
-                      <button
-                        type="button"
-                        className="ghost-button intelligence-refresh-button"
-                        onClick={handleManualAssistantRefresh}
-                        disabled={isAssistantRefreshBusy}
-                      >
-                        {isManualAssistantRefreshing ? "Actualizando..." : "Actualizar análisis"}
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="assistant-card-chip-group">
-                      <span className={`metric-chip risk-theme-badge ${assistantThemeClass}`}>Sin datos</span>
-                      <button
-                        type="button"
-                        className="ghost-button intelligence-refresh-button"
-                        onClick={handleManualAssistantRefresh}
-                        disabled={isAssistantRefreshBusy}
-                      >
-                        {isManualAssistantRefreshing ? "Actualizando..." : "Actualizar análisis"}
-                      </button>
-                    </div>
-                  )}
-                </div>
-                </div>
-              </div>
-
-              {isAssistantInitialLoading ? <p className="soft-text">Cargando asistente...</p> : null}
-              {!isAssistantInitialLoading && intelligenceError ? <p className="soft-text">{intelligenceError}</p> : null}
-              {!isAssistantInitialLoading && intelligenceRefreshError ? <p className="soft-text">{intelligenceRefreshError}</p> : null}
-              {isManualAssistantRefreshing ? (
-                <p className="soft-text intelligence-refresh-status">Actualizando solo el análisis...</p>
-              ) : null}
-              {!isAssistantInitialLoading && !intelligenceError && intelligenceSummary ? (
-                <div className="assistant-card-body">
-                  <div className="assistant-card-detail-copy">
-                    <p className="assistant-card-detail-label">Resumen del asistente</p>
-                    <p className="assistant-card-message">{intelligenceSummary.assistantMessage}</p>
-                    <p className="assistant-card-explanation">{intelligenceSummary.aiExplanation}</p>
-                  </div>
-                  <div className="assistant-card-grid">
-                    <div className="risk-stat">
-                      <p className="metric-label">Riesgo final</p>
-                      <p className="assistant-stat-value">{assistantRiskLabel}</p>
-                    </div>
-                    <div className="risk-stat">
-                      <p className="metric-label">Tendencia</p>
-                      <p className="assistant-stat-value">{assistantTrendLabel}</p>
-                    </div>
-                    <div className="risk-stat assistant-stat-wide">
-                      <p className="metric-label">Estado de IA</p>
-                      <p className="assistant-stat-value">{assistantAgreementLabel}</p>
-                    </div>
-                  </div>
-                </div>
-              ) : null}
-              {!isAssistantInitialLoading && !intelligenceError && !intelligenceSummary ? (
-                <p className="soft-text">Aún no hay análisis inteligente disponible.</p>
-              ) : null}
-            </Card>
-          </div>
-        </Section>
-      </div>
-
-      <div className="dashboard-secondary-grid dashboard-secondary-grid-visual">
-        <Section title="Exploracion visual" subtitle="Lecturas alternativas del mismo rango para aprovechar mejor el espacio analitico">
-          <Card className="chart-card">
-            <GlucoseVisualization data={filteredChartData} />
-          </Card>
-        </Section>
-
-        <Section title="Registro manual" subtitle="Entrada rapida para anadir una medicion sin salir del panel">
-          <Card className="manual-entry-card">
             <form className="manual-form" onSubmit={onManualSubmit}>
               <label className={`field ${formFieldErrors.glucoseValue ? "has-error" : ""}`}>
                 <span>Valor de glucosa (mg/dL)</span>
@@ -835,23 +739,18 @@ export default function DashboardPage() {
                 {formFieldErrors.measuredAt ? <small id="dashboard-measured-at-error">{formFieldErrors.measuredAt}</small> : null}
               </label>
 
-              <label className="field">
-                <span>Unidad</span>
-                <input type="text" value="mg/dL" disabled />
-              </label>
-
               {formError ? <p className="form-feedback form-feedback-error">{formError}</p> : null}
               {formSuccess ? <p className="form-feedback form-feedback-success">{formSuccess}</p> : null}
 
               <div className="manual-actions">
-                <p className="manual-helper-text">El registro se agrega al historial y actualiza el panel al guardarse.</p>
+                <p className="manual-helper-text">La medicion se agrega al historial y refresca el panel al guardarse.</p>
                 <button type="submit" className="primary-button" disabled={isSubmitting}>
                   {isSubmitting ? "Guardando..." : "Guardar medicion"}
                 </button>
               </div>
             </form>
           </Card>
-        </Section>
+        </div>
       </div>
     </div>
   );
