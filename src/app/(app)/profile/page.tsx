@@ -82,7 +82,7 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="profile-page">
+    <div className="profile-page app-page profile-page-layout">
       <div className="profile-page-feedback">
         {success ? <FeedbackBanner type="success" message={success} /> : null}
         {error ? <FeedbackBanner type="error" message={error} /> : null}
