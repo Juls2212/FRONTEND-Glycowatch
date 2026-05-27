@@ -1,6 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { FeedbackBanner } from "@/components/ui/feedback-banner";
 import { SkeletonBlock } from "@/components/ui/skeleton-block";
+import { StatePanel } from "@/components/ui/state-panel";
 import { DeviceRowActions } from "@/features/devices/components/device-row-actions";
 import { DeviceItem } from "@/features/devices/types";
 
@@ -29,19 +30,26 @@ export function DevicesList({ devices, isLoading, error, togglingId, onToggle, o
   return (
     <Card>
       {isLoading ? (
-        <div className="skeleton-stack">
-          <SkeletonBlock className="skeleton-line w-50" />
-          <SkeletonBlock className="skeleton-line w-100" />
-          <SkeletonBlock className="skeleton-line w-90" />
-        </div>
+        <StatePanel
+          variant="loading"
+          title="Cargando dispositivos"
+          message="Estamos reuniendo tu lista para que puedas gestionarla sin prisa."
+        >
+          <div className="skeleton-stack">
+            <SkeletonBlock className="skeleton-line w-50" />
+            <SkeletonBlock className="skeleton-line w-100" />
+            <SkeletonBlock className="skeleton-line w-90" />
+          </div>
+        </StatePanel>
       ) : null}
       {error ? <FeedbackBanner type="error" message={error} /> : null}
 
       {!isLoading && !error && devices.length === 0 ? (
-        <div className="empty-state">
-          <p className="empty-title">No hay dispositivos vinculados</p>
-          <p className="soft-text">Registra y vincula un dispositivo para comenzar a recibir datos.</p>
-        </div>
+        <StatePanel
+          variant="empty"
+          title="Aún no hay dispositivos vinculados"
+          message="Cuando registres tu primer dispositivo, aparecerá aquí para que puedas activarlo y gestionarlo."
+        />
       ) : null}
 
       {!isLoading && !error && devices.length > 0 ? (
