@@ -31,5 +31,5 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <AppBootstrap>{children}</AppBootstrap>
       </body>
     </html>
-  );
+);
 }
