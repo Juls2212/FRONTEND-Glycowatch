@@ -985,28 +985,170 @@ a {
 
 .feedback-banner {
   margin: 0;
-  border-radius: 12px;
-  padding: 10px 12px;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+  border-radius: 18px;
+  padding: 14px 16px;
   border: 1px solid transparent;
   font-size: 14px;
+  box-shadow: 0 10px 24px rgba(31, 74, 121, 0.06);
+  backdrop-filter: blur(12px);
+}
+
+.feedback-banner-icon {
+  width: 38px;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+  border: 1px solid currentColor;
+  background: rgba(var(--surface-panel-rgb), 0.68);
+  opacity: 0.92;
+  flex: 0 0 auto;
+}
+
+.feedback-banner-icon-svg {
+  width: 18px;
+  height: 18px;
+}
+
+.feedback-banner-message {
+  margin: 0;
+  line-height: 1.62;
 }
 
 .feedback-banner.success {
   color: rgba(var(--success-rgb), 0.95);
-  background: rgba(var(--success-rgb), 0.12);
-  border-color: rgba(var(--success-rgb), 0.32);
+  background:
+    radial-gradient(circle at top right, rgba(var(--success-rgb), 0.14) 0%, transparent 42%),
+    linear-gradient(180deg, rgba(var(--success-rgb), 0.12) 0%, rgba(var(--surface-panel-rgb), 0.92) 100%);
+  border-color: rgba(var(--success-rgb), 0.26);
 }
 
 .feedback-banner.error {
   color: rgba(var(--danger-rgb), 0.95);
-  background: rgba(var(--danger-rgb), 0.12);
-  border-color: rgba(var(--danger-rgb), 0.32);
+  background:
+    radial-gradient(circle at top right, rgba(var(--danger-rgb), 0.14) 0%, transparent 42%),
+    linear-gradient(180deg, rgba(var(--danger-rgb), 0.11) 0%, rgba(var(--surface-panel-rgb), 0.92) 100%);
+  border-color: rgba(var(--danger-rgb), 0.28);
 }
 
 .feedback-banner.info {
   color: rgba(var(--info-rgb), 0.95);
-  background: rgba(var(--info-rgb), 0.12);
-  border-color: rgba(var(--info-rgb), 0.32);
+  background:
+    radial-gradient(circle at top right, rgba(var(--info-rgb), 0.14) 0%, transparent 42%),
+    linear-gradient(180deg, rgba(var(--info-rgb), 0.11) 0%, rgba(var(--surface-panel-rgb), 0.92) 100%);
+  border-color: rgba(var(--info-rgb), 0.28);
+}
+
+.state-panel {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(var(--accent-rgb), 0.14);
+  background:
+    radial-gradient(circle at top right, rgba(var(--accent-rgb), 0.1) 0%, transparent 44%),
+    linear-gradient(180deg, rgba(var(--surface-panel-rgb), 0.96) 0%, rgba(var(--surface-panel-rgb), 0.88) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    0 10px 24px rgba(31, 74, 121, 0.05);
+}
+
+.state-panel.compact {
+  padding: 14px;
+  gap: 10px;
+  border-radius: 16px;
+}
+
+.state-panel.compact .state-panel-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 13px;
+}
+
+.state-panel.compact .state-panel-icon-svg {
+  width: 18px;
+  height: 18px;
+}
+
+.state-panel.compact .state-panel-title {
+  font-size: 0.94rem;
+}
+
+.state-panel.compact .state-panel-message {
+  font-size: 0.85rem;
+}
+
+.state-panel.error {
+  border-color: rgba(var(--danger-rgb), 0.22);
+  background:
+    radial-gradient(circle at top right, rgba(var(--danger-rgb), 0.12) 0%, transparent 42%),
+    linear-gradient(180deg, rgba(var(--danger-rgb), 0.08) 0%, rgba(var(--surface-panel-rgb), 0.92) 100%);
+}
+
+.state-panel-header {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+}
+
+.state-panel-icon {
+  width: 42px;
+  height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16px;
+  border: 1px solid rgba(var(--accent-rgb), 0.18);
+  background: rgba(var(--surface-panel-rgb), 0.76);
+  color: rgba(var(--accent-rgb), 0.9);
+  flex: 0 0 auto;
+}
+
+.state-panel.error .state-panel-icon {
+  border-color: rgba(var(--danger-rgb), 0.2);
+  color: rgba(var(--danger-rgb), 0.92);
+}
+
+.state-panel-icon-svg {
+  width: 20px;
+  height: 20px;
+}
+
+.state-panel.loading .state-panel-icon-svg {
+  animation: state-icon-spin 1.2s linear infinite;
+}
+
+.state-panel-copy {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.state-panel-title {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.state-panel-message {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.92rem;
+  line-height: 1.65;
+  text-wrap: pretty;
+}
+
+.state-panel-body {
+  display: grid;
+  gap: 12px;
 }
 
 .skeleton-stack {
@@ -1024,6 +1166,7 @@ a {
   );
   background-size: 200% 100%;
   animation: skeleton-shimmer 1.4s ease-in-out infinite;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16);
 }
 
 .skeleton-line {
@@ -2085,10 +2228,18 @@ a {
 }
 
 .error-text {
-  color: var(--danger);
   margin: 0;
-  font-size: var(--font-size-xs);
-  line-height: 1.55;
+  display: grid;
+  gap: 6px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(var(--danger-rgb), 0.22);
+  background:
+    radial-gradient(circle at top right, rgba(var(--danger-rgb), 0.1) 0%, transparent 42%),
+    linear-gradient(180deg, rgba(var(--danger-rgb), 0.08) 0%, rgba(var(--surface-panel-rgb), 0.94) 100%);
+  color: rgba(var(--danger-rgb), 0.96);
+  font-size: 0.82rem;
+  line-height: 1.6;
 }
 
 .field.has-error span {
@@ -2188,22 +2339,27 @@ a {
 
 .form-feedback {
   margin: 0;
-  padding: 12px 14px;
-  border-radius: var(--radius-md);
+  padding: 13px 15px;
+  border-radius: 16px;
   border: 1px solid transparent;
   font-size: var(--font-size-sm);
   line-height: 1.6;
+  box-shadow: 0 8px 20px rgba(31, 74, 121, 0.04);
 }
 
 .form-feedback-error {
   color: rgba(var(--danger-rgb), 0.96);
-  background: rgba(var(--danger-rgb), 0.1);
+  background:
+    radial-gradient(circle at top right, rgba(var(--danger-rgb), 0.12) 0%, transparent 42%),
+    linear-gradient(180deg, rgba(var(--danger-rgb), 0.09) 0%, rgba(var(--surface-panel-rgb), 0.94) 100%);
   border-color: rgba(var(--danger-rgb), 0.24);
 }
 
 .form-feedback-success {
   color: rgba(var(--success-rgb), 0.96);
-  background: rgba(var(--success-rgb), 0.1);
+  background:
+    radial-gradient(circle at top right, rgba(var(--success-rgb), 0.12) 0%, transparent 42%),
+    linear-gradient(180deg, rgba(var(--success-rgb), 0.09) 0%, rgba(var(--surface-panel-rgb), 0.94) 100%);
   border-color: rgba(var(--success-rgb), 0.24);
 }
 
@@ -2363,6 +2519,12 @@ a {
   }
   100% {
     background-position: -200% 0;
+  }
+}
+
+@keyframes state-icon-spin {
+  to {
+    transform: rotate(360deg);
   }
 }
 
