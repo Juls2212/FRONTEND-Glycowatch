@@ -32,6 +32,7 @@ const assistantMoodLabels: Record<string, string> = {
 };
 
 export type IntelligenceRiskTheme = "low" | "moderate" | "high" | "critical" | "neutral";
+export type IntelligenceAnalysisState = "missing" | "outdated" | "available";
 
 export function translateIntelligenceRiskLevel(value: string | null | undefined): string {
   if (!value) return "No disponible";
@@ -118,4 +119,49 @@ export function formatIntelligenceGeneratedAt(value: string | null | undefined):
     dateStyle: "medium",
     timeStyle: "short"
   });
+}
+
+export function getIntelligenceAnalysisState(
+  generatedAt: string | null | undefined,
+  latestMeasurementAt: string | null | undefined
+): IntelligenceAnalysisState {
+  if (!generatedAt) return "missing";
+
+  const generatedTime = new Date(generatedAt).getTime();
+  if (Number.isNaN(generatedTime)) return "missing";
+
+  if (!latestMeasurementAt) return "available";
+
+  const latestMeasurementTime = new Date(latestMeasurementAt).getTime();
+  if (Number.isNaN(latestMeasurementTime)) return "available";
+
+  if (latestMeasurementTime > generatedTime) return "outdated";
+  return "available";
+}
+
+export function getIntelligenceAnalysisLabel(state: IntelligenceAnalysisState): string {
+  if (state === "missing") return "Generar analisis";
+  return "Actualizar analisis";
+}
+
+export function getIntelligenceAnalysisStatusLabel(state: IntelligenceAnalysisState): string {
+  if (state === "missing") return "Analisis disponible por generar";
+  if (state === "outdated") return "Analisis desactualizado";
+  return "Analisis disponible";
+}
+
+export function getIntelligenceAnalysisStatusMessage(state: IntelligenceAnalysisState): string {
+  if (state === "missing") {
+    return "Todavia no hay un analisis generado para tus mediciones recientes.";
+  }
+  if (state === "outdated") {
+    return "Tus mediciones cambiaron desde el ultimo analisis. Puedes generar una version nueva cuando lo necesites.";
+  }
+  return "El analisis actual sigue disponible para consultar y puedes actualizarlo manualmente cuando quieras.";
+}
+
+export function translateMeasurementOrigin(value: string | null | undefined): string {
+  if (value === "IOT" || value === "DEVICE" || value === "HARDWARE") return "Dispositivo";
+  if (value === "MANUAL") return "Manual";
+  return "No disponible";
 }
