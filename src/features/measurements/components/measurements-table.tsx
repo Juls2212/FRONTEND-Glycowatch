@@ -1,6 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { FeedbackBanner } from "@/components/ui/feedback-banner";
 import { SkeletonBlock } from "@/components/ui/skeleton-block";
+import { StatePanel } from "@/components/ui/state-panel";
 import { MeasurementRowActions } from "@/features/measurements/components/measurement-row-actions";
 import { MeasurementItem } from "@/features/measurements/types";
 
@@ -21,20 +22,27 @@ export function MeasurementsTable({ measurements, isLoading, error, deletingId, 
   return (
     <Card>
       {isLoading ? (
-        <div className="skeleton-stack">
-          <SkeletonBlock className="skeleton-line w-40" />
-          <SkeletonBlock className="skeleton-line w-100" />
-          <SkeletonBlock className="skeleton-line w-100" />
-          <SkeletonBlock className="skeleton-line w-80" />
-        </div>
+        <StatePanel
+          variant="loading"
+          title="Cargando mediciones"
+          message="Estamos preparando tu historial para que puedas revisarlo con calma."
+        >
+          <div className="skeleton-stack">
+            <SkeletonBlock className="skeleton-line w-40" />
+            <SkeletonBlock className="skeleton-line w-100" />
+            <SkeletonBlock className="skeleton-line w-100" />
+            <SkeletonBlock className="skeleton-line w-80" />
+          </div>
+        </StatePanel>
       ) : null}
       {error ? <FeedbackBanner type="error" message={error} /> : null}
 
       {!isLoading && !error && measurements.length === 0 ? (
-        <div className="empty-state">
-          <p className="empty-title">Sin mediciones disponibles</p>
-          <p className="soft-text">Aun no hay resultados para los filtros seleccionados.</p>
-        </div>
+        <StatePanel
+          variant="empty"
+          title="Aún no hay mediciones para mostrar"
+          message="Cuando registres una lectura o ajustes los filtros, los resultados aparecerán aquí."
+        />
       ) : null}
 
       {!isLoading && !error && measurements.length > 0 ? (
