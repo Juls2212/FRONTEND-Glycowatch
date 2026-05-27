@@ -4079,6 +4079,40 @@ a {
   background: color-mix(in srgb, var(--surface-muted) 68%, var(--surface-panel));
 }
 
+.assistant-context-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.assistant-context-item {
+  color: var(--text-secondary);
+  font-size: 0.86rem;
+  line-height: 1.55;
+}
+
+.intelligence-state-badge {
+  border-width: 1px;
+}
+
+.intelligence-state-available {
+  color: rgba(var(--success-rgb), 0.82);
+  background: linear-gradient(180deg, rgba(var(--success-rgb), 0.1) 0%, rgba(var(--success-rgb), 0.04) 100%);
+  border-color: rgba(var(--success-rgb), 0.2);
+}
+
+.intelligence-state-outdated {
+  color: rgba(var(--warning-rgb), 0.82);
+  background: linear-gradient(180deg, rgba(var(--warning-rgb), 0.12) 0%, rgba(var(--warning-rgb), 0.05) 100%);
+  border-color: rgba(var(--warning-rgb), 0.22);
+}
+
+.intelligence-state-missing {
+  color: var(--text-secondary);
+  background: color-mix(in srgb, var(--surface-panel) 92%, white);
+  border-color: var(--border-subtle);
+}
+
 .dashboard-monitoring-layout {
   display: grid;
   grid-template-columns: minmax(0, 1.5fr) minmax(320px, 0.8fr);
@@ -5329,6 +5363,20 @@ a {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
+}
+
+.analytics-intelligence-state-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.analytics-intelligence-empty-copy {
+  display: grid;
+  gap: 8px;
+  text-align: center;
 }
 
 .analytics-intelligence-meta-item {
