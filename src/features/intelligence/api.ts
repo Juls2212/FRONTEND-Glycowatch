@@ -1,7 +1,7 @@
 import { apiClient } from "@/lib/api/client";
 import { API_ENDPOINTS } from "@/lib/api/endpoints";
 import { ApiSuccess } from "@/types/api";
-import { IntelligenceHistoryItem, IntelligenceSummary } from "./types";
+import { IntelligenceAnalysisDetail, IntelligenceHistoryItem, IntelligenceSummary } from "./types";
 
 export async function getIntelligenceSummary(): Promise<IntelligenceSummary> {
   const response = await apiClient.get<ApiSuccess<IntelligenceSummary>>(API_ENDPOINTS.intelligence.summary);
@@ -15,5 +15,10 @@ export async function generateIntelligenceSummary(): Promise<IntelligenceSummary
 
 export async function getIntelligenceHistory(): Promise<IntelligenceHistoryItem[]> {
   const response = await apiClient.get<ApiSuccess<IntelligenceHistoryItem[]>>(API_ENDPOINTS.intelligence.history);
+  return response.data.data;
+}
+
+export async function getIntelligenceHistoryDetail(id: number): Promise<IntelligenceAnalysisDetail> {
+  const response = await apiClient.get<ApiSuccess<IntelligenceAnalysisDetail>>(`${API_ENDPOINTS.intelligence.history}/${id}`);
   return response.data.data;
 }
