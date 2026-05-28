@@ -29,7 +29,11 @@ function formatFilterRange(filters: MeasurementsFilters): string {
   return `Periodo filtrado hasta ${filters.to}.`;
 }
 
-function buildPageSummary(latestMeasurement: LatestMeasurement | null, measurements: MeasurementItem[], totalElements: number): string {
+function buildPageSummary(
+  latestMeasurement: LatestMeasurement | null,
+  measurements: MeasurementItem[],
+  totalElements: number
+): string {
   if (!latestMeasurement) {
     return "Todavía no hay mediciones registradas. Puedes empezar agregando una lectura manual.";
   }
@@ -61,11 +65,21 @@ export default function MeasurementsPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  const loadData = async (page: number, activeFilters: MeasurementsFilters) => {
+  const loadData = async (
+    page: number,
+    activeFilters: MeasurementsFilters,
+    options?: { preserveFeedback?: boolean }
+  ) => {
     setError(null);
-    setSuccess(null);
+    if (!options?.preserveFeedback) {
+      setSuccess(null);
+    }
+
     try {
-      const [latest, pageData] = await Promise.all([fetchLatestMeasurement(), fetchMeasurements(page, PAGE_SIZE, activeFilters)]);
+      const [latest, pageData] = await Promise.all([
+        fetchLatestMeasurement(),
+        fetchMeasurements(page, PAGE_SIZE, activeFilters)
+      ]);
       setLatestMeasurement(latest);
       setMeasurements(pageData.content);
       setTotalPages(pageData.totalPages);
@@ -93,7 +107,6 @@ export default function MeasurementsPage() {
   }, []);
 
   const onApplyFilters = async () => {
-    setSuccess(null);
     const nextFilters: MeasurementsFilters = {
       from: draftFrom || undefined,
       to: draftTo || undefined
@@ -105,7 +118,6 @@ export default function MeasurementsPage() {
   };
 
   const onClearFilters = async () => {
-    setSuccess(null);
     setDraftFrom("");
     setDraftTo("");
     const clean: MeasurementsFilters = {};
@@ -117,7 +129,6 @@ export default function MeasurementsPage() {
 
   const onPageChange = async (targetPage: number) => {
     if (targetPage < 0 || targetPage >= totalPages || targetPage === currentPage) return;
-    setSuccess(null);
     setIsLoading(true);
     await loadData(targetPage, filters);
     setIsLoading(false);
@@ -125,7 +136,7 @@ export default function MeasurementsPage() {
 
   const onManualCreated = async () => {
     setSuccess("Medición manual agregada correctamente.");
-    await loadData(currentPage, filters);
+    await loadData(currentPage, filters, { preserveFeedback: true });
   };
 
   const onDeleteMeasurement = async (measurementId: number) => {

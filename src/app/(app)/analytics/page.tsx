@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Section } from "@/components/ui/section";
 import { GlucoseVisualization } from "@/components/charts/glucose-visualization";
 import { IntelligenceAssistantRobot } from "@/components/intelligence/IntelligenceAssistantRobot";
+import { IntelligenceAnalysisDetailModal } from "@/components/intelligence/intelligence-analysis-detail-modal";
 import { fetchChartData, fetchDashboardMetrics, fetchRiskAnalysis } from "@/features/dashboard/api";
 import { ChartPoint, DashboardMetrics, RiskAnalysis } from "@/features/dashboard/types";
 import { ChartRangeFilter } from "@/features/dashboard/components/chart-range-filter";
@@ -32,9 +33,10 @@ import {
   translateMeasurementOrigin
 } from "@/features/intelligence/display";
 import { useIntelligenceHistory, useIntelligenceSummary } from "@/features/intelligence/hooks";
-import { generateIntelligenceSummary } from "@/features/intelligence/api";
+import { generateIntelligenceSummary, getIntelligenceHistoryDetail } from "@/features/intelligence/api";
 import { fetchLatestMeasurementContext } from "@/features/measurements/api";
 import { useAuthStore } from "@/stores/auth-store";
+import { IntelligenceAnalysisDetail } from "@/features/intelligence/types";
 
 type InsightKey = "trend" | "predominance" | "stability";
 type HistoryLimit = 5 | 10 | "ALL";
@@ -208,6 +210,10 @@ export default function AnalyticsPage() {
   const [latestMeasurementOrigin, setLatestMeasurementOrigin] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [intelligenceRefreshError, setIntelligenceRefreshError] = useState<string | null>(null);
+  const [selectedHistoryId, setSelectedHistoryId] = useState<number | null>(null);
+  const [historyDetail, setHistoryDetail] = useState<IntelligenceAnalysisDetail | null>(null);
+  const [isHistoryDetailLoading, setIsHistoryDetailLoading] = useState(false);
+  const [historyDetailError, setHistoryDetailError] = useState<string | null>(null);
   const chartRangeRef = useRef<ChartRange>("MONTH");
   const hasMountedChartRangeEffectRef = useRef(false);
   const isMountedRef = useRef(false);
@@ -419,11 +425,11 @@ export default function AnalyticsPage() {
       await refreshAnalyticsMeasurements();
       const historyResult = await refreshIntelligenceHistory({ background: true });
       if (!historyResult.success) {
-        setIntelligenceRefreshError("No se pudo actualizar el anÃ¡lisis.");
+        setIntelligenceRefreshError("No se pudo actualizar el análisis.");
       }
     } catch (error) {
       console.error("Analytics manual intelligence refresh failed.", error);
-      setIntelligenceRefreshError("No se pudo actualizar el anÃ¡lisis.");
+      setIntelligenceRefreshError("No se pudo actualizar el análisis.");
     } finally {
       if (isMountedRef.current) {
         setIsManualIntelligenceRefreshing(false);
@@ -437,6 +443,34 @@ export default function AnalyticsPage() {
     refreshAnalyticsMeasurements,
     refreshIntelligenceHistory
   ]);
+
+  const handleOpenHistoryDetail = useCallback(async (historyId: number) => {
+    setSelectedHistoryId(historyId);
+    setHistoryDetail(null);
+    setHistoryDetailError(null);
+    setIsHistoryDetailLoading(true);
+
+    try {
+      const detail = await getIntelligenceHistoryDetail(historyId);
+      if (!isMountedRef.current) return;
+      setHistoryDetail(detail);
+    } catch (detailError) {
+      console.error("Analytics history detail request failed.", detailError);
+      if (!isMountedRef.current) return;
+      setHistoryDetailError("No se pudo cargar el reporte completo del análisis.");
+    } finally {
+      if (isMountedRef.current) {
+        setIsHistoryDetailLoading(false);
+      }
+    }
+  }, []);
+
+  const handleCloseHistoryDetail = useCallback(() => {
+    setSelectedHistoryId(null);
+    setHistoryDetail(null);
+    setHistoryDetailError(null);
+    setIsHistoryDetailLoading(false);
+  }, []);
 
   return (
     <div className="dashboard-grid app-page analytics-page">
@@ -452,7 +486,7 @@ export default function AnalyticsPage() {
             </div>
 
             <div className="hero-pill-row">
-              <span className="hero-pill">Ultima medicion: {latestMeasurementLabel}</span>
+              <span className="hero-pill">Última medición: {latestMeasurementLabel}</span>
               <span className="hero-pill">Tendencia: {risk ? translateTrend(risk.trend) : "ESTABLE"}</span>
             </div>
           </div>
@@ -464,7 +498,7 @@ export default function AnalyticsPage() {
                   <InsightIcon name="latest" />
                 </span>
                 <div>
-                  <p className="metric-label">Ultima medicion</p>
+                  <p className="metric-label">Última medición</p>
                   <p className="metric-card-caption">Referencia operativa inmediata</p>
                 </div>
               </div>
@@ -671,7 +705,7 @@ export default function AnalyticsPage() {
                   <div className="analytics-intelligence-header">
                     <div>
                       <p className="metric-label">Analisis inteligente</p>
-                      <p className="metric-card-caption">AnÃ¡lisis inteligente generado a partir de tus mediciones recientes.</p>
+                      <p className="metric-card-caption">Análisis inteligente generado a partir de tus mediciones recientes.</p>
                     </div>
                     <div className="analytics-intelligence-state-row">
                       <span className={`metric-chip intelligence-state-badge intelligence-state-${intelligenceAnalysisState}`}>
@@ -690,22 +724,22 @@ export default function AnalyticsPage() {
                   <span className="assistant-context-item">Origen reciente: {latestMeasurementOriginLabel}</span>
                 </div>
                 {isManualIntelligenceRefreshing ? (
-                  <p className="soft-text intelligence-refresh-status">Actualizando solo el anÃ¡lisis...</p>
+                  <p className="soft-text intelligence-refresh-status">Actualizando solo el análisis...</p>
                 ) : null}
               </Card>
 
               <Card className="analytics-intelligence-card analytics-intelligence-comparison">
                 <div className="analytics-intelligence-header">
                   <div>
-                    <p className="metric-label">Detalles del anÃ¡lisis</p>
-                    <p className="metric-card-caption">Referencia tÃ©cnica secundaria del resultado generado.</p>
+                    <p className="metric-label">Detalles del análisis</p>
+                    <p className="metric-card-caption">Referencia técnica secundaria del resultado generado.</p>
                   </div>
                   <span className="metric-card-badge">Detalle</span>
                 </div>
                 <p className="analytics-comparison-copy">
-                  AnÃ¡lisis inteligente generado a partir de tus mediciones recientes.
+                  Análisis inteligente generado a partir de tus mediciones recientes.
                 </p>
-                <p className="analytics-intelligence-details-label">ComparaciÃ³n de riesgo</p>
+                <p className="analytics-intelligence-details-label">Comparación de riesgo</p>
                 <div className="analytics-intelligence-metadata-grid">
                   <div className={`analytics-intelligence-meta-item risk-theme-panel ${getRiskThemeClass(intelligenceSummary.ruleBasedRiskLevel)}`}>
                     <span className="metric-label">Motor basado en reglas</span>
@@ -807,13 +841,13 @@ export default function AnalyticsPage() {
       </Section>
 
       <Section
-        title="Historial de anÃ¡lisis inteligente"
-        subtitle="EvoluciÃ³n reciente de los anÃ¡lisis generados por GlycoWatch."
+        title="Historial de análisis inteligente"
+        subtitle="Evolución reciente de los análisis generados por GlycoWatch."
         action={
           <div className="analytics-history-filter" role="tablist" aria-label="Filtro de historial inteligente">
             {([
-              { value: 5 as const, label: "Ãšltimos 5" },
-              { value: 10 as const, label: "Ãšltimos 10" },
+              { value: 5 as const, label: "Últimos 5" },
+              { value: 10 as const, label: "Últimos 10" },
               { value: "ALL" as const, label: "Todos" }
             ]).map((option) => (
               <button
@@ -831,7 +865,7 @@ export default function AnalyticsPage() {
       >
         {isIntelligenceHistoryInitialLoading ? (
           <Card className="analytics-intelligence-card">
-            <p className="soft-text">Cargando historial de anÃ¡lisis...</p>
+            <p className="soft-text">Cargando historial de análisis...</p>
           </Card>
         ) : null}
 
@@ -843,14 +877,19 @@ export default function AnalyticsPage() {
 
         {!isIntelligenceHistoryInitialLoading && !intelligenceHistoryError && intelligenceHistory.length === 0 ? (
           <Card className="analytics-intelligence-card">
-            <p className="soft-text">AÃºn no hay anÃ¡lisis guardados.</p>
+            <p className="soft-text">Aún no hay análisis guardados.</p>
           </Card>
         ) : null}
 
         {!isIntelligenceHistoryInitialLoading && !intelligenceHistoryError && intelligenceHistory.length > 0 ? (
           <div className="analytics-history-list">
             {visibleHistory.map((item) => (
-              <Card key={item.id} className={`analytics-history-card risk-theme-card ${getRiskThemeClass(item.finalRiskLevel, item.assistantMood)}`}>
+              <button
+                key={item.id}
+                type="button"
+                className={`analytics-history-card analytics-history-trigger risk-theme-card ${getRiskThemeClass(item.finalRiskLevel, item.assistantMood)}`}
+                onClick={() => void handleOpenHistoryDetail(item.id)}
+              >
                 <div className="analytics-history-header">
                   <div className="analytics-history-title">
                     <span className={`metric-card-badge risk-theme-badge ${getRiskThemeClass(item.finalRiskLevel, item.assistantMood)}`}>
@@ -869,14 +908,22 @@ export default function AnalyticsPage() {
                 </p>
 
                 <div className="analytics-history-footer">
-                  <p className="analytics-history-caption">Resumen generado por el asistente para esta lectura.</p>
+                  <p className="analytics-history-caption">Toca para abrir el reporte clínico completo.</p>
                   <span className="analytics-history-trend">{translateIntelligenceTrend(item.trend)}</span>
                 </div>
-              </Card>
+              </button>
             ))}
           </div>
         ) : null}
       </Section>
+
+      <IntelligenceAnalysisDetailModal
+        open={selectedHistoryId != null}
+        detail={historyDetail}
+        isLoading={isHistoryDetailLoading}
+        error={historyDetailError}
+        onClose={handleCloseHistoryDetail}
+      />
     </div>
   );
 }
