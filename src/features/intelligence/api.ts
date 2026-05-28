@@ -8,6 +8,11 @@ export async function getIntelligenceSummary(): Promise<IntelligenceSummary> {
   return response.data.data;
 }
 
+export async function generateIntelligenceSummary(): Promise<IntelligenceSummary> {
+  const response = await apiClient.post<ApiSuccess<IntelligenceSummary>>(API_ENDPOINTS.intelligence.generate);
+  return response.data.data;
+}
+
 export async function getIntelligenceHistory(): Promise<IntelligenceHistoryItem[]> {
   const response = await apiClient.get<ApiSuccess<IntelligenceHistoryItem[]>>(API_ENDPOINTS.intelligence.history);
   return response.data.data;
