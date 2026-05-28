@@ -24,8 +24,10 @@ import { Card } from "@/components/ui/card";
 import { Section } from "@/components/ui/section";
 import { GlucoseVisualization } from "@/components/charts/glucose-visualization";
 import { IntelligenceAssistantRobot } from "@/components/intelligence/IntelligenceAssistantRobot";
+import { ContextualAssistantPrompt } from "@/components/intelligence/contextual-assistant-prompt";
 import { ChartRangeFilter } from "@/features/dashboard/components/chart-range-filter";
 import { buildChartRangeParams, ChartRange, filterChartByRange } from "@/features/dashboard/chart-range";
+import { useContextualAssistantPrompt } from "@/hooks/use-contextual-assistant-prompt";
 import { normalizeRestrictedDecimalInput } from "@/lib/forms/input-normalizers";
 import {
   dashboardManualMeasurementSchema,
@@ -228,6 +230,12 @@ export default function DashboardPage() {
   } = useIntelligenceSummary({ enabled: false });
   const isAssistantRefreshBusy = isManualAssistantRefreshing;
   const isAssistantInitialLoading = isIntelligenceLoading && !intelligenceSummary;
+  const {
+    prompt: assistantPrompt,
+    dismissPrompt: dismissAssistantPrompt,
+    showPrompt,
+    showPromptOnce
+  } = useContextualAssistantPrompt();
 
   const loadDashboardData = async (options?: { mountedRef?: { current: boolean }; silent?: boolean }) => {
     const mountedRef = options?.mountedRef;
@@ -271,6 +279,12 @@ export default function DashboardPage() {
       const generatedSummary = await generateIntelligenceSummary();
       commitAssistantSummary(generatedSummary);
       await loadDashboardData({ silent: true });
+      showPrompt({
+        id: "dashboard-analysis-generated",
+        tone: "success",
+        title: "Análisis actualizado",
+        message: "El nuevo análisis ya está disponible. Puedes revisar la interpretación y el estado actual sin salir del panel."
+      });
     } catch (error) {
       console.error("Dashboard manual intelligence generation failed.", error);
       setIntelligenceRefreshError("No se pudo actualizar el analisis.");
@@ -381,6 +395,12 @@ export default function DashboardPage() {
 
       isRefreshInFlightRef.current = true;
       await loadDashboardData();
+      showPromptOnce({
+        id: "assistant-first-manual-measurement",
+        tone: "success",
+        title: "Medición incorporada",
+        message: "Tu registro manual ya forma parte del seguimiento. Cuando quieras, puedes generar un análisis nuevo con este dato."
+      });
     } catch (err) {
       const message = err instanceof Error ? err.message : "No se pudo guardar la medicion.";
       setFormError(message);
@@ -451,8 +471,42 @@ export default function DashboardPage() {
 
   const isBannerVisible = bannerData != null && dismissedBannerKey !== bannerData.key;
 
+  useEffect(() => {
+    if (isLoading) return;
+
+    showPromptOnce({
+      id: "assistant-first-dashboard-visit",
+      title: "Glyco Assistant te acompaña aquí",
+      message: "Este panel resume tu glucosa, la tendencia reciente y cuándo conviene generar un análisis más actualizado."
+    });
+  }, [isLoading, showPromptOnce]);
+
+  useEffect(() => {
+    if (isAssistantInitialLoading) return;
+    if (assistantAnalysisState !== "missing") return;
+
+    showPromptOnce({
+      id: "assistant-before-first-analysis",
+      title: "Análisis disponible para generar",
+      message: "Cuando tengas suficientes mediciones, puedes solicitar un análisis para obtener una interpretación clínica más guiada."
+    });
+  }, [assistantAnalysisState, isAssistantInitialLoading, showPromptOnce]);
+
+  useEffect(() => {
+    if (!latestMeasurementOrigin) return;
+    if (!["IOT", "DEVICE", "HARDWARE"].includes(latestMeasurementOrigin)) return;
+
+    showPromptOnce({
+      id: "assistant-first-device-measurement",
+      tone: "success",
+      title: "Lectura desde dispositivo detectada",
+      message: "Tus mediciones de hardware ya están entrando al seguimiento. Esto ayuda a comparar evolución y contexto con menos pasos manuales."
+    });
+  }, [latestMeasurementOrigin, showPromptOnce]);
+
   return (
     <div className="dashboard-grid app-page dashboard-page dashboard-phase-three">
+      <ContextualAssistantPrompt prompt={assistantPrompt} onDismiss={dismissAssistantPrompt} />
       {isBannerVisible && bannerData ? (
         <div className={`dashboard-alert-banner ${bannerData.variant}`} role="status" aria-live="polite">
           <p className="dashboard-alert-text">{bannerData.message}</p>
