@@ -209,16 +209,25 @@ export default function MeasurementsPage() {
         <LatestMeasurementCard latestMeasurement={latestMeasurement} recentMeasurements={measurements} />
 
         <div className="measurements-side-stack">
-          <Card className="measurements-filter-card">
-            <div className="measurements-card-head">
-              <div>
-                <p className="measurements-card-eyebrow">Evolución visible</p>
-                <h2 className="measurements-card-title">Filtrar periodo</h2>
-              </div>
+          <ManualMeasurementForm onCreated={onManualCreated} />
+        </div>
+      </div>
+
+      <Card className="measurements-history-section">
+        <div className="measurements-history-header">
+          <div>
+            <p className="measurements-card-eyebrow">Seguimiento reciente</p>
+            <h2 className="measurements-card-title">Historial de mediciones</h2>
+            <p className="measurements-card-copy">
+              Revisa tus lecturas ordenadas por fecha y elimina solo las que ya no necesites conservar.
+            </p>
+          </div>
+          <div className="measurements-history-controls" aria-label="Filtros del historial">
+            <div className="measurements-history-filter-copy">
+              <p className="measurements-card-eyebrow">Filtrar periodo</p>
               <p className="measurements-card-copy">{historySummary}</p>
             </div>
-
-            <div className="filters-grid">
+            <div className="filters-grid measurements-history-filters">
               <label className="field">
                 <span>Desde</span>
                 <input type="date" value={draftFrom} onChange={(event) => setDraftFrom(event.target.value)} />
@@ -228,49 +237,12 @@ export default function MeasurementsPage() {
                 <input type="date" value={draftTo} onChange={(event) => setDraftTo(event.target.value)} />
               </label>
             </div>
-            <div className="filters-actions">
+            <div className="filters-actions measurements-history-filter-actions">
               <button type="button" className="ghost-button" onClick={onClearFilters}>
                 Limpiar
               </button>
               <button type="button" className="primary-button" onClick={onApplyFilters}>
                 Aplicar filtros
-              </button>
-            </div>
-          </Card>
-
-          <ManualMeasurementForm onCreated={onManualCreated} />
-        </div>
-      </div>
-
-      <section className="measurements-history-section">
-        <div className="measurements-history-header">
-          <div>
-            <p className="measurements-card-eyebrow">Seguimiento reciente</p>
-            <h2 className="measurements-card-title">Historial de mediciones</h2>
-            <p className="measurements-card-copy">
-              Revisa tus lecturas ordenadas por fecha y elimina solo las que ya no necesites conservar.
-            </p>
-          </div>
-          <div className="measurements-history-meta">
-            <span className="soft-text">
-              Página {totalPages === 0 ? 0 : currentPage + 1} de {totalPages}
-            </span>
-            <div className="pagination-wrap">
-              <button
-                type="button"
-                className="ghost-button"
-                disabled={currentPage <= 0 || isLoading}
-                onClick={() => onPageChange(currentPage - 1)}
-              >
-                Anterior
-              </button>
-              <button
-                type="button"
-                className="ghost-button"
-                disabled={totalPages === 0 || currentPage >= totalPages - 1 || isLoading}
-                onClick={() => onPageChange(currentPage + 1)}
-              >
-                Siguiente
               </button>
             </div>
           </div>
@@ -284,7 +256,31 @@ export default function MeasurementsPage() {
           totalElements={totalElements}
           onDelete={onDeleteMeasurement}
         />
-      </section>
+
+        <div className="measurements-history-footer">
+          <span className="soft-text">
+            Página {totalPages === 0 ? 0 : currentPage + 1} de {totalPages}
+          </span>
+          <div className="pagination-wrap">
+            <button
+              type="button"
+              className="ghost-button"
+              disabled={currentPage <= 0 || isLoading}
+              onClick={() => onPageChange(currentPage - 1)}
+            >
+              Anterior
+            </button>
+            <button
+              type="button"
+              className="ghost-button"
+              disabled={totalPages === 0 || currentPage >= totalPages - 1 || isLoading}
+              onClick={() => onPageChange(currentPage + 1)}
+            >
+              Siguiente
+            </button>
+          </div>
+        </div>
+      </Card>
 
       <ConfirmDialog
         open={pendingDeleteId != null}
