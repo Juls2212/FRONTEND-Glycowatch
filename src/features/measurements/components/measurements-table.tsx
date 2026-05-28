@@ -1,4 +1,3 @@
-import { Card } from "@/components/ui/card";
 import { FeedbackBanner } from "@/components/ui/feedback-banner";
 import { SkeletonBlock } from "@/components/ui/skeleton-block";
 import { StatePanel } from "@/components/ui/state-panel";
@@ -25,12 +24,9 @@ function resolveOriginLabel(item: MeasurementItem): string {
 
 export function MeasurementsTable({ measurements, isLoading, error, deletingId, totalElements, onDelete }: Props) {
   return (
-    <Card className="measurements-history-card">
-      <div className="measurements-table-header">
-        <div>
-          <p className="measurements-card-eyebrow">Lecturas registradas</p>
-          <h3 className="measurements-table-title">Últimos resultados disponibles</h3>
-        </div>
+    <div className="measurements-history-card">
+      <div className="measurements-table-toolbar">
+        <p className="measurements-table-title">Últimos resultados disponibles</p>
         <span className="status-pill status-registered">
           {totalElements > 0 ? `${totalElements} totales` : "Sin registros"}
         </span>
@@ -111,6 +107,6 @@ export function MeasurementsTable({ measurements, isLoading, error, deletingId, 
           </table>
         </div>
       ) : null}
-    </Card>
+    </div>
   );
 }
