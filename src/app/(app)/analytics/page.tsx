@@ -32,6 +32,7 @@ import {
   translateMeasurementOrigin
 } from "@/features/intelligence/display";
 import { useIntelligenceHistory, useIntelligenceSummary } from "@/features/intelligence/hooks";
+import { generateIntelligenceSummary } from "@/features/intelligence/api";
 import { fetchLatestMeasurementContext } from "@/features/measurements/api";
 import { useAuthStore } from "@/stores/auth-store";
 
@@ -207,25 +208,23 @@ export default function AnalyticsPage() {
   const [latestMeasurementOrigin, setLatestMeasurementOrigin] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [intelligenceRefreshError, setIntelligenceRefreshError] = useState<string | null>(null);
+  const chartRangeRef = useRef<ChartRange>("MONTH");
   const hasMountedChartRangeEffectRef = useRef(false);
   const isMountedRef = useRef(false);
   const {
     data: intelligenceSummary,
     isLoading: isIntelligenceLoading,
-    isRefreshing: isIntelligenceSummaryRefreshing,
     error: intelligenceError,
-    refresh: refreshIntelligenceSummary
+    refresh: refreshIntelligenceSummary,
+    commitData: commitIntelligenceSummary
   } = useIntelligenceSummary({ enabled: false });
   const {
     data: intelligenceHistoryData,
     isLoading: isIntelligenceHistoryLoading,
-    isRefreshing: isIntelligenceHistoryRefreshing,
     error: intelligenceHistoryError,
     refresh: refreshIntelligenceHistory
   } = useIntelligenceHistory({ enabled: false });
-  const intelligenceHistory = intelligenceHistoryData ?? [];
-  const isIntelligenceRefreshBusy =
-    isManualIntelligenceRefreshing || isIntelligenceSummaryRefreshing || isIntelligenceHistoryRefreshing;
+  const intelligenceHistory = useMemo(() => intelligenceHistoryData ?? [], [intelligenceHistoryData]);
   const isIntelligenceInitialLoading = isIntelligenceLoading && !intelligenceSummary;
   const isIntelligenceHistoryInitialLoading =
     isIntelligenceHistoryLoading && intelligenceHistory.length === 0;
@@ -236,6 +235,32 @@ export default function AnalyticsPage() {
       isMountedRef.current = false;
     };
   }, []);
+
+  useEffect(() => {
+    chartRangeRef.current = chartRange;
+  }, [chartRange]);
+
+  const refreshAnalyticsMeasurements = useCallback(
+    async (options?: { mountedRef?: { current: boolean } }) => {
+      const mountedRef = options?.mountedRef;
+      const { from, to } = buildChartRangeParams(chartRangeRef.current);
+      const [metricsResult, riskResult, chartPoints, latestMeasurementContext] = await Promise.all([
+        fetchDashboardMetrics(),
+        fetchRiskAnalysis(),
+        fetchChartData(from, to),
+        fetchLatestMeasurementContext().catch(() => null)
+      ]);
+
+      if (mountedRef && !mountedRef.current) return;
+
+      setMetrics(metricsResult);
+      setRisk(riskResult);
+      setChartData(chartPoints);
+      setLatestMeasurementOrigin(latestMeasurementContext?.origin ?? null);
+      setError(null);
+    },
+    []
+  );
 
   const refreshIntelligenceData = useCallback(
     async (options?: { background?: boolean }) => {
@@ -264,30 +289,7 @@ export default function AnalyticsPage() {
       setIsLoading(true);
       setError(null);
       try {
-        const [metricsResult, riskResult, chartResult] = await Promise.allSettled([
-          fetchDashboardMetrics(),
-          fetchRiskAnalysis(),
-          fetchChartData(buildChartRangeParams(chartRange).from, buildChartRangeParams(chartRange).to)
-        ]);
-        const latestMeasurementContext = await fetchLatestMeasurementContext().catch(() => null);
-
-        if (metricsResult.status === "rejected" || riskResult.status === "rejected" || chartResult.status === "rejected") {
-          const primaryError =
-            metricsResult.status === "rejected"
-              ? metricsResult.reason
-              : riskResult.status === "rejected"
-                ? riskResult.reason
-                : chartResult.status === "rejected"
-                  ? chartResult.reason
-                  : new Error("No se pudo cargar el analisis.");
-          throw primaryError;
-        }
-
-        if (!mounted.current) return;
-        setMetrics(metricsResult.value);
-        setRisk(riskResult.value);
-        setChartData(chartResult.value);
-        setLatestMeasurementOrigin(latestMeasurementContext?.origin ?? null);
+        await refreshAnalyticsMeasurements({ mountedRef: mounted });
         await refreshIntelligenceData();
       } catch (err) {
         const message = err instanceof Error ? err.message : "No se pudo cargar el analisis.";
@@ -304,7 +306,7 @@ export default function AnalyticsPage() {
     return () => {
       mounted.current = false;
     };
-  }, [accessToken, isHydrated, refreshIntelligenceData]);
+  }, [accessToken, isHydrated, refreshAnalyticsMeasurements, refreshIntelligenceData]);
 
   useEffect(() => {
     if (!hasMountedChartRangeEffectRef.current) {
@@ -312,30 +314,26 @@ export default function AnalyticsPage() {
       return;
     }
 
-    let mounted = true;
+    const mountedRef = { current: true };
 
     async function refreshChartForRange() {
       setIsChartRefreshing(true);
       try {
-        const { from, to } = buildChartRangeParams(chartRange);
-        const chartPoints = await fetchChartData(from, to);
-        if (!mounted) return;
-        setChartData(chartPoints);
-        setError(null);
+        await refreshAnalyticsMeasurements({ mountedRef });
       } catch (err) {
         const message = err instanceof Error ? err.message : "No se pudo cargar el analisis.";
-        if (!mounted) return;
+        if (!mountedRef.current) return;
         setError(message);
       } finally {
-        if (mounted) setIsChartRefreshing(false);
+        if (mountedRef.current) setIsChartRefreshing(false);
       }
     }
 
     void refreshChartForRange();
     return () => {
-      mounted = false;
+      mountedRef.current = false;
     };
-  }, [chartRange]);
+  }, [chartRange, refreshAnalyticsMeasurements]);
 
   const filteredChartData = useMemo(() => filterChartByRange(chartData, chartRange), [chartData, chartRange]);
   const riskMessage = useMemo(() => (risk ? buildSpanishRiskMessage(risk) : "Sin analisis disponible por el momento."), [risk]);
@@ -410,14 +408,17 @@ export default function AnalyticsPage() {
   const latestMeasurementOriginLabel = translateMeasurementOrigin(latestMeasurementOrigin);
 
   const handleManualIntelligenceRefresh = useCallback(async () => {
-    if (isIntelligenceRefreshBusy || isIntelligenceInitialLoading || isIntelligenceHistoryInitialLoading) return;
+    if (isManualIntelligenceRefreshing || isIntelligenceInitialLoading || isIntelligenceHistoryInitialLoading) return;
 
     setIsManualIntelligenceRefreshing(true);
     setIntelligenceRefreshError(null);
 
     try {
-      const result = await refreshIntelligenceData({ background: true });
-      if (!result || !result.summarySuccess || !result.historySuccess) {
+      const generatedSummary = await generateIntelligenceSummary();
+      commitIntelligenceSummary(generatedSummary);
+      await refreshAnalyticsMeasurements();
+      const historyResult = await refreshIntelligenceHistory({ background: true });
+      if (!historyResult.success) {
         setIntelligenceRefreshError("No se pudo actualizar el anÃ¡lisis.");
       }
     } catch (error) {
@@ -429,10 +430,12 @@ export default function AnalyticsPage() {
       }
     }
   }, [
+    commitIntelligenceSummary,
     isIntelligenceHistoryInitialLoading,
     isIntelligenceInitialLoading,
-    isIntelligenceRefreshBusy,
-    refreshIntelligenceData
+    isManualIntelligenceRefreshing,
+    refreshAnalyticsMeasurements,
+    refreshIntelligenceHistory
   ]);
 
   return (
@@ -616,7 +619,7 @@ export default function AnalyticsPage() {
             className="ghost-button intelligence-refresh-button"
             onClick={handleManualIntelligenceRefresh}
             disabled={
-              isIntelligenceRefreshBusy || isIntelligenceInitialLoading || isIntelligenceHistoryInitialLoading
+              isManualIntelligenceRefreshing || isIntelligenceInitialLoading || isIntelligenceHistoryInitialLoading
             }
           >
             {isManualIntelligenceRefreshing ? (intelligenceAnalysisState === "missing" ? "Generando..." : "Actualizando...") : intelligenceActionLabel}
@@ -647,7 +650,7 @@ export default function AnalyticsPage() {
               type="button"
               className="ghost-button intelligence-refresh-button"
               onClick={handleManualIntelligenceRefresh}
-              disabled={isIntelligenceRefreshBusy}
+              disabled={isManualIntelligenceRefreshing}
             >
               {isManualIntelligenceRefreshing ? "Generando..." : "Generar analisis"}
             </button>
