@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { CLINICAL_DECIMAL_FORMAT_MESSAGE, CLINICAL_DECIMAL_PATTERN } from "@/lib/validation/clinical-numbers";
 
 const MIN_GLUCOSE_MG_DL = 20;
 const MAX_GLUCOSE_MG_DL = 600;
@@ -6,14 +7,16 @@ const GLUCOSE_TEXT_MAX_LENGTH = 16;
 const DATETIME_TEXT_MAX_LENGTH = 32;
 const DATE_TEXT_MAX_LENGTH = 10;
 const TIME_TEXT_MAX_LENGTH = 5;
-const DECIMAL_NUMBER_PATTERN = /^\d+(?:\.\d+)?$/;
 
 const glucoseValueField = z
   .string()
   .trim()
   .min(1, "Ingresa un valor de glucosa valido.")
   .max(GLUCOSE_TEXT_MAX_LENGTH, "El valor de glucosa es demasiado largo.")
-  .refine((value) => DECIMAL_NUMBER_PATTERN.test(value), "Ingresa un valor de glucosa valido.")
+  .refine(
+    (value) => CLINICAL_DECIMAL_PATTERN.test(value),
+    `Ingresa un valor de glucosa valido. ${CLINICAL_DECIMAL_FORMAT_MESSAGE}`
+  )
   .refine((value) => {
     const parsed = Number(value);
     return parsed >= MIN_GLUCOSE_MG_DL && parsed <= MAX_GLUCOSE_MG_DL;
