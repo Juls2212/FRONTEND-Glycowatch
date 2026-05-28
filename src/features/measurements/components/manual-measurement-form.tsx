@@ -3,7 +3,12 @@
 import { FormEvent, useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { createManualMeasurement } from "@/features/measurements/api";
-import { normalizeRestrictedDecimalInput } from "@/lib/forms/input-normalizers";
+import {
+  CLINICAL_DECIMAL_FORMAT_MESSAGE,
+  CLINICAL_DECIMAL_MAX_LENGTH,
+  getClinicalDecimalTypingError,
+  isAllowedClinicalDecimalInput
+} from "@/lib/validation/clinical-numbers";
 import { mapZodIssuesToFieldErrors } from "@/lib/validation/errors";
 import { manualMeasurementFormSchema, toManualMeasuredAtISOString } from "@/lib/validation/measurements";
 
@@ -42,6 +47,30 @@ export function ManualMeasurementForm({ onCreated }: Props) {
     });
     setMeasuredDate(nowDateInputValue());
     setMeasuredTime(nowTimeInputValue());
+  };
+
+  const updateGlucoseValue = (value: string) => {
+    if (!isAllowedClinicalDecimalInput(value)) {
+      setFieldErrors((current) => ({ ...current, glucoseValue: CLINICAL_DECIMAL_FORMAT_MESSAGE }));
+      return;
+    }
+
+    setFieldErrors((current) => {
+      const next = { ...current };
+      const typingError = getClinicalDecimalTypingError(value, {
+        min: 20,
+        max: 600,
+        unit: "mg/dL",
+        label: "La glucosa"
+      });
+      if (typingError) {
+        next.glucoseValue = typingError;
+      } else {
+        delete next.glucoseValue;
+      }
+      return next;
+    });
+    setGlucoseValue(value);
   };
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -96,7 +125,9 @@ export function ManualMeasurementForm({ onCreated }: Props) {
         <label className={`field ${fieldErrors.glucoseValue ? "has-error" : ""}`}>
           <span>Valor de glucosa (mg/dL)</span>
           <input
-            type="number"
+            type="text"
+            inputMode="decimal"
+            maxLength={CLINICAL_DECIMAL_MAX_LENGTH}
             step="0.1"
             min="20"
             max="600"
@@ -104,15 +135,7 @@ export function ManualMeasurementForm({ onCreated }: Props) {
             disabled={isSubmitting}
             aria-invalid={fieldErrors.glucoseValue ? "true" : "false"}
             aria-describedby={fieldErrors.glucoseValue ? "measurement-glucose-error" : undefined}
-            onChange={(event) => {
-              setFieldErrors((current) => {
-                if (!current.glucoseValue) return current;
-                const next = { ...current };
-                delete next.glucoseValue;
-                return next;
-              });
-              setGlucoseValue(normalizeRestrictedDecimalInput(event.target.value, { maxIntegerDigits: 3, maxFractionDigits: 1 }));
-            }}
+            onChange={(event) => updateGlucoseValue(event.target.value)}
             placeholder="Ej. 110.5"
           />
           {fieldErrors.glucoseValue ? <small id="measurement-glucose-error">{fieldErrors.glucoseValue}</small> : null}
