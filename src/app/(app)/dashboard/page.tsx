@@ -10,6 +10,7 @@ import {
 } from "@/features/dashboard/api";
 import { AlertItem, ChartPoint, DashboardMetrics, RiskAnalysis } from "@/features/dashboard/types";
 import { useIntelligenceSummary } from "@/features/intelligence/hooks";
+import { generateIntelligenceSummary } from "@/features/intelligence/api";
 import {
   getIntelligenceAnalysisLabel,
   getIntelligenceAnalysisState,
@@ -221,12 +222,11 @@ export default function DashboardPage() {
   const {
     data: intelligenceSummary,
     isLoading: isIntelligenceLoading,
-    isRefreshing: isAssistantBackgroundRefreshing,
     error: intelligenceError,
-    refresh: refreshAssistantSummary
+    refresh: refreshAssistantSummary,
+    commitData: commitAssistantSummary
   } = useIntelligenceSummary({ enabled: false });
-  const isAssistantRefreshBusy =
-    isManualAssistantRefreshing || isAssistantBackgroundRefreshing || isIntelligenceLoading;
+  const isAssistantRefreshBusy = isManualAssistantRefreshing;
   const isAssistantInitialLoading = isIntelligenceLoading && !intelligenceSummary;
 
   const loadDashboardData = async (options?: { mountedRef?: { current: boolean }; silent?: boolean }) => {
@@ -263,15 +263,20 @@ export default function DashboardPage() {
   };
 
   const handleManualAssistantRefresh = async () => {
-    if (isAssistantRefreshBusy) return;
+    if (isManualAssistantRefreshing) return;
 
     setIsManualAssistantRefreshing(true);
     setIntelligenceRefreshError(null);
-    const refreshed = await refreshAssistantSummary({ background: true });
-    if (!refreshed.success) {
+    try {
+      const generatedSummary = await generateIntelligenceSummary();
+      commitAssistantSummary(generatedSummary);
+      await loadDashboardData({ silent: true });
+    } catch (error) {
+      console.error("Dashboard manual intelligence generation failed.", error);
       setIntelligenceRefreshError("No se pudo actualizar el analisis.");
+    } finally {
+      setIsManualAssistantRefreshing(false);
     }
-    setIsManualAssistantRefreshing(false);
   };
 
   useEffect(() => {
@@ -568,7 +573,7 @@ export default function DashboardPage() {
             type="button"
             className="ghost-button intelligence-refresh-button"
             onClick={handleManualAssistantRefresh}
-            disabled={isAssistantRefreshBusy}
+            disabled={isManualAssistantRefreshing || isAssistantInitialLoading}
           >
             {isManualAssistantRefreshing
               ? assistantAnalysisState === "missing"
