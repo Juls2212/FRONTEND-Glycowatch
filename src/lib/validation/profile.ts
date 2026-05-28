@@ -2,6 +2,7 @@ import { z } from "zod";
 import { DiabetesType } from "@/lib/auth/onboarding";
 import { UpdateProfilePayload, ProfileData } from "@/features/profile/types";
 import { getTimezoneOptions } from "@/lib/timezones";
+import { CLINICAL_DECIMAL_FORMAT_MESSAGE, CLINICAL_DECIMAL_PATTERN } from "@/lib/validation/clinical-numbers";
 
 const MIN_GLUCOSE_THRESHOLD = 20;
 const MAX_GLUCOSE_THRESHOLD = 600;
@@ -14,7 +15,6 @@ const FULL_NAME_MAX_LENGTH = 100;
 const BIRTH_DATE_MAX_LENGTH = 10;
 const TIMEZONE_MAX_LENGTH = 100;
 const NUMERIC_TEXT_MAX_LENGTH = 16;
-const DECIMAL_NUMBER_PATTERN = /^\d+(?:\.\d+)?$/;
 
 export const DIABETES_TYPE_OPTIONS: Array<{ value: DiabetesType; label: string }> = [
   { value: "TYPE_1", label: "Tipo 1" },
@@ -37,7 +37,7 @@ const requiredNumericTextField = (message: string) =>
     .trim()
     .min(1, message)
     .max(NUMERIC_TEXT_MAX_LENGTH, "El valor ingresado es demasiado largo.")
-    .refine((value) => DECIMAL_NUMBER_PATTERN.test(value), message);
+    .refine((value) => CLINICAL_DECIMAL_PATTERN.test(value), `${message} ${CLINICAL_DECIMAL_FORMAT_MESSAGE}`);
 
 const normalizedFullName = requiredTrimmedString("El nombre completo es obligatorio.")
   .max(FULL_NAME_MAX_LENGTH, `El nombre completo no puede superar ${FULL_NAME_MAX_LENGTH} caracteres.`)
@@ -119,10 +119,10 @@ function addThresholdValidation(
 function addOptionalBodyMetricsValidation(values: { weightKg: string; heightCm: string }, ctx: z.RefinementCtx) {
   if (values.weightKg) {
     const weight = Number(values.weightKg);
-    if (!DECIMAL_NUMBER_PATTERN.test(values.weightKg) || weight < MIN_WEIGHT_KG || weight > MAX_WEIGHT_KG) {
+    if (!CLINICAL_DECIMAL_PATTERN.test(values.weightKg) || weight < MIN_WEIGHT_KG || weight > MAX_WEIGHT_KG) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: `El peso debe estar entre ${MIN_WEIGHT_KG} y ${MAX_WEIGHT_KG} kg.`,
+        message: `El peso debe estar entre ${MIN_WEIGHT_KG} y ${MAX_WEIGHT_KG} kg. ${CLINICAL_DECIMAL_FORMAT_MESSAGE}`,
         path: ["weightKg"]
       });
     }
@@ -130,10 +130,10 @@ function addOptionalBodyMetricsValidation(values: { weightKg: string; heightCm: 
 
   if (values.heightCm) {
     const height = Number(values.heightCm);
-    if (!DECIMAL_NUMBER_PATTERN.test(values.heightCm) || height < MIN_HEIGHT_CM || height > MAX_HEIGHT_CM) {
+    if (!CLINICAL_DECIMAL_PATTERN.test(values.heightCm) || height < MIN_HEIGHT_CM || height > MAX_HEIGHT_CM) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: `La altura debe estar entre ${MIN_HEIGHT_CM} y ${MAX_HEIGHT_CM} cm.`,
+        message: `La altura debe estar entre ${MIN_HEIGHT_CM} y ${MAX_HEIGHT_CM} cm. ${CLINICAL_DECIMAL_FORMAT_MESSAGE}`,
         path: ["heightCm"]
       });
     }
