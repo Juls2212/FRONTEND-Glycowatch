@@ -222,9 +222,9 @@ export function IntelligenceAnalysisDetailModal({ open, detail, isLoading, error
         style={{
           position: "relative",
           zIndex: 9999,
-          width: "min(980px, calc(100vw - 40px))",
+          width: "min(1120px, calc(100vw - 40px))",
           maxWidth: "100%",
-          maxHeight: "90vh",
+          maxHeight: "92vh",
           overflow: "hidden",
           background: "var(--surface-panel)",
           border: "1px solid var(--border-subtle)",
@@ -239,6 +239,14 @@ export function IntelligenceAnalysisDetailModal({ open, detail, isLoading, error
               Consulta la interpretación, los datos utilizados y la comparación final del análisis guardado.
             </p>
           </div>
+          {detail ? (
+            <div className="analysis-detail-header-meta">
+              <span className={`metric-card-badge risk-theme-badge ${detailThemeClass}`}>
+                {translateIntelligenceRiskLevel(detail.finalRiskLevel)}
+              </span>
+              <span className="analysis-detail-generated-at">{formatIntelligenceGeneratedAt(detail.generatedAt)}</span>
+            </div>
+          ) : null}
           <button type="button" className="ghost-button analysis-detail-close" onClick={onClose}>
             Cerrar
           </button>
@@ -258,12 +266,33 @@ export function IntelligenceAnalysisDetailModal({ open, detail, isLoading, error
 
         {!isLoading && !error && detail ? (
           <div className="analysis-detail-body">
+            <div className="analysis-detail-report-summary">
+              <div className="analysis-detail-report-summary-copy">
+                <p className="metric-label">Lectura ejecutiva</p>
+                <p className="analysis-detail-primary-message">{detail.assistantMessage}</p>
+              </div>
+              <div className="analysis-detail-report-summary-grid">
+                <div className="analysis-detail-kv-item">
+                  <span className="metric-label">Riesgo final</span>
+                  <strong>{translateIntelligenceRiskLevel(detail.finalRiskLevel)}</strong>
+                </div>
+                <div className="analysis-detail-kv-item">
+                  <span className="metric-label">Tendencia</span>
+                  <strong>{translateIntelligenceTrend(detail.trend)}</strong>
+                </div>
+                <div className="analysis-detail-kv-item">
+                  <span className="metric-label">Confianza</span>
+                  <strong>{formatIntelligenceConfidence(detail.confidence)}</strong>
+                </div>
+              </div>
+            </div>
+
             <div className="analysis-detail-report-layout">
               <div className="analysis-detail-main-stack">
                 <SectionCard title="Resumen clínico">
                   <div className="analysis-detail-hero-grid">
                     <div className="analysis-detail-hero-message">
-                      <p className="analysis-detail-primary-message">{detail.assistantMessage}</p>
+                      <p className="analysis-detail-section-kicker">Interpretación de IA</p>
                       {detail.aiExplanation ? <p className="analysis-detail-explanation">{detail.aiExplanation}</p> : null}
                     </div>
                     <div className="analysis-detail-overview-panel">
@@ -289,7 +318,7 @@ export function IntelligenceAnalysisDetailModal({ open, detail, isLoading, error
 
                 <SectionCard title="Interpretación principal" subtitle="Lectura clínica general y estado de acuerdo del análisis.">
                   <div className="analysis-detail-interpretation-grid">
-                    <div className="analysis-detail-kv-item">
+                    <div className="analysis-detail-kv-item analysis-detail-kv-wide">
                       <span className="metric-label">Resumen</span>
                       <strong>{detail.summary || "Sin resumen disponible"}</strong>
                     </div>
@@ -374,8 +403,9 @@ export function IntelligenceAnalysisDetailModal({ open, detail, isLoading, error
                 {detail.detectedFactors.length > 0 ? (
                   <SectionCard title="Factores detectados">
                     <div className="analysis-detail-bullet-grid">
-                      {detail.detectedFactors.map((factor) => (
+                      {detail.detectedFactors.map((factor, index) => (
                         <div key={factor} className="analysis-detail-bullet-card">
+                          <span className="analysis-detail-bullet-index">{index + 1}</span>
                           {factor}
                         </div>
                       ))}
@@ -386,8 +416,9 @@ export function IntelligenceAnalysisDetailModal({ open, detail, isLoading, error
                 {detail.recommendations.length > 0 ? (
                   <SectionCard title="Recomendaciones">
                     <div className="analysis-detail-bullet-grid">
-                      {detail.recommendations.map((recommendation) => (
+                      {detail.recommendations.map((recommendation, index) => (
                         <div key={recommendation} className="analysis-detail-bullet-card">
+                          <span className="analysis-detail-bullet-index">{index + 1}</span>
                           {recommendation}
                         </div>
                       ))}
