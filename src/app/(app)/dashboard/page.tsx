@@ -18,6 +18,7 @@ import {
   getIntelligenceAnalysisStatusMessage,
   getRiskBadgeLabel,
   getRiskThemeClass,
+  hasKnownMeasurementOrigin,
   translateMeasurementOrigin
 } from "@/features/intelligence/display";
 import { Card } from "@/components/ui/card";
@@ -485,7 +486,9 @@ export default function DashboardPage() {
   const assistantActionLabel = getIntelligenceAnalysisLabel(assistantAnalysisState);
   const assistantStatusLabel = getIntelligenceAnalysisStatusLabel(assistantAnalysisState);
   const assistantStatusMessage = getIntelligenceAnalysisStatusMessage(assistantAnalysisState);
-  const latestMeasurementOriginLabel = translateMeasurementOrigin(latestMeasurementOrigin);
+  const latestMeasurementOriginLabel = hasKnownMeasurementOrigin(latestMeasurementOrigin)
+    ? translateMeasurementOrigin(latestMeasurementOrigin)
+    : null;
   const primaryInsight = intelligenceSummary?.assistantMessage ?? riskMessage;
 
   useEffect(() => {
@@ -568,40 +571,40 @@ export default function DashboardPage() {
       </div>
 
       <div className="dashboard-clinical-hero">
-        <Card className={`dashboard-clinical-card risk-theme-card ${assistantThemeClass}`}>
+        <Card className={`dashboard-clinical-card dashboard-first-section-card risk-theme-card ${assistantThemeClass}`}>
           <div className="dashboard-clinical-top">
-            <div className="dashboard-clinical-reading">
-              <p className="dashboard-clinical-label">Glucosa actual</p>
-              <p className="dashboard-clinical-value">{latestMeasurementLabel}</p>
+            <div className="dashboard-clinical-reading dashboard-readable-panel dashboard-glucose-panel">
+              <p className="dashboard-clinical-label dashboard-readable-label">Glucosa actual</p>
+              <p className="dashboard-clinical-value dashboard-readable-primary-value">{latestMeasurementLabel}</p>
               <div className="dashboard-clinical-badges">
-                <span className={`metric-chip ${monitoringToneClass}`}>Estado {risk ? translateStatus(risk.currentStatus) : "Sin datos"}</span>
-                <span className="metric-chip">Tendencia {risk ? translateTrend(risk.trend) : "Sin datos"}</span>
+                <span className={`metric-chip dashboard-readable-chip ${monitoringToneClass}`}>Estado {risk ? translateStatus(risk.currentStatus) : "Sin datos"}</span>
+                <span className="metric-chip dashboard-readable-chip">Tendencia {risk ? translateTrend(risk.trend) : "Sin datos"}</span>
               </div>
-              <p className="dashboard-clinical-meta">{formattedLatest}</p>
+              <p className="dashboard-clinical-meta dashboard-readable-helper">{formattedLatest}</p>
             </div>
 
-            <div className="dashboard-clinical-graph">
+            <div className="dashboard-clinical-graph dashboard-readable-panel dashboard-trend-panel">
               <div className="dashboard-clinical-graph-head">
-                <p className="dashboard-clinical-graph-label">Mini tendencia</p>
-                <span className="dashboard-clinical-graph-range">{rangeSummary}</span>
+                <p className="dashboard-clinical-graph-label dashboard-readable-label">Mini tendencia</p>
+                <span className="dashboard-clinical-graph-range dashboard-readable-range">{rangeSummary}</span>
               </div>
               <DashboardSparkline data={filteredChartData} />
             </div>
           </div>
 
-          <div className="dashboard-primary-insight">
-            <div>
-              <p className="dashboard-primary-insight-label">Insight principal</p>
-              <p className="dashboard-primary-insight-copy">{primaryInsight}</p>
+          <div className="dashboard-primary-insight dashboard-readable-panel dashboard-insight-panel">
+            <div className="dashboard-insight-copy-block">
+              <p className="dashboard-primary-insight-label dashboard-readable-label">Insight principal</p>
+              <p className="dashboard-primary-insight-copy dashboard-readable-description">{primaryInsight}</p>
             </div>
             <div className="dashboard-primary-insight-summary">
-              <span className="dashboard-primary-insight-stat">
-                <strong>{averageLabel}</strong>
-                <span>Promedio reciente</span>
+              <span className="dashboard-primary-insight-stat dashboard-readable-mini-metric">
+                <strong className="dashboard-readable-metric-value">{averageLabel}</strong>
+                <span className="dashboard-readable-metric-label">Promedio reciente</span>
               </span>
-              <span className="dashboard-primary-insight-stat">
-                <strong>{formatWholeMetric(metrics?.alertsCount ?? 0)}</strong>
-                <span>Eventos totales</span>
+              <span className="dashboard-primary-insight-stat dashboard-readable-mini-metric">
+                <strong className="dashboard-readable-metric-value">{formatWholeMetric(metrics?.alertsCount ?? 0)}</strong>
+                <span className="dashboard-readable-metric-label">Eventos totales</span>
               </span>
             </div>
           </div>
@@ -707,11 +710,13 @@ export default function DashboardPage() {
               <p className="dashboard-assistant-preview-panel-copy">
                 {assistantStatusMessage}
               </p>
-              <div className="assistant-context-list">
+            <div className="assistant-context-list">
+              {latestMeasurementOriginLabel ? (
                 <span className="assistant-context-item">Origen reciente: {latestMeasurementOriginLabel}</span>
-                <span className="assistant-context-item">
-                  {intelligenceSummary ? `Generado: ${new Date(intelligenceSummary.generatedAt).toLocaleString("es-CO")}` : "Sin análisis previo"}
-                </span>
+              ) : null}
+              <span className="assistant-context-item">
+                {intelligenceSummary ? `Generado: ${new Date(intelligenceSummary.generatedAt).toLocaleString("es-CO")}` : "Sin análisis previo"}
+              </span>
               </div>
             </div>
 
