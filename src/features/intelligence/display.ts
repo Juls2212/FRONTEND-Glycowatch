@@ -165,3 +165,7 @@ export function translateMeasurementOrigin(value: string | null | undefined): st
   if (value === "MANUAL") return "Manual";
   return "No disponible";
 }
+
+export function hasKnownMeasurementOrigin(value: string | null | undefined): boolean {
+  return value === "IOT" || value === "DEVICE" || value === "HARDWARE" || value === "MANUAL";
+}
