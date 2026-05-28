@@ -4,11 +4,13 @@ import { useEffect, useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { FeedbackBanner } from "@/components/ui/feedback-banner";
+import { ContextualAssistantPrompt } from "@/components/intelligence/contextual-assistant-prompt";
 import { LatestMeasurementCard } from "@/features/measurements/components/latest-measurement-card";
 import { ManualMeasurementForm } from "@/features/measurements/components/manual-measurement-form";
 import { MeasurementsTable } from "@/features/measurements/components/measurements-table";
 import { deleteMeasurement, fetchLatestMeasurement, fetchMeasurements } from "@/features/measurements/api";
 import { LatestMeasurement, MeasurementItem, MeasurementsFilters } from "@/features/measurements/types";
+import { useContextualAssistantPrompt } from "@/hooks/use-contextual-assistant-prompt";
 import { HttpError } from "@/types/api";
 
 const PAGE_SIZE = 10;
@@ -64,6 +66,11 @@ export default function MeasurementsPage() {
   const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const {
+    prompt: assistantPrompt,
+    dismissPrompt: dismissAssistantPrompt,
+    showPromptOnce
+  } = useContextualAssistantPrompt();
 
   const loadData = async (
     page: number,
@@ -137,6 +144,12 @@ export default function MeasurementsPage() {
   const onManualCreated = async () => {
     setSuccess("Medición manual agregada correctamente.");
     await loadData(currentPage, filters, { preserveFeedback: true });
+    showPromptOnce({
+      id: "assistant-first-manual-measurement",
+      tone: "success",
+      title: "Registro incorporado",
+      message: "Tu medición manual ya quedó integrada al historial. Cuando quieras, puedes generar un análisis nuevo con este dato."
+    });
   };
 
   const onDeleteMeasurement = async (measurementId: number) => {
@@ -174,6 +187,7 @@ export default function MeasurementsPage() {
 
   return (
     <div className="app-page measurements-page measurements-phase-three">
+      <ContextualAssistantPrompt prompt={assistantPrompt} onDismiss={dismissAssistantPrompt} />
       <header className="measurements-shell-header">
         <div className="measurements-shell-copy">
           <p className="measurements-shell-eyebrow">Registro glucémico</p>
