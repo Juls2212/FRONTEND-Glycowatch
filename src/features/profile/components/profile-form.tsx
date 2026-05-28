@@ -1,5 +1,6 @@
 import { FormEvent, ReactNode, useEffect, useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
+import { ContextualAssistantGuide } from "@/components/intelligence/contextual-assistant-guide";
 import { StatePanel } from "@/components/ui/state-panel";
 import { ProfileData, UpdateProfilePayload } from "@/features/profile/types";
 import { DiabetesType } from "@/lib/auth/onboarding";
@@ -250,6 +251,16 @@ export function ProfileForm({
               description="Estos datos ayudan a identificar tu cuenta y ajustar horarios, edad y contexto de seguimiento."
             />
 
+            <ContextualAssistantGuide
+              compact
+              title="Por que este contexto personal importa"
+              description="El asistente usa tus datos personales para que horarios, resumenes y referencias se muestren de forma coherente."
+              bullets={[
+                "La zona horaria evita interpretar una medicion en un horario equivocado.",
+                "La fecha de nacimiento aporta una referencia basica para contextualizar el seguimiento."
+              ]}
+            />
+
             <div className="profile-section-grid">
               <label className={`field ${fieldErrors.fullName ? "has-error" : ""}`}>
                 <span>Nombre completo</span>
@@ -328,6 +339,18 @@ export function ProfileForm({
               }
               title="Salud y monitoreo"
               description="Configura el tipo de diabetes y los valores que guían tus alertas y análisis diarios."
+            />
+
+            <ContextualAssistantGuide
+              compact
+              tone="highlight"
+              title="Como se personaliza tu monitoreo"
+              description="Estos valores ayudan a que el sistema distinga mejor cuando una lectura necesita mas atencion o seguimiento."
+              bullets={[
+                "El tipo de diabetes orienta mejor el tono del analisis y las alertas.",
+                "Los umbrales minimo y maximo definen tu rango de monitoreo personalizado.",
+                "Peso y altura completan un contexto clinico mas util para futuras referencias."
+              ]}
             />
 
             <div className="profile-threshold-highlight">
