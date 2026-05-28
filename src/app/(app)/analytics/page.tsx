@@ -6,6 +6,7 @@ import { Section } from "@/components/ui/section";
 import { GlucoseVisualization } from "@/components/charts/glucose-visualization";
 import { IntelligenceAssistantRobot } from "@/components/intelligence/IntelligenceAssistantRobot";
 import { IntelligenceAnalysisDetailModal } from "@/components/intelligence/intelligence-analysis-detail-modal";
+import { ContextualAssistantPrompt } from "@/components/intelligence/contextual-assistant-prompt";
 import { fetchChartData, fetchDashboardMetrics, fetchRiskAnalysis } from "@/features/dashboard/api";
 import { ChartPoint, DashboardMetrics, RiskAnalysis } from "@/features/dashboard/types";
 import { ChartRangeFilter } from "@/features/dashboard/components/chart-range-filter";
@@ -37,6 +38,7 @@ import { generateIntelligenceSummary, getIntelligenceHistoryDetail } from "@/fea
 import { fetchLatestMeasurementContext } from "@/features/measurements/api";
 import { useAuthStore } from "@/stores/auth-store";
 import { IntelligenceAnalysisDetail } from "@/features/intelligence/types";
+import { useContextualAssistantPrompt } from "@/hooks/use-contextual-assistant-prompt";
 
 type InsightKey = "trend" | "predominance" | "stability";
 type HistoryLimit = 5 | 10 | "ALL";
@@ -234,6 +236,12 @@ export default function AnalyticsPage() {
   const isIntelligenceInitialLoading = isIntelligenceLoading && !intelligenceSummary;
   const isIntelligenceHistoryInitialLoading =
     isIntelligenceHistoryLoading && intelligenceHistory.length === 0;
+  const {
+    prompt: assistantPrompt,
+    dismissPrompt: dismissAssistantPrompt,
+    showPrompt,
+    showPromptOnce
+  } = useContextualAssistantPrompt();
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -426,6 +434,13 @@ export default function AnalyticsPage() {
       const historyResult = await refreshIntelligenceHistory({ background: true });
       if (!historyResult.success) {
         setIntelligenceRefreshError("No se pudo actualizar el análisis.");
+      } else {
+        showPrompt({
+          id: "analytics-analysis-generated",
+          tone: "success",
+          title: "Análisis generado",
+          message: "El reporte inteligente y su historial ya fueron actualizados con las mediciones más recientes."
+        });
       }
     } catch (error) {
       console.error("Analytics manual intelligence refresh failed.", error);
@@ -441,7 +456,8 @@ export default function AnalyticsPage() {
     isIntelligenceInitialLoading,
     isManualIntelligenceRefreshing,
     refreshAnalyticsMeasurements,
-    refreshIntelligenceHistory
+    refreshIntelligenceHistory,
+    showPrompt
   ]);
 
   const handleOpenHistoryDetail = useCallback(async (historyId: number) => {
@@ -472,8 +488,20 @@ export default function AnalyticsPage() {
     setIsHistoryDetailLoading(false);
   }, []);
 
+  useEffect(() => {
+    if (isIntelligenceInitialLoading) return;
+    if (intelligenceAnalysisState !== "missing") return;
+
+    showPromptOnce({
+      id: "assistant-before-first-analysis",
+      title: "Todavía no hay análisis clínico",
+      message: "Puedes generarlo manualmente cuando quieras para obtener interpretación, factores detectados y recomendaciones sobre tus mediciones."
+    });
+  }, [intelligenceAnalysisState, isIntelligenceInitialLoading, showPromptOnce]);
+
   return (
     <div className="dashboard-grid app-page analytics-page">
+      <ContextualAssistantPrompt prompt={assistantPrompt} onDismiss={dismissAssistantPrompt} />
       <div className="analytics-hero">
         <Card className="analytics-hero-card analytics-hero-primary">
           <div className="analytics-hero-copy">
