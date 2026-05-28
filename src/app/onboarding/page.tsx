@@ -12,8 +12,14 @@ import { fetchProfile, updateProfile } from "@/features/profile/api";
 import { ProfileData } from "@/features/profile/types";
 import { useContextualAssistantPrompt } from "@/hooks/use-contextual-assistant-prompt";
 import { onboardingStorage, DiabetesType } from "@/lib/auth/onboarding";
-import { normalizeRestrictedDecimalInput, trimInputValue } from "@/lib/forms/input-normalizers";
+import { trimInputValue } from "@/lib/forms/input-normalizers";
 import { getBrowserTimezoneOrDefault } from "@/lib/timezones";
+import {
+  CLINICAL_DECIMAL_FORMAT_MESSAGE,
+  CLINICAL_DECIMAL_MAX_LENGTH,
+  getClinicalDecimalTypingError,
+  isAllowedClinicalDecimalInput
+} from "@/lib/validation/clinical-numbers";
 import {
   buildOnboardingProfilePayload,
   DIABETES_TYPE_OPTIONS,
@@ -31,6 +37,11 @@ type OnboardingFormValues = {
   weightKg: string;
   heightCm: string;
 };
+
+type OnboardingClinicalField = keyof Pick<
+  OnboardingFormValues,
+  "hypoglycemiaThreshold" | "hyperglycemiaThreshold" | "weightKg" | "heightCm"
+>;
 
 function FieldInfoTip({ summary, children }: { summary: string; children: string }) {
   return (
@@ -54,6 +65,18 @@ function toDefaultValues(profile: ProfileData | null): OnboardingFormValues {
   };
 }
 
+function getOnboardingClinicalTypingError(field: OnboardingClinicalField, value: string): string | null {
+  if (field === "hypoglycemiaThreshold" || field === "hyperglycemiaThreshold") {
+    return getClinicalDecimalTypingError(value, { min: 20, max: 600, unit: "mg/dL", label: "El umbral" });
+  }
+
+  if (field === "weightKg") {
+    return getClinicalDecimalTypingError(value, { min: 2, max: 350, unit: "kg", label: "El peso" });
+  }
+
+  return getClinicalDecimalTypingError(value, { min: 30, max: 250, unit: "cm", label: "La altura" });
+}
+
 export default function OnboardingPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
@@ -69,6 +92,9 @@ export default function OnboardingPage() {
     handleSubmit,
     reset,
     setValue,
+    setError,
+    clearErrors,
+    trigger,
     formState: { errors, isSubmitting, isValid }
   } = useForm<OnboardingFormValues>({
     resolver: zodResolver(onboardingProfileSchema),
@@ -133,13 +159,28 @@ export default function OnboardingPage() {
   });
 
   const applyRestrictedDecimal =
-    (field: keyof Pick<OnboardingFormValues, "hypoglycemiaThreshold" | "hyperglycemiaThreshold" | "weightKg" | "heightCm">) =>
+    (field: OnboardingClinicalField) =>
     (value: string) => {
-      setValue(field, normalizeRestrictedDecimalInput(value, { maxIntegerDigits: 3, maxFractionDigits: 1 }), {
+      if (!isAllowedClinicalDecimalInput(value)) {
+        setError(field, { type: "pattern", message: CLINICAL_DECIMAL_FORMAT_MESSAGE });
+        return;
+      }
+
+      setValue(field, value, {
         shouldDirty: true,
         shouldTouch: true,
-        shouldValidate: true
+        shouldValidate: false
       });
+      const typingError = getOnboardingClinicalTypingError(field, value);
+      if (typingError) {
+        setError(field, { type: "pattern", message: typingError });
+        return;
+      }
+      if (value.endsWith(".")) {
+        clearErrors(field);
+        return;
+      }
+      void trigger(field);
     };
 
   useEffect(() => {
@@ -249,7 +290,9 @@ export default function OnboardingPage() {
                       <label className={`field ${errors.hypoglycemiaThreshold ? "has-error" : ""}`}>
                         <span>Umbral minimo de glucosa (mg/dL)</span>
                         <input
-                          type="number"
+                          type="text"
+                          inputMode="decimal"
+                          maxLength={CLINICAL_DECIMAL_MAX_LENGTH}
                           step="0.1"
                           min="20"
                           max="600"
@@ -269,7 +312,9 @@ export default function OnboardingPage() {
                       <label className={`field ${errors.hyperglycemiaThreshold ? "has-error" : ""}`}>
                         <span>Umbral maximo de glucosa (mg/dL)</span>
                         <input
-                          type="number"
+                          type="text"
+                          inputMode="decimal"
+                          maxLength={CLINICAL_DECIMAL_MAX_LENGTH}
                           step="0.1"
                           min="20"
                           max="600"
@@ -289,7 +334,9 @@ export default function OnboardingPage() {
                       <label className={`field ${errors.weightKg ? "has-error" : ""}`}>
                         <span>Peso (kg)</span>
                         <input
-                          type="number"
+                          type="text"
+                          inputMode="decimal"
+                          maxLength={CLINICAL_DECIMAL_MAX_LENGTH}
                           step="0.1"
                           min="2"
                           max="350"
@@ -309,7 +356,9 @@ export default function OnboardingPage() {
                       <label className={`field ${errors.heightCm ? "has-error" : ""}`}>
                         <span>Altura (cm)</span>
                         <input
-                          type="number"
+                          type="text"
+                          inputMode="decimal"
+                          maxLength={CLINICAL_DECIMAL_MAX_LENGTH}
                           step="0.1"
                           min="30"
                           max="250"
