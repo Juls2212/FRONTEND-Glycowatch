@@ -553,9 +553,9 @@ export default function DashboardPage() {
       <div className="dashboard-shell-header">
         <div className="dashboard-shell-copy">
           <p className="hero-eyebrow">Monitoreo diario</p>
-          <h2 className="dashboard-shell-title">{getGreeting()}, este es tu control de hoy.</h2>
+          <h2 className="dashboard-shell-title">{getGreeting()}, tu seguimiento glucémico está listo.</h2>
           <p className="dashboard-shell-subtitle">
-            Una vista mas calmada para revisar glucosa, tendencia y apoyo inteligente sin fragmentacion innecesaria.
+            Revisa el estado actual, registra una medición y mantén el análisis clínico en una vista clara y serena.
           </p>
         </div>
         <div className="dashboard-shell-actions">
@@ -607,73 +607,137 @@ export default function DashboardPage() {
           </div>
         </Card>
 
-        <Card className={`dashboard-assistant-preview risk-theme-card ${assistantThemeClass}`}>
-          <div className="dashboard-assistant-preview-head">
-            <IntelligenceAssistantRobot
-              assistantMood={intelligenceSummary?.assistantMood}
-              finalRiskLevel={intelligenceSummary?.finalRiskLevel}
-              trend={intelligenceSummary?.trend}
-              isLoading={isAssistantInitialLoading}
-              className="dashboard-assistant-preview-robot"
-            />
-            <div className="dashboard-assistant-preview-copy">
-              <p className="hero-eyebrow">Glyco Assistant</p>
-              <h3 className="dashboard-assistant-preview-title">Resumen inteligente</h3>
-              <p className="dashboard-assistant-preview-message">
-                {isAssistantInitialLoading
-                  ? "Cargando analisis inteligente..."
-                  : intelligenceError
-                    ? intelligenceError
-                    : intelligenceSummary?.assistantMessage ?? "Todavia no hay un analisis generado para tus mediciones."}
-              </p>
+        <div className="dashboard-hero-side-stack">
+          <Card className="manual-entry-card dashboard-manual-card dashboard-manual-priority-card">
+            <div className="dashboard-support-card-header">
+              <div>
+                <p className="metric-label">Registro manual</p>
+                <p className="metric-card-caption">Agrega una medición sin salir del panel.</p>
+              </div>
             </div>
-          </div>
 
-          <div className="dashboard-assistant-preview-badges">
-            <span className={`metric-chip intelligence-state-badge intelligence-state-${assistantAnalysisState}`}>
-              {assistantStatusLabel}
-            </span>
-            <span className={`metric-chip risk-theme-badge ${assistantThemeClass}`}>
-              {intelligenceSummary ? getRiskBadgeLabel(intelligenceSummary.finalRiskLevel) : "Sin datos"}
-            </span>
-            <span className="metric-chip">Tendencia {assistantTrendLabel}</span>
-          </div>
+            <form className="manual-form" onSubmit={onManualSubmit}>
+              <label className={`field ${formFieldErrors.glucoseValue ? "has-error" : ""}`}>
+                <span>Valor de glucosa (mg/dL)</span>
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  maxLength={CLINICAL_DECIMAL_MAX_LENGTH}
+                  step="0.1"
+                  min="20"
+                  max="600"
+                  value={glucoseValueInput}
+                  disabled={isSubmitting}
+                  aria-invalid={formFieldErrors.glucoseValue ? "true" : "false"}
+                  aria-describedby={formFieldErrors.glucoseValue ? "dashboard-glucose-error" : undefined}
+                  onChange={(event) => updateGlucoseValueInput(event.target.value)}
+                  placeholder="Ej. 112.5"
+                />
+                {formFieldErrors.glucoseValue ? <small id="dashboard-glucose-error">{formFieldErrors.glucoseValue}</small> : null}
+              </label>
 
-          <div className="dashboard-assistant-preview-panel">
-            <p className="dashboard-assistant-preview-panel-title">Contexto del analisis</p>
-            <p className="dashboard-assistant-preview-panel-copy">
-              {assistantStatusMessage}
-            </p>
-            <div className="assistant-context-list">
-              <span className="assistant-context-item">Origen reciente: {latestMeasurementOriginLabel}</span>
-              <span className="assistant-context-item">
-                {intelligenceSummary ? `Generado: ${new Date(intelligenceSummary.generatedAt).toLocaleString("es-CO")}` : "Sin analisis previo"}
+              <label className={`field ${formFieldErrors.measuredAt ? "has-error" : ""}`}>
+                <span>Fecha y hora de medición</span>
+                <input
+                  type="datetime-local"
+                  max={new Date().toISOString().slice(0, 16)}
+                  value={measuredAtInput}
+                  disabled={isSubmitting}
+                  aria-invalid={formFieldErrors.measuredAt ? "true" : "false"}
+                  aria-describedby={formFieldErrors.measuredAt ? "dashboard-measured-at-error" : undefined}
+                  onChange={(event) => {
+                    setFormFieldErrors((current) => {
+                      if (!current.measuredAt) return current;
+                      const next = { ...current };
+                      delete next.measuredAt;
+                      return next;
+                    });
+                    setMeasuredAtInput(event.target.value);
+                  }}
+                />
+                {formFieldErrors.measuredAt ? <small id="dashboard-measured-at-error">{formFieldErrors.measuredAt}</small> : null}
+              </label>
+
+              {formError ? <p className="form-feedback form-feedback-error">{formError}</p> : null}
+              {formSuccess ? <p className="form-feedback form-feedback-success">{formSuccess}</p> : null}
+
+              <div className="manual-actions dashboard-manual-actions">
+                <p className="manual-helper-text">Se agrega al historial y actualiza el panel.</p>
+                <button type="submit" className="primary-button" disabled={isSubmitting}>
+                  {isSubmitting ? "Guardando..." : "Guardar medición"}
+                </button>
+              </div>
+            </form>
+          </Card>
+
+          <Card className={`dashboard-assistant-preview risk-theme-card ${assistantThemeClass}`}>
+            <div className="dashboard-assistant-preview-head">
+              <IntelligenceAssistantRobot
+                assistantMood={intelligenceSummary?.assistantMood}
+                finalRiskLevel={intelligenceSummary?.finalRiskLevel}
+                trend={intelligenceSummary?.trend}
+                isLoading={isAssistantInitialLoading}
+                className="dashboard-assistant-preview-robot"
+              />
+              <div className="dashboard-assistant-preview-copy">
+                <p className="hero-eyebrow">Glyco Assistant</p>
+                <h3 className="dashboard-assistant-preview-title">Resumen inteligente</h3>
+                <p className="dashboard-assistant-preview-message">
+                  {isAssistantInitialLoading
+                    ? "Cargando análisis inteligente..."
+                    : intelligenceError
+                      ? intelligenceError
+                      : intelligenceSummary?.assistantMessage ?? "Todavía no hay un análisis generado para tus mediciones."}
+                </p>
+              </div>
+            </div>
+
+            <div className="dashboard-assistant-preview-badges">
+              <span className={`metric-chip intelligence-state-badge intelligence-state-${assistantAnalysisState}`}>
+                {assistantStatusLabel}
               </span>
+              <span className={`metric-chip risk-theme-badge ${assistantThemeClass}`}>
+                {intelligenceSummary ? getRiskBadgeLabel(intelligenceSummary.finalRiskLevel) : "Sin datos"}
+              </span>
+              <span className="metric-chip">Tendencia {assistantTrendLabel}</span>
             </div>
-          </div>
 
-          <button
-            type="button"
-            className="ghost-button intelligence-refresh-button"
-            onClick={handleManualAssistantRefresh}
-            disabled={isManualAssistantRefreshing || isAssistantInitialLoading}
-          >
-            {isManualAssistantRefreshing
-              ? assistantAnalysisState === "missing"
-                ? "Generando..."
-                : "Actualizando..."
-              : assistantActionLabel}
-          </button>
+            <div className="dashboard-assistant-preview-panel">
+              <p className="dashboard-assistant-preview-panel-title">Contexto del análisis</p>
+              <p className="dashboard-assistant-preview-panel-copy">
+                {assistantStatusMessage}
+              </p>
+              <div className="assistant-context-list">
+                <span className="assistant-context-item">Origen reciente: {latestMeasurementOriginLabel}</span>
+                <span className="assistant-context-item">
+                  {intelligenceSummary ? `Generado: ${new Date(intelligenceSummary.generatedAt).toLocaleString("es-CO")}` : "Sin análisis previo"}
+                </span>
+              </div>
+            </div>
 
-          {!isAssistantInitialLoading && intelligenceRefreshError ? <p className="soft-text">{intelligenceRefreshError}</p> : null}
-          {isManualAssistantRefreshing ? <p className="soft-text intelligence-refresh-status">Actualizando solo el analisis...</p> : null}
-        </Card>
+            <button
+              type="button"
+              className="ghost-button intelligence-refresh-button"
+              onClick={handleManualAssistantRefresh}
+              disabled={isManualAssistantRefreshing || isAssistantInitialLoading}
+            >
+              {isManualAssistantRefreshing
+                ? assistantAnalysisState === "missing"
+                  ? "Generando..."
+                  : "Actualizando..."
+                : assistantActionLabel}
+            </button>
+
+            {!isAssistantInitialLoading && intelligenceRefreshError ? <p className="soft-text">{intelligenceRefreshError}</p> : null}
+            {isManualAssistantRefreshing ? <p className="soft-text intelligence-refresh-status">Actualizando solo el análisis...</p> : null}
+          </Card>
+        </div>
       </div>
 
       <div className="dashboard-monitoring-layout">
         <Section
           title="Monitoreo de glucosa"
-          subtitle="Una sola vista principal para explorar el rango seleccionado con mejor contexto clinico."
+          subtitle="Explora el rango seleccionado con contexto clínico."
           action={
             <div className="section-actions">
               <ChartRangeFilter value={chartRange} onChange={setChartRange} />
@@ -730,8 +794,8 @@ export default function DashboardPage() {
           <Card className="dashboard-support-card">
             <div className="dashboard-support-card-header">
               <div>
-                <p className="metric-label">Lectura clinica</p>
-                <p className="metric-card-caption">Sintesis compacta para interpretar el momento actual.</p>
+                <p className="metric-label">Lectura clínica</p>
+                <p className="metric-card-caption">Síntesis compacta para interpretar el momento actual.</p>
               </div>
               <span className={`metric-chip ${monitoringToneClass}`}>{risk ? translateStatus(risk.currentStatus) : "Sin datos"}</span>
             </div>
@@ -758,7 +822,7 @@ export default function DashboardPage() {
             <div className="dashboard-support-card-header">
               <div>
                 <p className="metric-label">Alertas recientes</p>
-                <p className="metric-card-caption">Eventos mas relevantes para mantener seguimiento inmediato.</p>
+                <p className="metric-card-caption">Eventos más relevantes para mantener seguimiento inmediato.</p>
               </div>
               <span className="metric-chip">Activas {formatWholeMetric(unreadAlertsCount)}</span>
             </div>
@@ -782,68 +846,6 @@ export default function DashboardPage() {
             ) : (
               <p className="soft-text">No hay alertas recientes visibles en este momento.</p>
             )}
-          </Card>
-
-          <Card className="manual-entry-card dashboard-manual-card">
-            <div className="dashboard-support-card-header">
-              <div>
-                <p className="metric-label">Registro manual</p>
-                <p className="metric-card-caption">Agrega una medicion sin salir del panel.</p>
-              </div>
-            </div>
-
-            <form className="manual-form" onSubmit={onManualSubmit}>
-              <label className={`field ${formFieldErrors.glucoseValue ? "has-error" : ""}`}>
-                <span>Valor de glucosa (mg/dL)</span>
-                <input
-                  type="text"
-                  inputMode="decimal"
-                  maxLength={CLINICAL_DECIMAL_MAX_LENGTH}
-                  step="0.1"
-                  min="20"
-                  max="600"
-                  value={glucoseValueInput}
-                  disabled={isSubmitting}
-                  aria-invalid={formFieldErrors.glucoseValue ? "true" : "false"}
-                  aria-describedby={formFieldErrors.glucoseValue ? "dashboard-glucose-error" : undefined}
-                  onChange={(event) => updateGlucoseValueInput(event.target.value)}
-                  placeholder="Ej. 112.5"
-                />
-                {formFieldErrors.glucoseValue ? <small id="dashboard-glucose-error">{formFieldErrors.glucoseValue}</small> : null}
-              </label>
-
-              <label className={`field ${formFieldErrors.measuredAt ? "has-error" : ""}`}>
-                <span>Fecha y hora de medicion</span>
-                <input
-                  type="datetime-local"
-                  max={new Date().toISOString().slice(0, 16)}
-                  value={measuredAtInput}
-                  disabled={isSubmitting}
-                  aria-invalid={formFieldErrors.measuredAt ? "true" : "false"}
-                  aria-describedby={formFieldErrors.measuredAt ? "dashboard-measured-at-error" : undefined}
-                  onChange={(event) => {
-                    setFormFieldErrors((current) => {
-                      if (!current.measuredAt) return current;
-                      const next = { ...current };
-                      delete next.measuredAt;
-                      return next;
-                    });
-                    setMeasuredAtInput(event.target.value);
-                  }}
-                />
-                {formFieldErrors.measuredAt ? <small id="dashboard-measured-at-error">{formFieldErrors.measuredAt}</small> : null}
-              </label>
-
-              {formError ? <p className="form-feedback form-feedback-error">{formError}</p> : null}
-              {formSuccess ? <p className="form-feedback form-feedback-success">{formSuccess}</p> : null}
-
-              <div className="manual-actions">
-                <p className="manual-helper-text">La medicion se agrega al historial y refresca el panel al guardarse.</p>
-                <button type="submit" className="primary-button" disabled={isSubmitting}>
-                  {isSubmitting ? "Guardando..." : "Guardar medicion"}
-                </button>
-              </div>
-            </form>
           </Card>
         </div>
       </div>
