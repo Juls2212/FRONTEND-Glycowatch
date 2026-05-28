@@ -17,7 +17,11 @@ type Props = {
 };
 
 function nowDateInputValue(): string {
-  return new Date().toISOString().slice(0, 10);
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 function nowTimeInputValue(): string {
@@ -121,7 +125,7 @@ export function ManualMeasurementForm({ onCreated }: Props) {
           Registra una lectura puntual para mantener tu seguimiento actualizado.
         </p>
       </div>
-      <form className="manual-form" onSubmit={onSubmit}>
+      <form className="manual-form measurements-manual-form" onSubmit={onSubmit}>
         <div className="manual-form-grid manual-form-grid-primary">
           <label className={`field ${fieldErrors.glucoseValue ? "has-error" : ""}`}>
             <span>Valor de glucosa</span>
