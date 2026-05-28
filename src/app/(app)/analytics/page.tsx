@@ -565,8 +565,17 @@ export default function AnalyticsPage() {
         </Card>
       </div>
 
-      <Section title="Exploracion de tendencia" subtitle="Visualizacion interactiva con el mismo rango temporal del seguimiento" action={<ChartRangeFilter value={chartRange} onChange={setChartRange} />}>
+      <Section title="Exploración de tendencia" subtitle="Visualización interactiva con el mismo rango temporal del seguimiento" action={<ChartRangeFilter value={chartRange} onChange={setChartRange} />}>
         <Card className="chart-card analytics-chart-card">
+          <div className="analytics-chart-card-header">
+            <div>
+              <p className="metric-label">Curva glucémica</p>
+              <p className="metric-card-caption">
+                {filteredChartData.length > 0 ? `${filteredChartData.length} lecturas visibles en el rango seleccionado.` : "Sin lecturas visibles en este rango."}
+              </p>
+            </div>
+            <span className="metric-card-badge">Rango activo</span>
+          </div>
           {isLoading && chartData.length === 0 ? <p className="soft-text">Cargando analisis...</p> : null}
           {!isLoading && isChartRefreshing ? <p className="soft-text">Actualizando grafica...</p> : null}
           {error ? <p className="error-text">{error}</p> : null}
@@ -805,11 +814,13 @@ export default function AnalyticsPage() {
                   </div>
                 </div>
                 {intelligenceFactors.length > 0 ? (
-                  <ul className="analytics-intelligence-list">
+                  <div className="analytics-intelligence-chip-list">
                     {intelligenceFactors.map((factor) => (
-                      <li key={factor}>{factor}</li>
+                      <div key={factor} className="analytics-intelligence-chip-card">
+                        {factor}
+                      </div>
                     ))}
-                  </ul>
+                  </div>
                 ) : (
                   <p className="soft-text">No se detectaron factores adicionales en este momento.</p>
                 )}
@@ -823,11 +834,13 @@ export default function AnalyticsPage() {
                   </div>
                 </div>
                 {intelligenceRecommendations.length > 0 ? (
-                  <ul className="analytics-intelligence-list">
+                  <div className="analytics-intelligence-chip-list">
                     {intelligenceRecommendations.map((recommendation) => (
-                      <li key={recommendation}>{recommendation}</li>
+                      <div key={recommendation} className="analytics-intelligence-chip-card">
+                        {recommendation}
+                      </div>
                     ))}
-                  </ul>
+                  </div>
                 ) : (
                   <p className="soft-text">No hay recomendaciones adicionales disponibles.</p>
                 )}
@@ -868,29 +881,7 @@ export default function AnalyticsPage() {
         ) : null}
       </Section>
 
-      <Section
-        title="Historial de análisis inteligente"
-        subtitle="Evolución reciente de los análisis generados por GlycoWatch."
-        action={
-          <div className="analytics-history-filter" role="tablist" aria-label="Filtro de historial inteligente">
-            {([
-              { value: 5 as const, label: "Últimos 5" },
-              { value: 10 as const, label: "Últimos 10" },
-              { value: "ALL" as const, label: "Todos" }
-            ]).map((option) => (
-              <button
-                key={option.label}
-                type="button"
-                className={`analytics-history-filter-button ${historyLimit === option.value ? "active" : ""}`}
-                onClick={() => setHistoryLimit(option.value)}
-                aria-pressed={historyLimit === option.value}
-              >
-                {option.label}
-              </button>
-            ))}
-          </div>
-        }
-      >
+      <Section title="Historial de análisis inteligente" subtitle="Evolución reciente de los análisis generados por GlycoWatch.">
         {isIntelligenceHistoryInitialLoading ? (
           <Card className="analytics-intelligence-card">
             <p className="soft-text">Cargando historial de análisis...</p>
@@ -910,38 +901,85 @@ export default function AnalyticsPage() {
         ) : null}
 
         {!isIntelligenceHistoryInitialLoading && !intelligenceHistoryError && intelligenceHistory.length > 0 ? (
-          <div className="analytics-history-list">
-            {visibleHistory.map((item) => (
-              <button
-                key={item.id}
-                type="button"
-                className={`analytics-history-card analytics-history-trigger risk-theme-card ${getRiskThemeClass(item.finalRiskLevel, item.assistantMood)}`}
-                onClick={() => void handleOpenHistoryDetail(item.id)}
-              >
-                <div className="analytics-history-header">
-                  <div className="analytics-history-title">
-                    <span className={`metric-card-badge risk-theme-badge ${getRiskThemeClass(item.finalRiskLevel, item.assistantMood)}`}>
-                      {translateIntelligenceRiskLevel(item.finalRiskLevel)}
-                    </span>
-                    <p className="metric-card-caption">{formatIntelligenceGeneratedAt(item.createdAt)}</p>
-                  </div>
-                  <div className="analytics-history-tags">
-                    <span className="analytics-history-tag">{translateIntelligenceTrend(item.trend)}</span>
-                    <span className="analytics-history-tag">{translateAssistantMood(item.assistantMood)}</span>
-                  </div>
-                </div>
-
-                <p className="analytics-history-summary" title={item.summary}>
-                  {item.summary}
+          <Card className="analytics-history-feed">
+            <div className="analytics-history-feed-head">
+              <div>
+                <p className="metric-label">Línea de tiempo clínica</p>
+                <p className="metric-card-caption">
+                  {visibleHistory.length} de {intelligenceHistory.length} reportes disponibles.
                 </p>
+              </div>
+              <div className="analytics-history-filter" role="tablist" aria-label="Filtro de historial inteligente">
+                {([
+                  { value: 5 as const, label: "Últimos 5" },
+                  { value: 10 as const, label: "Últimos 10" },
+                  { value: "ALL" as const, label: "Todos" }
+                ]).map((option) => (
+                  <button
+                    key={option.label}
+                    type="button"
+                    className={`analytics-history-filter-button ${historyLimit === option.value ? "active" : ""}`}
+                    onClick={() => setHistoryLimit(option.value)}
+                    aria-pressed={historyLimit === option.value}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            </div>
 
-                <div className="analytics-history-footer">
-                  <p className="analytics-history-caption">Toca para abrir el reporte clínico completo.</p>
-                  <span className="analytics-history-trend">{translateIntelligenceTrend(item.trend)}</span>
-                </div>
-              </button>
-            ))}
-          </div>
+            <div className="analytics-history-list">
+              {visibleHistory.map((item, index) => {
+                const itemThemeClass = getRiskThemeClass(item.finalRiskLevel, item.assistantMood);
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    className={`analytics-history-card analytics-history-trigger risk-theme-card ${itemThemeClass}`}
+                    onClick={() => void handleOpenHistoryDetail(item.id)}
+                  >
+                    <span className="analytics-history-marker" aria-hidden="true">
+                      {index + 1}
+                    </span>
+
+                    <div className="analytics-history-content">
+                      <div className="analytics-history-header">
+                        <div className="analytics-history-title">
+                          <span className={`metric-card-badge risk-theme-badge ${itemThemeClass}`}>
+                            {translateIntelligenceRiskLevel(item.finalRiskLevel)}
+                          </span>
+                          <div>
+                            <p className="analytics-history-report-title">Reporte inteligente #{item.id}</p>
+                            <p className="metric-card-caption">{formatIntelligenceGeneratedAt(item.createdAt)}</p>
+                          </div>
+                        </div>
+                        <span className="analytics-history-open">Ver reporte</span>
+                      </div>
+
+                      <p className="analytics-history-summary" title={item.summary}>
+                        {item.summary}
+                      </p>
+
+                      <div className="analytics-history-metadata">
+                        <span className="analytics-history-meta-item">
+                          <span>Tendencia</span>
+                          <strong>{translateIntelligenceTrend(item.trend)}</strong>
+                        </span>
+                        <span className="analytics-history-meta-item">
+                          <span>Asistente</span>
+                          <strong>{translateAssistantMood(item.assistantMood)}</strong>
+                        </span>
+                        <span className="analytics-history-meta-item">
+                          <span>Riesgo final</span>
+                          <strong>{translateIntelligenceRiskLevel(item.finalRiskLevel)}</strong>
+                        </span>
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </Card>
         ) : null}
       </Section>
 
