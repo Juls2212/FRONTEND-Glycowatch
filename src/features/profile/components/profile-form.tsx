@@ -1,8 +1,10 @@
 import { FormEvent, ReactNode, useEffect, useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
+import { ContextualAssistantPrompt } from "@/components/intelligence/contextual-assistant-prompt";
 import { ContextualAssistantGuide } from "@/components/intelligence/contextual-assistant-guide";
 import { StatePanel } from "@/components/ui/state-panel";
 import { ProfileData, UpdateProfilePayload } from "@/features/profile/types";
+import { useContextualAssistantPrompt } from "@/hooks/use-contextual-assistant-prompt";
 import { DiabetesType } from "@/lib/auth/onboarding";
 import { normalizeRestrictedDecimalInput, trimInputValue } from "@/lib/forms/input-normalizers";
 import { formatTimezoneLabel, getBrowserTimezoneOrDefault, getTimezoneOptions } from "@/lib/timezones";
@@ -115,6 +117,11 @@ export function ProfileForm({
   const [form, setForm] = useState<FormState>(INITIAL_STATE);
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<FieldName, string>>>({});
   const timezoneOptions = useMemo(() => getTimezoneOptions(), []);
+  const {
+    prompt: assistantPrompt,
+    dismissPrompt: dismissAssistantPrompt,
+    showPromptOnce
+  } = useContextualAssistantPrompt();
 
   useEffect(() => {
     if (!profile) return;
@@ -124,6 +131,16 @@ export function ProfileForm({
     }
     setForm(mapped);
   }, [profile, diabetesType]);
+
+  useEffect(() => {
+    if (!profile) return;
+
+    showPromptOnce({
+      id: "assistant-profile-guidance",
+      title: "Perfil listo para ajustar",
+      message: "Si cambian tus umbrales o tu contexto clínico, actualiza este perfil para mantener alertas y explicaciones más útiles."
+    });
+  }, [profile, showPromptOnce]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -198,6 +215,7 @@ export function ProfileForm({
 
   return (
     <div className="profile-experience">
+      <ContextualAssistantPrompt prompt={assistantPrompt} onDismiss={dismissAssistantPrompt} />
       <Card className="profile-hero-card">
         <div className="profile-hero-content">
           <div className="profile-hero-copy">
