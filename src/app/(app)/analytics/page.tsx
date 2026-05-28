@@ -27,6 +27,7 @@ import {
   getIntelligenceAnalysisStatusMessage,
   getRiskBadgeLabel,
   getRiskThemeClass,
+  hasKnownMeasurementOrigin,
   translateAgreementStatus,
   translateAssistantMood,
   translateIntelligenceRiskLevel,
@@ -419,7 +420,9 @@ export default function AnalyticsPage() {
   const intelligenceActionLabel = getIntelligenceAnalysisLabel(intelligenceAnalysisState);
   const intelligenceStatusLabel = getIntelligenceAnalysisStatusLabel(intelligenceAnalysisState);
   const intelligenceStatusMessage = getIntelligenceAnalysisStatusMessage(intelligenceAnalysisState);
-  const latestMeasurementOriginLabel = translateMeasurementOrigin(latestMeasurementOrigin);
+  const latestMeasurementOriginLabel = hasKnownMeasurementOrigin(latestMeasurementOrigin)
+    ? translateMeasurementOrigin(latestMeasurementOrigin)
+    : null;
 
   const handleManualIntelligenceRefresh = useCallback(async () => {
     if (isManualIntelligenceRefreshing || isIntelligenceInitialLoading || isIntelligenceHistoryInitialLoading) return;
@@ -758,7 +761,9 @@ export default function AnalyticsPage() {
                 <p className="analytics-intelligence-explanation">{intelligenceSummary.aiExplanation}</p>
                 <div className="assistant-context-list">
                   <span className="assistant-context-item">{intelligenceStatusMessage}</span>
-                  <span className="assistant-context-item">Origen reciente: {latestMeasurementOriginLabel}</span>
+                  {latestMeasurementOriginLabel ? (
+                    <span className="assistant-context-item">Origen reciente: {latestMeasurementOriginLabel}</span>
+                  ) : null}
                 </div>
                 {isManualIntelligenceRefreshing ? (
                   <p className="soft-text intelligence-refresh-status">Actualizando solo el análisis...</p>
