@@ -20,6 +20,7 @@ type IntelligenceHookResult<T> = {
   isRefreshing: boolean;
   error: string | null;
   refresh: (options?: RefreshOptions) => Promise<RefreshResult<T>>;
+  commitData: (nextData: T) => void;
 };
 
 type ResourceOptions<T> = {
@@ -131,6 +132,17 @@ function useIntelligenceResource<T>({
     [accessToken, errorMessage, fetcher, isHydrated, retryDelayMs, retryOnce]
   );
 
+  const commitData = useCallback((nextData: T) => {
+    dataRef.current = nextData;
+
+    if (mountedRef.current) {
+      setData(nextData);
+      setError(null);
+      setIsLoading(false);
+      setIsRefreshing(false);
+    }
+  }, []);
+
   useEffect(() => {
     if (!enabled || !isHydrated || !accessToken) return;
     void refresh();
@@ -141,7 +153,8 @@ function useIntelligenceResource<T>({
     isLoading,
     isRefreshing,
     error,
-    refresh
+    refresh,
+    commitData
   };
 }
 
