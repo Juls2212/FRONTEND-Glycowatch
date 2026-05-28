@@ -140,24 +140,24 @@ export function getIntelligenceAnalysisState(
 }
 
 export function getIntelligenceAnalysisLabel(state: IntelligenceAnalysisState): string {
-  if (state === "missing") return "Generar analisis";
-  return "Actualizar analisis";
+  if (state === "missing") return "Generar análisis";
+  return "Actualizar análisis";
 }
 
 export function getIntelligenceAnalysisStatusLabel(state: IntelligenceAnalysisState): string {
-  if (state === "missing") return "Analisis disponible por generar";
-  if (state === "outdated") return "Analisis desactualizado";
-  return "Analisis disponible";
+  if (state === "missing") return "Análisis disponible por generar";
+  if (state === "outdated") return "Análisis desactualizado";
+  return "Análisis disponible";
 }
 
 export function getIntelligenceAnalysisStatusMessage(state: IntelligenceAnalysisState): string {
   if (state === "missing") {
-    return "Todavia no hay un analisis generado para tus mediciones recientes.";
+    return "Todavía no hay un análisis generado para tus mediciones recientes.";
   }
   if (state === "outdated") {
-    return "Tus mediciones cambiaron desde el ultimo analisis. Puedes generar una version nueva cuando lo necesites.";
+    return "Tus mediciones cambiaron desde el último análisis. Puedes generar una versión nueva cuando lo necesites.";
   }
-  return "El analisis actual sigue disponible para consultar y puedes actualizarlo manualmente cuando quieras.";
+  return "El análisis actual sigue disponible para consultar y puedes actualizarlo manualmente cuando quieras.";
 }
 
 export function translateMeasurementOrigin(value: string | null | undefined): string {
