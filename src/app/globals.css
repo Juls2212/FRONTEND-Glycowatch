@@ -5775,8 +5775,203 @@ a {
   0%,
   100% {
     transform: scale(1);
-    box-shadow: var(--shadow-soft);
+  box-shadow: var(--shadow-soft);
+}
+
+.analytics-history-trigger {
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+}
+
+.analytics-history-trigger:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-card-hover);
+}
+
+.analytics-history-trigger:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--focus-ring);
+}
+
+.analysis-detail-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  padding: 24px;
+  background: var(--surface-overlay-strong);
+  backdrop-filter: blur(8px);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  overflow-y: auto;
+}
+
+.analysis-detail-dialog {
+  width: min(1120px, 100%);
+  margin: auto 0;
+  border-radius: 28px;
+  border: 1px solid var(--border-subtle);
+  background: linear-gradient(180deg, var(--surface-panel) 0%, var(--surface-panel-strong) 100%);
+  box-shadow: var(--shadow-floating);
+  padding: 24px;
+  display: grid;
+  gap: 22px;
+}
+
+.analysis-detail-header,
+.analysis-detail-overview {
+  display: grid;
+  gap: 18px;
+}
+
+.analysis-detail-header {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+}
+
+.analysis-detail-title,
+.analysis-detail-section-title {
+  margin: 0;
+}
+
+.analysis-detail-subtitle,
+.analysis-detail-section-copy,
+.analysis-detail-explanation {
+  margin: 0;
+  color: var(--text-secondary);
+}
+
+.analysis-detail-body,
+.analysis-detail-report-grid,
+.analysis-detail-list-grid,
+.analysis-detail-measurements,
+.analysis-detail-measurement-list,
+.analysis-detail-overview-panel,
+.analysis-detail-kv-grid,
+.analysis-detail-chip-row {
+  display: grid;
+  gap: 14px;
+}
+
+.analysis-detail-overview {
+  grid-template-columns: minmax(0, 1.4fr) minmax(280px, 0.8fr);
+}
+
+.analysis-detail-overview-copy,
+.analysis-detail-overview-panel,
+.analysis-detail-section,
+.analysis-detail-kv-item,
+.analysis-detail-measurement-item {
+  border: 1px solid rgba(var(--accent-rgb), 0.08);
+  background: color-mix(in srgb, var(--surface-panel) 90%, rgba(var(--accent-rgb), 0.04));
+  border-radius: 20px;
+}
+
+.analysis-detail-overview-copy,
+.analysis-detail-overview-panel,
+.analysis-detail-section {
+  padding: 18px;
+}
+
+.analysis-detail-primary-message {
+  margin: 0;
+  font-size: 1.18rem;
+  line-height: 1.5;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.analysis-detail-chip-row {
+  grid-auto-flow: column;
+  grid-auto-columns: max-content;
+  align-items: center;
+}
+
+.analysis-detail-overview-panel,
+.analysis-detail-kv-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.analysis-detail-kv-item,
+.analysis-detail-measurement-item {
+  padding: 14px 16px;
+  align-content: start;
+}
+
+.analysis-detail-kv-item span,
+.analysis-detail-measurement-item span {
+  color: var(--text-secondary);
+}
+
+.analysis-detail-section-head {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.analysis-detail-measurements,
+.analysis-detail-report-grid {
+  grid-template-columns: minmax(0, 1.1fr) minmax(300px, 0.9fr);
+}
+
+.analysis-detail-measurement-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.analysis-detail-measurement-item strong {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.analysis-detail-measurement-meta {
+  display: grid;
+  gap: 4px;
+  text-align: right;
+  font-size: 0.88rem;
+}
+
+.analysis-detail-report-grid,
+.analysis-detail-list-grid {
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .analysis-detail-overlay {
+    padding: 14px;
   }
+
+  .analysis-detail-dialog,
+  .analysis-detail-overview,
+  .analysis-detail-measurements,
+  .analysis-detail-report-grid,
+  .analysis-detail-list-grid,
+  .analysis-detail-overview-panel,
+  .analysis-detail-kv-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .analysis-detail-header {
+    grid-template-columns: 1fr;
+  }
+
+  .analysis-detail-chip-row {
+    grid-auto-flow: row;
+    grid-template-columns: repeat(2, minmax(0, max-content));
+  }
+
+  .analysis-detail-measurement-item {
+    flex-direction: column;
+  }
+
+  .analysis-detail-measurement-meta {
+    text-align: left;
+  }
+}
   50% {
     transform: scale(1.02);
     box-shadow: 0 20px 40px rgba(var(--accent-rgb), 0.12);
