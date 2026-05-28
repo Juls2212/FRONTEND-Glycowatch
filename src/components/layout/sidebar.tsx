@@ -1,13 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { NAV_ITEMS, NavIcon } from "@/components/layout/nav-items";
+import { useAuthStore } from "@/stores/auth-store";
 
 type SidebarProps = {
   collapsed: boolean;
   onToggle: () => void;
 };
+
+const SIDEBAR_NAV_ITEMS = NAV_ITEMS.filter((item) => item.href !== "/profile");
 
 function NavItemIcon({ icon }: { icon: NavIcon }) {
   if (icon === "dashboard") {
@@ -60,8 +63,37 @@ function NavItemIcon({ icon }: { icon: NavIcon }) {
   );
 }
 
+function LogoutIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" className="nav-icon-svg">
+      <path
+        d="M10.75 5.75H6.5a1.75 1.75 0 0 0-1.75 1.75v9A1.75 1.75 0 0 0 6.5 18.25h4.25"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+      />
+      <path
+        d="M13.25 8.25 17 12l-3.75 3.75M8.75 12H17"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export function Sidebar({ collapsed, onToggle }: SidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
+  const logout = useAuthStore((state) => state.logout);
+
+  const handleLogout = () => {
+    logout();
+    router.replace("/login");
+  };
 
   return (
     <aside className={`sidebar ${collapsed ? "collapsed" : ""}`}>
@@ -101,7 +133,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
       <div className="sidebar-group">
         {!collapsed ? <p className="sidebar-group-label">Modulos</p> : null}
         <nav className="sidebar-nav">
-          {NAV_ITEMS.map((item) => {
+          {SIDEBAR_NAV_ITEMS.map((item) => {
             const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
             return (
               <Link
@@ -119,6 +151,27 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
             );
           })}
         </nav>
+      </div>
+
+      <div className="sidebar-session">
+        {!collapsed ? (
+          <div className="sidebar-session-copy">
+            <p className="sidebar-footer-label">Sesión</p>
+            <p className="sidebar-session-text">Acceso protegido activo</p>
+          </div>
+        ) : null}
+        <button
+          type="button"
+          className={`sidebar-logout-button ${collapsed ? "compact" : ""}`}
+          onClick={handleLogout}
+          title={collapsed ? "Cerrar sesión" : undefined}
+          aria-label="Cerrar sesión"
+        >
+          <span className="nav-icon" aria-hidden="true">
+            <LogoutIcon />
+          </span>
+          {!collapsed ? <span className="nav-link-text">Cerrar sesión</span> : null}
+        </button>
       </div>
     </aside>
   );
