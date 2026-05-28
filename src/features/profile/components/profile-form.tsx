@@ -6,8 +6,14 @@ import { StatePanel } from "@/components/ui/state-panel";
 import { ProfileData, UpdateProfilePayload } from "@/features/profile/types";
 import { useContextualAssistantPrompt } from "@/hooks/use-contextual-assistant-prompt";
 import { DiabetesType } from "@/lib/auth/onboarding";
-import { normalizeRestrictedDecimalInput, trimInputValue } from "@/lib/forms/input-normalizers";
+import { trimInputValue } from "@/lib/forms/input-normalizers";
 import { formatTimezoneLabel, getBrowserTimezoneOrDefault, getTimezoneOptions } from "@/lib/timezones";
+import {
+  CLINICAL_DECIMAL_FORMAT_MESSAGE,
+  CLINICAL_DECIMAL_MAX_LENGTH,
+  getClinicalDecimalTypingError,
+  isAllowedClinicalDecimalInput
+} from "@/lib/validation/clinical-numbers";
 import { mapZodIssuesToFieldErrors } from "@/lib/validation/errors";
 import { buildProfilePayload, DIABETES_TYPE_OPTIONS, profileViewSchema } from "@/lib/validation/profile";
 
@@ -77,6 +83,22 @@ function buildInitials(fullName: string, email: string): string {
 
 function getDiabetesLabel(value: "" | DiabetesType): string {
   return DIABETES_TYPE_OPTIONS.find((option) => option.value === value)?.label ?? "Sin definir";
+}
+
+function getClinicalFieldTypingError(field: FieldName, value: string): string | null {
+  if (field === "hypoglycemiaThreshold" || field === "hyperglycemiaThreshold") {
+    return getClinicalDecimalTypingError(value, { min: 20, max: 600, unit: "mg/dL", label: "El umbral" });
+  }
+
+  if (field === "weightKg") {
+    return getClinicalDecimalTypingError(value, { min: 2, max: 350, unit: "kg", label: "El peso" });
+  }
+
+  if (field === "heightCm") {
+    return getClinicalDecimalTypingError(value, { min: 30, max: 250, unit: "cm", label: "La altura" });
+  }
+
+  return null;
 }
 
 function ProfileGlyph({ children }: { children: ReactNode }) {
@@ -184,8 +206,24 @@ export function ProfileForm({
 
   const updateRestrictedDecimalField =
     (field: FieldName) =>
-    (value: string): void =>
-      updateField(field)(normalizeRestrictedDecimalInput(value, { maxIntegerDigits: 3, maxFractionDigits: 1 }));
+    (value: string): void => {
+      if (!isAllowedClinicalDecimalInput(value)) {
+        setFieldErrors((current) => ({ ...current, [field]: CLINICAL_DECIMAL_FORMAT_MESSAGE }));
+        return;
+      }
+
+      setFieldErrors((current) => {
+        const next = { ...current };
+        const typingError = getClinicalFieldTypingError(field, value);
+        if (typingError) {
+          next[field] = typingError;
+        } else {
+          delete next[field];
+        }
+        return next;
+      });
+      setForm((current) => ({ ...current, [field]: value as FormState[FieldName] }));
+    };
 
   if (isLoading) {
     return (
@@ -410,7 +448,9 @@ export function ProfileForm({
               <label className={`field ${fieldErrors.hypoglycemiaThreshold ? "has-error" : ""}`}>
                 <span>Umbral minimo (mg/dL)</span>
                 <input
-                  type="number"
+                  type="text"
+                  inputMode="decimal"
+                  maxLength={CLINICAL_DECIMAL_MAX_LENGTH}
                   step="0.1"
                   min="20"
                   max="600"
@@ -432,7 +472,9 @@ export function ProfileForm({
               <label className={`field ${fieldErrors.hyperglycemiaThreshold ? "has-error" : ""}`}>
                 <span>Umbral maximo (mg/dL)</span>
                 <input
-                  type="number"
+                  type="text"
+                  inputMode="decimal"
+                  maxLength={CLINICAL_DECIMAL_MAX_LENGTH}
                   step="0.1"
                   min="20"
                   max="600"
@@ -454,7 +496,9 @@ export function ProfileForm({
               <label className={`field ${fieldErrors.weightKg ? "has-error" : ""}`}>
                 <span>Peso (kg)</span>
                 <input
-                  type="number"
+                  type="text"
+                  inputMode="decimal"
+                  maxLength={CLINICAL_DECIMAL_MAX_LENGTH}
                   step="0.1"
                   min="2"
                   max="350"
@@ -474,7 +518,9 @@ export function ProfileForm({
               <label className={`field ${fieldErrors.heightCm ? "has-error" : ""}`}>
                 <span>Altura (cm)</span>
                 <input
-                  type="number"
+                  type="text"
+                  inputMode="decimal"
+                  maxLength={CLINICAL_DECIMAL_MAX_LENGTH}
                   step="0.1"
                   min="30"
                   max="250"
