@@ -5,10 +5,12 @@ import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ProtectedRoute } from "@/components/auth/protected-route";
+import { ContextualAssistantPrompt } from "@/components/intelligence/contextual-assistant-prompt";
 import { ContextualAssistantGuide } from "@/components/intelligence/contextual-assistant-guide";
 import { FeedbackBanner } from "@/components/ui/feedback-banner";
 import { fetchProfile, updateProfile } from "@/features/profile/api";
 import { ProfileData } from "@/features/profile/types";
+import { useContextualAssistantPrompt } from "@/hooks/use-contextual-assistant-prompt";
 import { onboardingStorage, DiabetesType } from "@/lib/auth/onboarding";
 import { normalizeRestrictedDecimalInput, trimInputValue } from "@/lib/forms/input-normalizers";
 import { getBrowserTimezoneOrDefault } from "@/lib/timezones";
@@ -56,6 +58,11 @@ export default function OnboardingPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const {
+    prompt: assistantPrompt,
+    dismissPrompt: dismissAssistantPrompt,
+    showPromptOnce
+  } = useContextualAssistantPrompt();
 
   const {
     register,
@@ -135,12 +142,23 @@ export default function OnboardingPage() {
       });
     };
 
+  useEffect(() => {
+    if (isLoading) return;
+
+    showPromptOnce({
+      id: "assistant-onboarding-guidance",
+      title: "Configuración guiada",
+      message: "Estos datos ayudan a personalizar alertas, rangos y explicaciones futuras sin cambiar tu flujo de seguimiento."
+    });
+  }, [isLoading, showPromptOnce]);
+
   return (
     <ProtectedRoute>
       <div className="onboarding-shell">
         <div className="onboarding-card onboarding-card-assisted">
           <div className="onboarding-layout">
             <div className="onboarding-main">
+              <ContextualAssistantPrompt prompt={assistantPrompt} onDismiss={dismissAssistantPrompt} />
               <div className="onboarding-copy">
                 <p className="auth-eyebrow">Primeros pasos</p>
                 <h1 className="onboarding-title">Bienvenido a GlycoWatch</h1>
