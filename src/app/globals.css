@@ -2982,6 +2982,90 @@ a {
   line-height: 1.55;
 }
 
+.assistant-prompt {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: start;
+  padding: 14px 16px;
+  border-radius: 18px;
+  border: 1px solid color-mix(in srgb, var(--border-subtle) 90%, rgba(var(--accent-rgb), 0.08));
+  background:
+    radial-gradient(circle at top right, rgba(var(--accent-rgb), 0.06) 0%, transparent 34%),
+    linear-gradient(180deg, rgba(var(--surface-panel-rgb), 0.96), rgba(var(--surface-panel-rgb), 0.9));
+  box-shadow: var(--shadow-soft);
+}
+
+.assistant-prompt-success {
+  border-color: rgba(var(--success-rgb), 0.16);
+  background:
+    radial-gradient(circle at top right, rgba(var(--success-rgb), 0.08) 0%, transparent 34%),
+    linear-gradient(180deg, rgba(var(--surface-panel-rgb), 0.96), rgba(var(--surface-panel-rgb), 0.9));
+}
+
+.assistant-prompt-icon {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  color: var(--accent);
+  background: rgba(var(--accent-rgb), 0.1);
+  border: 1px solid rgba(var(--accent-rgb), 0.12);
+}
+
+.assistant-prompt-success .assistant-prompt-icon {
+  color: rgba(var(--success-rgb), 0.9);
+  background: rgba(var(--success-rgb), 0.1);
+  border-color: rgba(var(--success-rgb), 0.16);
+}
+
+.assistant-prompt-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.assistant-prompt-copy {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.assistant-prompt-copy strong {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.assistant-prompt-copy p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.86rem;
+  line-height: 1.55;
+}
+
+.assistant-prompt-close {
+  border: 0;
+  background: transparent;
+  color: var(--text-tertiary);
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1rem;
+  transition:
+    color var(--transition-fast),
+    background var(--transition-fast);
+}
+
+.assistant-prompt-close:hover {
+  color: var(--text-primary);
+  background: var(--surface-muted);
+}
+
 .metric-chip.ready {
   border-color: rgba(var(--success-rgb), 0.18);
   background: linear-gradient(180deg, rgba(var(--success-rgb), 0.1) 0%, rgba(var(--success-rgb), 0.05) 100%);
