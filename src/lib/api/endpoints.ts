@@ -24,6 +24,7 @@ export const API_ENDPOINTS = {
   },
   intelligence: {
     summary: "/api/v1/intelligence/summary",
+    generate: "/api/v1/intelligence/summary/generate",
     history: "/api/v1/intelligence/history"
   }
 } as const;
