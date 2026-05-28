@@ -114,7 +114,7 @@ export function ManualMeasurementForm({ onCreated }: Props) {
     <Card className="measurements-manual-card">
       <div className="measurements-card-head">
         <div>
-          <p className="measurements-card-eyebrow">Nuevo registro</p>
+          <p className="measurements-card-eyebrow">Acción clínica rápida</p>
           <h2 className="measurements-card-title">Agregar medición manual</h2>
         </div>
         <p className="measurements-card-copy">
@@ -122,72 +122,76 @@ export function ManualMeasurementForm({ onCreated }: Props) {
         </p>
       </div>
       <form className="manual-form" onSubmit={onSubmit}>
-        <label className={`field ${fieldErrors.glucoseValue ? "has-error" : ""}`}>
-          <span>Valor de glucosa (mg/dL)</span>
-          <input
-            type="text"
-            inputMode="decimal"
-            maxLength={CLINICAL_DECIMAL_MAX_LENGTH}
-            step="0.1"
-            min="20"
-            max="600"
-            value={glucoseValue}
-            disabled={isSubmitting}
-            aria-invalid={fieldErrors.glucoseValue ? "true" : "false"}
-            aria-describedby={fieldErrors.glucoseValue ? "measurement-glucose-error" : undefined}
-            onChange={(event) => updateGlucoseValue(event.target.value)}
-            placeholder="Ej. 110.5"
-          />
-          {fieldErrors.glucoseValue ? <small id="measurement-glucose-error">{fieldErrors.glucoseValue}</small> : null}
-        </label>
+        <div className="manual-form-grid manual-form-grid-primary">
+          <label className={`field ${fieldErrors.glucoseValue ? "has-error" : ""}`}>
+            <span>Valor de glucosa</span>
+            <input
+              type="text"
+              inputMode="decimal"
+              maxLength={CLINICAL_DECIMAL_MAX_LENGTH}
+              step="0.1"
+              min="20"
+              max="600"
+              value={glucoseValue}
+              disabled={isSubmitting}
+              aria-invalid={fieldErrors.glucoseValue ? "true" : "false"}
+              aria-describedby={fieldErrors.glucoseValue ? "measurement-glucose-error" : undefined}
+              onChange={(event) => updateGlucoseValue(event.target.value)}
+              placeholder="Ej. 110.5"
+            />
+            {fieldErrors.glucoseValue ? <small id="measurement-glucose-error">{fieldErrors.glucoseValue}</small> : null}
+          </label>
 
-        <label className={`field ${fieldErrors.measuredDate ? "has-error" : ""}`}>
-          <span>Fecha de medicion</span>
-          <input
-            type="date"
-            max={maxDate}
-            value={measuredDate}
-            disabled={isSubmitting}
-            aria-invalid={fieldErrors.measuredDate ? "true" : "false"}
-            aria-describedby={fieldErrors.measuredDate ? "measurement-date-error" : undefined}
-            onChange={(event) => {
-              setFieldErrors((current) => {
-                if (!current.measuredDate) return current;
-                const next = { ...current };
-                delete next.measuredDate;
-                return next;
-              });
-              setMeasuredDate(event.target.value);
-            }}
-          />
-          {fieldErrors.measuredDate ? <small id="measurement-date-error">{fieldErrors.measuredDate}</small> : null}
-        </label>
+          <label className="field manual-unit-field">
+            <span>Unidad</span>
+            <input type="text" value="mg/dL" disabled />
+          </label>
+        </div>
 
-        <label className={`field ${fieldErrors.measuredTime ? "has-error" : ""}`}>
-          <span>Hora de medicion</span>
-          <input
-            type="time"
-            value={measuredTime}
-            disabled={isSubmitting}
-            aria-invalid={fieldErrors.measuredTime ? "true" : "false"}
-            aria-describedby={fieldErrors.measuredTime ? "measurement-time-error" : undefined}
-            onChange={(event) => {
-              setFieldErrors((current) => {
-                if (!current.measuredTime) return current;
-                const next = { ...current };
-                delete next.measuredTime;
-                return next;
-              });
-              setMeasuredTime(event.target.value);
-            }}
-          />
-          {fieldErrors.measuredTime ? <small id="measurement-time-error">{fieldErrors.measuredTime}</small> : null}
-        </label>
+        <div className="manual-form-grid">
+          <label className={`field ${fieldErrors.measuredDate ? "has-error" : ""}`}>
+            <span>Fecha de medición</span>
+            <input
+              type="date"
+              max={maxDate}
+              value={measuredDate}
+              disabled={isSubmitting}
+              aria-invalid={fieldErrors.measuredDate ? "true" : "false"}
+              aria-describedby={fieldErrors.measuredDate ? "measurement-date-error" : undefined}
+              onChange={(event) => {
+                setFieldErrors((current) => {
+                  if (!current.measuredDate) return current;
+                  const next = { ...current };
+                  delete next.measuredDate;
+                  return next;
+                });
+                setMeasuredDate(event.target.value);
+              }}
+            />
+            {fieldErrors.measuredDate ? <small id="measurement-date-error">{fieldErrors.measuredDate}</small> : null}
+          </label>
 
-        <label className="field">
-          <span>Unidad</span>
-          <input type="text" value="mg/dL" disabled />
-        </label>
+          <label className={`field ${fieldErrors.measuredTime ? "has-error" : ""}`}>
+            <span>Hora de medición</span>
+            <input
+              type="time"
+              value={measuredTime}
+              disabled={isSubmitting}
+              aria-invalid={fieldErrors.measuredTime ? "true" : "false"}
+              aria-describedby={fieldErrors.measuredTime ? "measurement-time-error" : undefined}
+              onChange={(event) => {
+                setFieldErrors((current) => {
+                  if (!current.measuredTime) return current;
+                  const next = { ...current };
+                  delete next.measuredTime;
+                  return next;
+                });
+                setMeasuredTime(event.target.value);
+              }}
+            />
+            {fieldErrors.measuredTime ? <small id="measurement-time-error">{fieldErrors.measuredTime}</small> : null}
+          </label>
+        </div>
 
         {error ? <p className="form-feedback form-feedback-error">{error}</p> : null}
         {success ? <p className="form-feedback form-feedback-success">{success}</p> : null}
@@ -197,7 +201,7 @@ export function ManualMeasurementForm({ onCreated }: Props) {
             Usar hora actual
           </button>
           <button type="submit" className="primary-button" disabled={isSubmitting}>
-            {isSubmitting ? "Guardando..." : "Registrar medicion"}
+            {isSubmitting ? "Guardando..." : "Registrar medición"}
           </button>
         </div>
       </form>
