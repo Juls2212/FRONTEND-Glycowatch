@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { ACCENT_THEMES, AccentTheme, COLOR_MODES, ColorMode } from "@/lib/theme/config";
 import { getThemeState, setAccentTheme, setColorMode } from "@/lib/theme/client";
 
@@ -36,12 +36,15 @@ export function AppearanceMenu({ open: controlledOpen, onOpenChange }: Appearanc
   const [panelPosition, setPanelPosition] = useState<PanelPosition>({ top: 72, right: 16 });
   const open = controlledOpen ?? uncontrolledOpen;
 
-  const setOpen = (nextOpen: boolean) => {
-    if (controlledOpen === undefined) {
-      setUncontrolledOpen(nextOpen);
-    }
-    onOpenChange?.(nextOpen);
-  };
+  const setOpen = useCallback(
+    (nextOpen: boolean) => {
+      if (controlledOpen === undefined) {
+        setUncontrolledOpen(nextOpen);
+      }
+      onOpenChange?.(nextOpen);
+    },
+    [controlledOpen, onOpenChange]
+  );
 
   useEffect(() => {
     const state = getThemeState();
@@ -63,7 +66,7 @@ export function AppearanceMenu({ open: controlledOpen, onOpenChange }: Appearanc
     return () => {
       window.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [open]);
+  }, [open, setOpen]);
 
   useEffect(() => {
     if (!open) return;
@@ -78,7 +81,7 @@ export function AppearanceMenu({ open: controlledOpen, onOpenChange }: Appearanc
     return () => {
       window.removeEventListener("keydown", handleEscape);
     };
-  }, [open]);
+  }, [open, setOpen]);
 
   useLayoutEffect(() => {
     if (!open) return;
