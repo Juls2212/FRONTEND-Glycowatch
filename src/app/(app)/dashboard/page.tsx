@@ -28,7 +28,12 @@ import { ContextualAssistantPrompt } from "@/components/intelligence/contextual-
 import { ChartRangeFilter } from "@/features/dashboard/components/chart-range-filter";
 import { buildChartRangeParams, ChartRange, filterChartByRange } from "@/features/dashboard/chart-range";
 import { useContextualAssistantPrompt } from "@/hooks/use-contextual-assistant-prompt";
-import { normalizeRestrictedDecimalInput } from "@/lib/forms/input-normalizers";
+import {
+  CLINICAL_DECIMAL_FORMAT_MESSAGE,
+  CLINICAL_DECIMAL_MAX_LENGTH,
+  getClinicalDecimalTypingError,
+  isAllowedClinicalDecimalInput
+} from "@/lib/validation/clinical-numbers";
 import {
   dashboardManualMeasurementSchema,
   toDashboardMeasuredAtISOString
@@ -410,6 +415,30 @@ export default function DashboardPage() {
     }
   };
 
+  const updateGlucoseValueInput = (value: string) => {
+    if (!isAllowedClinicalDecimalInput(value)) {
+      setFormFieldErrors((current) => ({ ...current, glucoseValue: CLINICAL_DECIMAL_FORMAT_MESSAGE }));
+      return;
+    }
+
+    setFormFieldErrors((current) => {
+      const next = { ...current };
+      const typingError = getClinicalDecimalTypingError(value, {
+        min: 20,
+        max: 600,
+        unit: "mg/dL",
+        label: "La glucosa"
+      });
+      if (typingError) {
+        next.glucoseValue = typingError;
+      } else {
+        delete next.glucoseValue;
+      }
+      return next;
+    });
+    setGlucoseValueInput(value);
+  };
+
   const formattedLatest = useMemo(() => {
     if (!metrics?.latestMeasurement) return "Sin datos recientes";
     return new Date(metrics.latestMeasurement.measuredAt).toLocaleString("es-CO");
@@ -767,7 +796,9 @@ export default function DashboardPage() {
               <label className={`field ${formFieldErrors.glucoseValue ? "has-error" : ""}`}>
                 <span>Valor de glucosa (mg/dL)</span>
                 <input
-                  type="number"
+                  type="text"
+                  inputMode="decimal"
+                  maxLength={CLINICAL_DECIMAL_MAX_LENGTH}
                   step="0.1"
                   min="20"
                   max="600"
@@ -775,15 +806,7 @@ export default function DashboardPage() {
                   disabled={isSubmitting}
                   aria-invalid={formFieldErrors.glucoseValue ? "true" : "false"}
                   aria-describedby={formFieldErrors.glucoseValue ? "dashboard-glucose-error" : undefined}
-                  onChange={(event) => {
-                    setFormFieldErrors((current) => {
-                      if (!current.glucoseValue) return current;
-                      const next = { ...current };
-                      delete next.glucoseValue;
-                      return next;
-                    });
-                    setGlucoseValueInput(normalizeRestrictedDecimalInput(event.target.value, { maxIntegerDigits: 3, maxFractionDigits: 1 }));
-                  }}
+                  onChange={(event) => updateGlucoseValueInput(event.target.value)}
                   placeholder="Ej. 112.5"
                 />
                 {formFieldErrors.glucoseValue ? <small id="dashboard-glucose-error">{formFieldErrors.glucoseValue}</small> : null}
