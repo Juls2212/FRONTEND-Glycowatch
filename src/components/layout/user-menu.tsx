@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores/auth-store";
 
@@ -16,12 +16,15 @@ export function UserMenu({ open: controlledOpen, onOpenChange }: UserMenuProps) 
   const containerRef = useRef<HTMLDivElement | null>(null);
   const open = controlledOpen ?? uncontrolledOpen;
 
-  const setOpen = (nextOpen: boolean) => {
-    if (controlledOpen === undefined) {
-      setUncontrolledOpen(nextOpen);
-    }
-    onOpenChange?.(nextOpen);
-  };
+  const setOpen = useCallback(
+    (nextOpen: boolean) => {
+      if (controlledOpen === undefined) {
+        setUncontrolledOpen(nextOpen);
+      }
+      onOpenChange?.(nextOpen);
+    },
+    [controlledOpen, onOpenChange]
+  );
 
   useEffect(() => {
     if (!open) return;
@@ -37,7 +40,7 @@ export function UserMenu({ open: controlledOpen, onOpenChange }: UserMenuProps) 
     return () => {
       window.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [open]);
+  }, [open, setOpen]);
 
   const goToProfile = () => {
     setOpen(false);
