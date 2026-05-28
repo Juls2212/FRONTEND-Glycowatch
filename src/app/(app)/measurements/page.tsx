@@ -143,7 +143,7 @@ export default function MeasurementsPage() {
 
   const onManualCreated = async () => {
     setSuccess("Medición manual agregada correctamente.");
-    await loadData(currentPage, filters, { preserveFeedback: true });
+    await loadData(0, filters, { preserveFeedback: true });
     showPromptOnce({
       id: "assistant-first-manual-measurement",
       tone: "success",
